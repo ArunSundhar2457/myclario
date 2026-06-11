@@ -3,27 +3,34 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Clario — Your money. Your day. Sorted." },
+      {
+        name: "description",
+        content:
+          "Clario is a calm, AI-powered personal finance and daily planning app. Track income, expenses, budgets, and tasks in one place.",
+      },
     ],
   }),
-  component: Index,
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+      <div className="max-w-md text-center">
+        <div className="mx-auto mb-8 grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-card">
+          <span className="font-display text-3xl font-bold">C</span>
+        </div>
+        <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          Clario
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          Your money. Your day. Sorted.
+        </p>
+        <p className="mt-8 text-sm text-muted-foreground">
+          Setting things up. Once Supabase is connected, sign in to get started.
+        </p>
+      </div>
+    </main>
   );
 }
