@@ -1,0 +1,246 @@
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  Home,
+  Wallet,
+  PiggyBank,
+  CalendarCheck,
+  Sparkles,
+  Plus,
+  LogOut,
+  Settings as SettingsIcon,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { useAppStore, type Currency } from "@/lib/app-store";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { to: "/dashboard", label: "Home", icon: Home, enabled: true },
+  { to: "/transactions", label: "Transactions", icon: Wallet, enabled: false },
+  { to: "/budgets", label: "Budgets", icon: PiggyBank, enabled: false },
+  { to: "/planner", label: "Planner", icon: CalendarCheck, enabled: false },
+  { to: "/insights", label: "Insights", icon: Sparkles, enabled: false },
+] as const;
+
+function monthOptions(): { value: string; label: string }[] {
+  const opts: { value: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleString(undefined, { month: "long", year: "numeric" });
+    opts.push({ value, label });
+  }
+  return opts;
+}
+
+function GlobalControls() {
+  const { selectedMonth, setSelectedMonth, currency, setCurrency } = useAppStore();
+  return (
+    <div className="flex items-center gap-2">
+      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+        <SelectTrigger className="h-9 w-[150px] text-sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {monthOptions().map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+        <SelectTrigger className="h-9 w-[78px] text-sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(["INR", "USD", "EUR", "GBP"] as const).map((c) => (
+            <SelectItem key={c} value={c}>
+              {c}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function Brand() {
+  return (
+    <Link to="/dashboard" className="flex items-center gap-2.5">
+      <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-card">
+        <span className="font-display text-lg font-bold leading-none">C</span>
+      </div>
+      <span className="font-display text-lg font-semibold tracking-tight">Clario</span>
+    </Link>
+  );
+}
+
+function Sidebar() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    navigate({ to: "/auth", replace: true });
+  }
+
+  return (
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
+      <div className="px-2">
+        <Brand />
+      </div>
+      <nav className="mt-8 flex flex-1 flex-col gap-1">
+        {NAV.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.to;
+          const content = (
+            <span
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                active
+                  ? "bg-primary-soft text-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                !item.enabled && "cursor-not-allowed opacity-60",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+              {!item.enabled && (
+                <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
+                  soon
+                </span>
+              )}
+            </span>
+          );
+          return item.enabled ? (
+            <Link key={item.to} to={item.to}>
+              {content}
+            </Link>
+          ) : (
+            <button
+              key={item.to}
+              type="button"
+              onClick={() => toast.info(`${item.label} arrives in the next build.`)}
+              className="text-left"
+            >
+              {content}
+            </button>
+          );
+        })}
+      </nav>
+      <div className="flex flex-col gap-1 border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={() => toast.info("Settings arrive in the next build.")}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <SettingsIcon className="h-4 w-4" /> Settings
+        </button>
+        <button
+          type="button"
+          onClick={signOut}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function MobileHeader() {
+  return (
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur md:hidden">
+      <Brand />
+      <GlobalControls />
+    </header>
+  );
+}
+
+function DesktopHeader() {
+  return (
+    <header className="sticky top-0 z-10 hidden items-center justify-end border-b border-border bg-background/85 px-8 py-4 backdrop-blur md:flex">
+      <GlobalControls />
+    </header>
+  );
+}
+
+function BottomNav() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-background/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
+      {NAV.map((item) => {
+        const Icon = item.icon;
+        const active = pathname === item.to;
+        const inner = (
+          <span
+            className={cn(
+              "flex flex-1 flex-col items-center gap-0.5 rounded-md px-2 py-1.5 text-[10px] font-medium",
+              active ? "text-primary" : "text-muted-foreground",
+              !item.enabled && "opacity-60",
+            )}
+          >
+            <Icon className="h-5 w-5" />
+            {item.label}
+          </span>
+        );
+        return item.enabled ? (
+          <Link key={item.to} to={item.to} className="flex flex-1">
+            {inner}
+          </Link>
+        ) : (
+          <button
+            key={item.to}
+            type="button"
+            className="flex flex-1"
+            onClick={() => toast.info(`${item.label} arrives in the next build.`)}
+          >
+            {inner}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+function Fab() {
+  return (
+    <Button
+      size="icon"
+      onClick={() => toast.info("Add flow arrives with Transactions.")}
+      className="fixed bottom-20 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
+      aria-label="Add"
+    >
+      <Plus className="h-6 w-6" />
+    </Button>
+  );
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <MobileHeader />
+        <DesktopHeader />
+        <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
+          <div className="mx-auto w-full max-w-[1200px]">{children}</div>
+        </main>
+      </div>
+      <Fab />
+      <BottomNav />
+    </div>
+  );
+}
