@@ -92,6 +92,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Clario — Your money. Your day. Sorted." },
+      { name: "description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
+      { property: "og:description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
+      { name: "twitter:description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
