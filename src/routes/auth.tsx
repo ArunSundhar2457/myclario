@@ -1,10 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -18,9 +17,11 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+type Mode = "signin" | "signup" | "forgot";
+
 function AuthPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"signin" | "signup" | "forgot">("signin");
+  const [mode, setMode] = useState<Mode>("signin");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -29,55 +30,128 @@ function AuthPage() {
   }, [navigate]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-card">
-            <span className="font-display text-2xl font-bold">C</span>
-          </div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            Welcome to Clario
+    <main className="flex min-h-screen w-full bg-background">
+      {/* LEFT PANEL */}
+      <section className="flex w-full flex-col justify-between px-6 py-10 md:w-1/2 md:px-12 lg:px-20">
+        <header>
+          <img src="/clario-logo.svg" alt="Clario" className="h-10 w-auto md:h-11" />
+        </header>
+
+        <div className="mx-auto w-full max-w-sm py-10">
+          <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
+            {mode === "signup"
+              ? "Create your account"
+              : mode === "forgot"
+                ? "Reset your password"
+                : "Welcome back"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Your money. Your day. Sorted.
           </p>
+
+          <div className="mt-8 space-y-4">
+            {mode !== "forgot" && (
+              <>
+                <GoogleButton />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase tracking-wide">
+                    <span className="bg-background px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {mode === "signin" && (
+              <SignInForm
+                onForgot={() => setMode("forgot")}
+                onSwitch={() => setMode("signup")}
+              />
+            )}
+            {mode === "signup" && <SignUpForm onSwitch={() => setMode("signin")} />}
+            {mode === "forgot" && <ForgotForm onBack={() => setMode("signin")} />}
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signin" className="mt-5">
-              <SignInForm onForgot={() => setTab("forgot")} />
-            </TabsContent>
-            <TabsContent value="signup" className="mt-5">
-              <SignUpForm onDone={() => setTab("signin")} />
-            </TabsContent>
-            <TabsContent value="forgot" className="mt-5">
-              <ForgotForm onBack={() => setTab("signin")} />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <footer className="text-xs text-muted-foreground">
+          By continuing, you agree to Clario's Terms and Privacy Policy.
+        </footer>
+      </section>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By continuing, you agree to Clario's{" "}
-          <Link to="/" className="underline-offset-2 hover:underline">
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link to="/" className="underline-offset-2 hover:underline">
-            Privacy Policy
-          </Link>
-          .
-        </p>
-      </div>
+      {/* RIGHT PANEL */}
+      <aside
+        className="relative hidden w-1/2 overflow-hidden md:block"
+        style={{
+          background:
+            "linear-gradient(135deg, #0b1024 0%, #131a3a 45%, #0e3d3a 100%)",
+        }}
+      >
+        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="absolute inset-0 flex flex-col justify-end p-12 lg:p-16">
+          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
+            Take control of your finances
+          </h2>
+          <p className="mt-4 max-w-md text-base text-white/70 lg:text-lg">
+            Track expenses, plan your day, and hit your goals.
+          </p>
+        </div>
+      </aside>
     </main>
   );
 }
 
-function SignInForm({ onForgot }: { onForgot: () => void }) {
+function GoogleButton() {
+  const [loading, setLoading] = useState(false);
+  async function onClick() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: "https://myclario.lovable.app/dashboard" },
+    });
+    if (error) {
+      setLoading(false);
+      toast.error(error.message);
+    }
+  }
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full"
+      onClick={onClick}
+      disabled={loading}
+    >
+      {loading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <GoogleIcon className="mr-2 h-4 w-4" />
+      )}
+      Continue with Google
+    </Button>
+  );
+}
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09Z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/>
+      <path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.45.34-2.11V7.05H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.95l3.66-2.84Z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38Z"/>
+    </svg>
+  );
+}
+
+function SignInForm({
+  onForgot,
+  onSwitch,
+}: {
+  onForgot: () => void;
+  onSwitch: () => void;
+}) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -114,7 +188,7 @@ function SignInForm({ onForgot }: { onForgot: () => void }) {
             onClick={onForgot}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            Forgot?
+            Forgot password?
           </button>
         </div>
         <Input
@@ -130,11 +204,21 @@ function SignInForm({ onForgot }: { onForgot: () => void }) {
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Sign in
       </Button>
+      <p className="text-center text-sm text-muted-foreground">
+        Don't have an account?{" "}
+        <button
+          type="button"
+          onClick={onSwitch}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          Sign up
+        </button>
+      </p>
     </form>
   );
 }
 
-function SignUpForm({ onDone }: { onDone: () => void }) {
+function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -150,7 +234,7 @@ function SignUpForm({ onDone }: { onDone: () => void }) {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Check your inbox to confirm your email.");
-    onDone();
+    onSwitch();
   }
 
   return (
@@ -183,6 +267,16 @@ function SignUpForm({ onDone }: { onDone: () => void }) {
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Create account
       </Button>
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <button
+          type="button"
+          onClick={onSwitch}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          Sign in
+        </button>
+      </p>
     </form>
   );
 }
