@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="115" fill="#1a1a2e"/>
+  <!-- C arc same color as bg but with lighter stroke to show -->
+  <path d="M 310 100 A 156 156 0 1 0 310 412" fill="none" stroke="#4f6ef7" stroke-width="52" stroke-linecap="round"/>
+  <!-- White trend line -->
+  <polyline points="148,360 208,272 268,312 340,168" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- White dot -->
+  <circle cx="340" cy="168" r="36" fill="white"/>
+</svg>
