@@ -77,11 +77,8 @@ function GlobalControls() {
 
 function Brand() {
   return (
-    <Link to="/dashboard" className="flex items-center gap-2.5">
-      <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-card">
-        <span className="font-display text-lg font-bold leading-none">C</span>
-      </div>
-      <span className="font-display text-lg font-semibold tracking-tight">Clario</span>
+    <Link to="/dashboard" className="flex items-center" aria-label="Clario home">
+      <img src="/clario-logo.svg" alt="Clario" className="h-9 w-auto" />
     </Link>
   );
 }
