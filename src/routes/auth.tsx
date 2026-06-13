@@ -30,54 +30,72 @@ function AuthPage() {
   }, [navigate]);
 
   return (
-    <main className="flex min-h-screen w-full bg-background">
+    <main className="relative flex min-h-screen w-full bg-background">
       {/* LEFT PANEL */}
-      <section className="flex w-full flex-col justify-between px-6 py-10 md:w-1/2 md:px-12 lg:px-20">
-        <header>
-          <img src="/clario-logo.svg" alt="Clario" className="h-10 w-auto md:h-11" />
+      <section className="relative flex min-h-screen w-full flex-col md:w-1/2">
+        <header className="absolute left-8 top-8 z-10">
+          <img src="/clario-logo.svg" alt="Clario" style={{ width: 180 }} className="h-auto" />
         </header>
 
-        <div className="mx-auto w-full max-w-sm py-10">
-          <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-            {mode === "signup"
-              ? "Create your account"
-              : mode === "forgot"
-                ? "Reset your password"
-                : "Welcome back"}
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Your money. Your day. Sorted.
-          </p>
+        <div className="flex flex-1 items-center justify-center px-6 py-24 md:px-12 lg:px-20">
+          <div className="w-full max-w-sm">
+            <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
+              {mode === "signup"
+                ? "Create your account"
+                : mode === "forgot"
+                  ? "Reset your password"
+                  : "Welcome back"}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your money. Your day. Sorted.
+            </p>
 
-          <div className="mt-8 space-y-4">
-            {mode !== "forgot" && (
-              <>
-                <GoogleButton />
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
+            <div className="mt-8 flex flex-col gap-5">
+              {mode !== "forgot" && (
+                <>
+                  <GoogleButton />
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-wide">
+                      <span className="bg-background px-2 text-muted-foreground">or</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase tracking-wide">
-                    <span className="bg-background px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            {mode === "signin" && (
-              <SignInForm
-                onForgot={() => setMode("forgot")}
-                onSwitch={() => setMode("signup")}
-              />
-            )}
-            {mode === "signup" && <SignUpForm onSwitch={() => setMode("signin")} />}
-            {mode === "forgot" && <ForgotForm onBack={() => setMode("signin")} />}
+              {mode === "signin" && (
+                <SignInForm
+                  onForgot={() => setMode("forgot")}
+                  onSwitch={() => setMode("signup")}
+                />
+              )}
+              {mode === "signup" && <SignUpForm onSwitch={() => setMode("signin")} />}
+              {mode === "forgot" && <ForgotForm onBack={() => setMode("signin")} />}
+
+              {mode !== "forgot" && (
+                <p className="text-center text-xs text-muted-foreground">
+                  By continuing, you agree to Clario's{" "}
+                  <a
+                    href="/terms"
+                    className="text-primary underline underline-offset-4 hover:opacity-80"
+                  >
+                    Terms
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/privacy"
+                    className="text-primary underline underline-offset-4 hover:opacity-80"
+                  >
+                    Privacy Policy
+                  </a>
+                  .
+                </p>
+              )}
+            </div>
           </div>
         </div>
-
-        <footer className="text-xs text-muted-foreground">
-          By continuing, you agree to Clario's Terms and Privacy Policy.
-        </footer>
       </section>
 
       {/* RIGHT PANEL */}
@@ -91,6 +109,13 @@ function AuthPage() {
         <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="absolute inset-0 flex flex-col justify-end p-12 lg:p-16">
+          <img
+            src="/clario-icon.svg"
+            alt=""
+            aria-hidden="true"
+            style={{ width: 64, height: 64, opacity: 0.85 }}
+            className="mb-6"
+          />
           <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
             Take control of your finances
           </h2>
@@ -168,8 +193,8 @@ function SignInForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-1.5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <div className="space-y-2">
         <Label htmlFor="si-email">Email</Label>
         <Input
           id="si-email"
@@ -180,7 +205,7 @@ function SignInForm({
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="si-password">Password</Label>
           <button
@@ -238,8 +263,8 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-1.5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <div className="space-y-2">
         <Label htmlFor="su-email">Email</Label>
         <Input
           id="su-email"
@@ -250,7 +275,7 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="su-password">Password</Label>
         <Input
           id="su-password"
@@ -298,11 +323,11 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">
         Enter your email and we'll send you a reset link.
       </p>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="fp-email">Email</Label>
         <Input
           id="fp-email"
