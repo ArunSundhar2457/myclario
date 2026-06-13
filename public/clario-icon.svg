@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- White background so icon fills the tab space -->
+  <rect width="512" height="512" rx="115" fill="white"/>
   <!-- C arc in emerald green -->
   <path d="M 310 100 A 156 156 0 1 0 310 412" fill="none" stroke="#2a7a6a" stroke-width="52" stroke-linecap="round"/>
   <!-- Trend line in emerald green -->
