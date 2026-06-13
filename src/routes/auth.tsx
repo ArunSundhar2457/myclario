@@ -34,10 +34,10 @@ function AuthPage() {
       {/* LEFT PANEL */}
       <section className="relative flex min-h-screen w-full flex-col md:w-1/2">
         <header className="absolute left-8 top-8 z-10">
-          <img src="/clario-logo.svg" alt="Clario" style={{ width: 220 }} className="h-auto" />
+          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
         </header>
 
-        <div className="flex flex-1 items-center justify-center px-6 py-24 md:px-12 lg:px-20">
+        <div className="flex flex-1 items-center justify-center px-6 py-16 md:px-12 md:py-12 lg:px-20">
           <div className="w-full max-w-sm">
             <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
               {mode === "signup"
@@ -101,13 +101,19 @@ function AuthPage() {
       {/* RIGHT PANEL */}
       <aside
         className="relative hidden w-1/2 overflow-hidden md:block"
-        style={{
-          background:
-            "linear-gradient(135deg, #0b1024 0%, #131a3a 45%, #0e3d3a 100%)",
-        }}
       >
-        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
+        {/* Animated gradient base */}
+        <div
+          className="absolute inset-0 animate-gradient-shift"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, #0b1024 0%, #131a3a 35%, #0e3d3a 70%, #0b1024 100%)",
+          }}
+        />
+        {/* Floating ambient blobs */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 animate-float-slow rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 animate-float-slower rounded-full bg-emerald-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/3 top-1/2 h-64 w-64 animate-float-slow rounded-full bg-teal-300/10 blur-3xl" />
 
         {/* Floating preview stat cards */}
         <div className="absolute inset-x-0 top-0 h-1/2 p-12 lg:p-16">
@@ -115,17 +121,17 @@ function AuthPage() {
             <StatCard
               value="₹45,200"
               label="Saved this month"
-              className="absolute left-0 top-4 w-56"
+              className="absolute left-0 top-4 w-56 animate-card-float"
             />
             <StatCard
               value="12 tasks"
               label="Completed today"
-              className="absolute right-2 top-24 w-52"
+              className="absolute right-2 top-24 w-52 animate-card-float [animation-delay:1.5s]"
             />
             <StatCard
               value="₹8,400"
               label="Under budget"
-              className="absolute left-12 top-56 w-52"
+              className="absolute left-12 top-56 w-52 animate-card-float [animation-delay:3s]"
             />
           </div>
         </div>
@@ -155,7 +161,7 @@ function StatCard({
   return (
     <div
       className={
-        "rounded-xl border border-white/15 bg-white/10 px-5 py-4 text-white shadow-lg backdrop-blur-xl " +
+        "rounded-xl border border-white/20 bg-white/10 px-5 py-4 text-white shadow-xl backdrop-blur-md ring-1 ring-white/5 " +
         (className ?? "")
       }
     >
