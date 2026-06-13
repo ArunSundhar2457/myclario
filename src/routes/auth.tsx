@@ -34,7 +34,7 @@ function AuthPage() {
       {/* LEFT PANEL */}
       <section className="relative flex min-h-screen w-full flex-col md:w-1/2">
         <header className="absolute left-8 top-8 z-10">
-          <img src="/clario-logo.svg" alt="Clario" style={{ width: 180 }} className="h-auto" />
+          <img src="/clario-logo.svg" alt="Clario" style={{ width: 220 }} className="h-auto" />
         </header>
 
         <div className="flex flex-1 items-center justify-center px-6 py-24 md:px-12 lg:px-20">
@@ -108,14 +108,29 @@ function AuthPage() {
       >
         <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
+
+        {/* Floating preview stat cards */}
+        <div className="absolute inset-x-0 top-0 h-1/2 p-12 lg:p-16">
+          <div className="relative h-full w-full">
+            <StatCard
+              value="₹45,200"
+              label="Saved this month"
+              className="absolute left-0 top-4 w-56"
+            />
+            <StatCard
+              value="12 tasks"
+              label="Completed today"
+              className="absolute right-2 top-24 w-52"
+            />
+            <StatCard
+              value="₹8,400"
+              label="Under budget"
+              className="absolute left-12 top-56 w-52"
+            />
+          </div>
+        </div>
+
         <div className="absolute inset-0 flex flex-col justify-end p-12 lg:p-16">
-          <img
-            src="/clario-icon.svg"
-            alt=""
-            aria-hidden="true"
-            style={{ width: 64, height: 64, opacity: 0.85 }}
-            className="mb-6"
-          />
           <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
             Take control of your finances
           </h2>
@@ -125,6 +140,28 @@ function AuthPage() {
         </div>
       </aside>
     </main>
+  );
+}
+
+function StatCard({
+  value,
+  label,
+  className,
+}: {
+  value: string;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={
+        "rounded-xl border border-white/15 bg-white/10 px-5 py-4 text-white shadow-lg backdrop-blur-xl " +
+        (className ?? "")
+      }
+    >
+      <div className="text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-1 text-xs text-white/70">{label}</div>
+    </div>
   );
 }
 
