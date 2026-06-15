@@ -108,10 +108,10 @@ function TransactionsPage() {
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
 
   function setKind(k: Kind) {
-    navigate({ search: (p) => ({ ...p, kind: k, page: 1 }) });
+    navigate({ search: { ...search, kind: k, page: 1 } });
   }
   function setPage(n: number) {
-    navigate({ search: (p) => ({ ...p, page: n }) });
+    navigate({ search: { ...search, page: n } });
   }
 
   return (
@@ -134,7 +134,7 @@ function TransactionsPage() {
         onToggle={() => setFiltersOpen((v) => !v)}
         search={search}
         onChange={(patch) =>
-          navigate({ search: (p) => ({ ...p, ...patch, page: 1 }) })
+          navigate({ search: { ...search, ...patch, page: 1 } })
         }
       />
 
@@ -569,8 +569,8 @@ function AddTransactionSheet({
   const queryClient = useQueryClient();
   const createFn = useServerFn(createTransaction);
   const create = useMutation({
-    mutationFn: createFn,
-    onMutate: async (vars) => {
+    mutationFn: (vars: { data: z.infer<typeof formSchema> }) => createFn(vars),
+    onMutate: async (vars: { data: z.infer<typeof formSchema> }) => {
       const data = vars.data;
       const key = ["transactions"];
       await queryClient.cancelQueries({ queryKey: key });
