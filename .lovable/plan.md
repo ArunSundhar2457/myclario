@@ -1,81 +1,59 @@
+## Phase 2 — Transactions & Budgets
 
-# Clario — Phase 1 Plan
+### Database (single migration)
 
-Auth, app shell, and Home (Dashboard). Transactions, Budgets, Planner, Insights, Settings, and GDPR pages come in later phases.
+Three new tables, all user-scoped with RLS (`auth.uid() = user_id`), GRANTs to `authenticated` + `service_role`, `updated_at` triggers via existing `set_updated_at()`.
 
-## Stack notes (vs. your spec)
+- `public.expenses` — `user_id`, `amount numeric(12,2) > 0`, `category text`, `description text`, `occurred_on date`, `is_recurring bool`, `recurrence text` (`daily|weekly|monthly|null`).
+- `public.income` — same shape (category from income list).
+- `public.budgets` — `user_id`, `category text`, `monthly_limit numeric(12,2) > 0`, `month date` (first of month). Unique `(user_id, category, month)` so "only categories without an existing budget" can be enforced.
 
-- This project is **TanStack Start + React 19 + Tailwind v4**, not CRA/Vite-React. All routing uses file-based routes under `src/routes/`. No `react-router-dom`.
-- **Framer Motion** → install `motion` (the current package). **Recharts** added as-is.
-- **PWA**: spec asks for installable PWA. We'll do **manifest-only** (installable, app icon, standalone). No service worker in Phase 1 — Lovable preview blocks SW registration and offline isn't a Phase 1 need. We can add the generated SW later if you want true offline.
-- **Fonts**: Inter (body) + DM Sans (headings) via Google Fonts in the root head.
-- **Theme**: light-only, premium fintech feel. I'll pick a distinctive palette (deep ink + a single accent, soft neutrals, 12px radius, subtle borders + soft shadow) and codify it in `src/styles.css` design tokens — no hardcoded colors in components.
+### Server functions (`src/lib/`)
 
-## Backend setup (your Supabase project)
+`transactions.functions.ts` (uses `requireSupabaseAuth`):
+- `listTransactions({ kind: 'income'|'expense', page, pageSize=10, from?, to?, category?, search? })` → `{ rows, total }`
+- `createTransaction({ kind, amount, category, description, occurred_on, is_recurring, recurrence })`
+- `deleteTransaction({ kind, id })`
+- `exportTransactionsCsv({ kind, filters })` → CSV string
 
-You'll be prompted to connect your Supabase project via the connector. Once connected:
+`budgets.functions.ts`:
+- `listBudgets()` → budgets for current month + computed `spent` (sum of expenses in same category/month)
+- `createBudget({ category, monthly_limit })` (current month)
+- `deleteBudget({ id })`
+- `listAvailableCategories()` → expense categories minus ones with a current-month budget
 
-1. **Migration** adds only the missing `todos` table + RLS + GRANTs (existing tables left alone). Also adds `currency` and `consent_at` columns to `profiles` if missing.
-2. **Auth**: email/password + Google OAuth (via Lovable's broker) + password reset (`/reset-password` route).
-3. **Server boundary**: TanStack `createServerFn` for AI calls. Gemini key stored as a server secret `GEMINI_API_KEY` (you'll paste the rotated key into the secure prompt — never in chat).
-4. **Route gating**: integration-managed `_authenticated/route.tsx`. All app pages live under `_authenticated/`. `/auth`, `/reset-password`, `/privacy`, `/terms` are public.
+Zod validation on every input; amount > 0, category in allowed set.
 
-## Routes (Phase 1)
+### Routes
 
-```
-src/routes/
-  __root.tsx                       # fonts, manifest link, providers, auth listener
-  index.tsx                        # redirects: signed-in → /dashboard, else → /auth
-  auth.tsx                         # split-screen login + signup tabs + forgot pw
-  reset-password.tsx               # set new password after recovery link
-  _authenticated/
-    route.tsx                      # ssr:false gate, redirect to /auth
-    dashboard.tsx                  # Home
-```
+`src/routes/_authenticated/transactions.tsx`:
+- Header + segmented `Income | Expenses` toggle (URL search param `kind`, defaults to `expense`).
+- Collapsible filter bar (date range, category, search) — `validateSearch` + `useNavigate`.
+- Paginated list (10/page) with category icon, name, description, signed amount (green/red), date.
+- Desktop: trash button. Mobile: swipe-to-delete via framer-motion drag.
+- Empty state with CTA opening the sheet.
+- "Export CSV" button below list — calls server fn, triggers download.
+- Floating FAB (bottom-right) opens shadcn `Sheet` (`side="bottom"`) with the add form:
+  - kind toggle, large amount input, horizontal scrollable category pills, description, date picker, recurring switch + recurrence select, full-width Save.
+  - Inline zod error messages.
+  - Optimistic insert via React Query `onMutate`, rollback on error, toast.
 
-## App shell
+`src/routes/_authenticated/budgets.tsx`:
+- Inline create form: category select (only available cats) + monthly limit + Create.
+- Grid of cards per budget: title + current month, animated progress bar (motion `width` 0 → pct, 0.8s), spent/remaining, status badge (`On Track <80%`, `Warning 80-100%`, `Over Budget >100%`), bar color tied to status, ghost delete button.
+- Empty state with CTA focusing the form.
 
-- `AppShell` component renders inside `_authenticated/route.tsx`:
-  - **Mobile (<768px)**: top header (greeting, month picker, currency, settings icon) + bottom tab bar (5 tabs, only Home active in Phase 1, others render "Coming soon" stubs so nav works) + FAB.
-  - **Desktop (≥768px)**: left sidebar 240px sticky + top header + centered 1200px content + FAB inside content.
-- Global state via a small Zustand store: `selectedMonth`, `currency`. Persisted to `profiles.currency`.
+Both routes:
+- `loader` calls `context.queryClient.ensureQueryData(...)`, components use `useSuspenseQuery`.
+- Define `errorComponent` and `notFoundComponent`.
+- `head()` with unique title/description.
 
-## Dashboard (Home)
+### Shared
 
-- Greeting + date + month picker + currency selector.
-- Snapshot cards (2×2 / 4×1): Income, Spent, Net Savings, Savings Rate — color-coded, count-up animation, staggered entrance.
-- **AI Daily Briefing card** — calls `getDailyBriefing` server fn → Gemini (`gemini-2.0-flash` via Lovable AI Gateway *if* you'd rather use it, otherwise direct Gemini REST with your key). Skeleton while loading, graceful fallback message.
-- Spending Trend AreaChart (last 30d, income + expenses, gradient fills).
-- Category Donut PieChart for the selected month.
-- Budget Alert Strip — only renders if any budget ≥80% used.
-- Today's Tasks Preview — top 5 todos for today with checkbox toggle; "View all" link disabled in Phase 1.
+- `src/lib/categories.ts` — exported `EXPENSE_CATEGORIES`, `INCOME_CATEGORIES`, icon map (lucide).
+- Reuse existing shadcn `Sheet`, `Select`, `Switch`, `Calendar`/`Popover`, `Badge`, `Progress` (add via shadcn if missing).
+- `formatMoney` from `@/lib/app-store`.
 
-Data loading: `createServerFn` per query (`getMonthlySummary`, `getDailyBriefing`, `getSpendingTrend`, `getCategoryBreakdown`, `getBudgetAlerts`, `getTodayTasks`), called from the component via TanStack Query + `useSuspenseQuery`, with route loader prefetch.
+### Out of scope
 
-## AI integration
-
-One `createServerFn` `getDailyBriefing` that:
-
-1. Reads user via `requireSupabaseAuth`.
-2. Pulls today's todos + month income/expense aggregates from Supabase (RLS-scoped).
-3. POSTs to Gemini `generateContent` with a Clario system prompt (calm, encouraging, plain language, 2–3 sentences).
-4. Returns `{ text }`. Errors surface a friendly fallback in the UI.
-
-Gemini key never leaves the server. If you'd rather use Lovable AI Gateway (no key mgmt, billed by Lovable), say the word and I'll swap providers — code structure is identical.
-
-## Out of Phase 1 (next phases)
-
-- Transactions, Budgets, Planner, Insights pages
-- Settings modal
-- Privacy/Terms pages + cookie banner
-- CSV export
-- Service worker / offline
-- Other-tab placeholders will say "Coming next" so nothing is broken
-
-## Open questions I'll resolve in build mode
-
-- Connect your Supabase project (you'll do this through the connector prompt).
-- Add `GEMINI_API_KEY` as a secret (after you rotate the leaked one).
-- Confirm: stick with **direct Gemini REST** using your key, or switch to **Lovable AI Gateway** (Gemini, no key mgmt)?
-
-Reply "go" (or with any tweaks) and I'll switch to build mode and execute.
+No edits to dashboard, auth, styles, or existing components. Dashboard placeholders stay as-is.
