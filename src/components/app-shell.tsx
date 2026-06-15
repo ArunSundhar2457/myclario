@@ -25,8 +25,8 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home, enabled: true },
-  { to: "/transactions", label: "Transactions", icon: Wallet, enabled: false },
-  { to: "/budgets", label: "Budgets", icon: PiggyBank, enabled: false },
+  { to: "/transactions", label: "Transactions", icon: Wallet, enabled: true },
+  { to: "/budgets", label: "Budgets", icon: PiggyBank, enabled: true },
   { to: "/planner", label: "Planner", icon: CalendarCheck, enabled: false },
   { to: "/insights", label: "Insights", icon: Sparkles, enabled: false },
 ] as const;
