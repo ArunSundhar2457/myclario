@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from "react";
 import { useAppStore, type Currency } from "@/lib/app-store";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+
 import {
   Select,
   SelectContent,
