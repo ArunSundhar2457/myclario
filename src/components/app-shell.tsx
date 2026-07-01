@@ -5,14 +5,14 @@ import {
   PiggyBank,
   CalendarCheck,
   Sparkles,
-  Plus,
   LogOut,
   Settings as SettingsIcon,
 } from "lucide-react";
+
 import type { ReactNode } from "react";
 import { useAppStore, type Currency } from "@/lib/app-store";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+
 import {
   Select,
   SelectContent,
@@ -77,11 +77,30 @@ function GlobalControls() {
 
 function Brand() {
   return (
-    <Link to="/dashboard" className="flex items-center" aria-label="Clario home">
-      <img src="/clario-logo.svg" alt="Clario" className="h-9 w-auto" />
+    <Link
+      to="/dashboard"
+      className="flex items-center gap-2.5 px-3 py-2"
+      aria-label="Clario home"
+    >
+      <img src="/clario-icon.svg" alt="" className="h-10 w-10 rounded-lg" />
+      <div className="flex flex-col leading-none">
+        <span
+          className="font-display tracking-tight text-foreground"
+          style={{ fontSize: "22px", fontWeight: 700 }}
+        >
+          Clario
+        </span>
+        <span
+          className="mt-1 text-muted-foreground"
+          style={{ fontSize: "10px" }}
+        >
+          Your money. Your day. Sorted.
+        </span>
+      </div>
     </Link>
   );
 }
+
 
 function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -212,19 +231,6 @@ function BottomNav() {
   );
 }
 
-function Fab() {
-  return (
-    <Button
-      size="icon"
-      onClick={() => toast.info("Add flow arrives with Transactions.")}
-      className="fixed bottom-20 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
-      aria-label="Add"
-    >
-      <Plus className="h-6 w-6" />
-    </Button>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -236,7 +242,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-[1200px]">{children}</div>
         </main>
       </div>
-      <Fab />
+      <BottomNav />
+
       <BottomNav />
     </div>
   );
