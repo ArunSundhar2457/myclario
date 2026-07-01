@@ -5,10 +5,10 @@ import {
   PiggyBank,
   CalendarCheck,
   Sparkles,
-  Plus,
   LogOut,
   Settings as SettingsIcon,
 } from "lucide-react";
+
 import type { ReactNode } from "react";
 import { useAppStore, type Currency } from "@/lib/app-store";
 import { supabase } from "@/integrations/supabase/client";
