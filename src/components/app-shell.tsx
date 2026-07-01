@@ -27,8 +27,8 @@ const NAV = [
   { to: "/dashboard", label: "Home", icon: Home, enabled: true },
   { to: "/transactions", label: "Transactions", icon: Wallet, enabled: true },
   { to: "/budgets", label: "Budgets", icon: PiggyBank, enabled: true },
-  { to: "/planner", label: "Planner", icon: CalendarCheck, enabled: false },
-  { to: "/insights", label: "Insights", icon: Sparkles, enabled: false },
+  { to: "/planner", label: "Planner", icon: CalendarCheck, enabled: true },
+  { to: "/insights", label: "Insights", icon: Sparkles, enabled: true },
 ] as const;
 
 function monthOptions(): { value: string; label: string }[] {
@@ -242,8 +242,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-[1200px]">{children}</div>
         </main>
       </div>
-      <BottomNav />
-
       <BottomNav />
     </div>
   );
