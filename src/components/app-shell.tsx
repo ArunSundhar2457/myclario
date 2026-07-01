@@ -231,19 +231,6 @@ function BottomNav() {
   );
 }
 
-function Fab() {
-  return (
-    <Button
-      size="icon"
-      onClick={() => toast.info("Add flow arrives with Transactions.")}
-      className="fixed bottom-20 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
-      aria-label="Add"
-    >
-      <Plus className="h-6 w-6" />
-    </Button>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -255,7 +242,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-[1200px]">{children}</div>
         </main>
       </div>
-      <Fab />
+      <BottomNav />
+
       <BottomNav />
     </div>
   );
