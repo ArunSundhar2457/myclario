@@ -77,11 +77,30 @@ function GlobalControls() {
 
 function Brand() {
   return (
-    <Link to="/dashboard" className="flex items-center" aria-label="Clario home">
-      <img src="/clario-logo.svg" alt="Clario" className="h-9 w-auto" />
+    <Link
+      to="/dashboard"
+      className="flex items-center gap-2.5 px-3 py-2"
+      aria-label="Clario home"
+    >
+      <img src="/clario-icon.svg" alt="" className="h-10 w-10 rounded-lg" />
+      <div className="flex flex-col leading-none">
+        <span
+          className="font-display tracking-tight text-foreground"
+          style={{ fontSize: "22px", fontWeight: 700 }}
+        >
+          Clario
+        </span>
+        <span
+          className="mt-1 text-muted-foreground"
+          style={{ fontSize: "10px" }}
+        >
+          Your money. Your day. Sorted.
+        </span>
+      </div>
     </Link>
   );
 }
+
 
 function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
