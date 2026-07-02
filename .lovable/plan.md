@@ -1,51 +1,64 @@
-## Phase 2 — Planner + AI Insights
+# Phase 3 — Polish, Landing Page & GDPR
 
-### 1. Planner page (`/planner`)
+Ship the remaining Clario surfaces without touching existing working pages (Dashboard, Transactions, Budgets, Planner, Insights, Auth) or the design tokens in `src/styles.css`.
 
-Uses existing `public.todos` table — no schema changes.
+---
 
-**New server functions** — `src/lib/planner.functions.ts`:
-- `listTodosForMonth({ year, month })` — returns todos with `due_date` in that month; used to render calendar dots.
-- `listTodosForDay({ date })` — todos for the selected day (plus undated if selected day is today).
-- `createTodo({ title, notes?, due_date, due_time?, priority })` — insert scoped to `auth.uid()`.
-- `toggleTodo({ id, is_completed })` — reuse existing in `todos.functions.ts` (already implemented).
-- `deleteTodo({ id })` — hard delete.
+## 1. Settings modal (fix sidebar gear)
 
-**Route** — `src/routes/_authenticated/planner.tsx`:
-- Header row: month label + "Today" quick jump.
-- shadcn `Calendar` (single mode). Custom `DayButton` (or `modifiers`) shows a small emerald dot under any date that has todos in the month query.
-- Selected day defaults to today; below the calendar render:
-  - Quick stats: "Today: X tasks · Y completed".
-  - Task list. Each row: checkbox (toggle), title + optional time, priority pill (Low=muted, Medium=amber, High=destructive), trash icon. Completed → line-through + muted.
-  - Empty state with "Add task" CTA.
-- FAB (bottom-right, same pattern as Transactions) opens a `Sheet`:
-  - Fields: Title (required), Notes (textarea), Time (input type="time"), Priority pill selector (Low / Medium / High), full-width Save.
-  - Optimistic insert via react-query mutation → invalidate month + day queries.
-- Enable `/planner` link in `src/components/app-shell.tsx` nav.
+Create `src/components/settings-modal.tsx` using shadcn `Dialog` + `AlertDialog`. Wire it up in `src/components/app-shell.tsx` — replace the `toast.info(...)` stub on the Settings button (and add a matching entry in the mobile bottom nav overflow if needed) with a state-controlled open handler.
 
-### 2. AI Insights page (`/insights`)
+Contents:
+- **Display name** — text input, prefilled from `profiles.display_name` (add column if missing via migration).
+- **Currency** — select (INR/USD/EUR/GBP), synced with `useAppStore` + `profiles.currency`.
+- **Save** — updates the `profiles` row via a new `updateProfile` server fn (`src/lib/profile.functions.ts`, `requireSupabaseAuth`).
+- **Export my data** — calls new `exportUserData` server fn that returns `{ profile, expenses, income, budgets, todos }`; client triggers download of `clario-data-export.json`.
+- **Delete Account** — destructive button opens `AlertDialog` confirming permanent deletion. On confirm calls `deleteAccount` server fn: deletes rows from `todos, budgets, expenses, income, profiles` for `auth.uid()`, then client signs out and navigates to `/auth`. (Auth user row deletion requires service role — do inside handler with `supabaseAdmin` after `requireSupabaseAuth`.)
+- Footer: `Need help? myclario.help@gmail.com`.
 
-**New server function** — `src/lib/insights.functions.ts`:
-- Uses Lovable AI Gateway (`LOVABLE_API_KEY` already provisioned) with `google/gemini-3-flash-preview`.
-- `generateInsights()` — aggregates current-month expenses / income / budgets for the authed user (via `requireSupabaseAuth`), sends a compact summary to Gemini, returns structured JSON:
-  - `thisMonth`: 1–2 sentence overview of income vs expenses + net.
-  - `whereMoneyWent`: top 3 categories with % share and a short note.
-  - `budgetHealth`: per-budget status summary.
-  - `tips`: array of 3 short actionable tips.
-- `quickTip()` — small call, returns single 1–2 sentence tip string.
-- Graceful fallback string on error (no raw provider errors surfaced).
+Migration: add `display_name text` to `profiles` if not present (safe `add column if not exists`).
 
-**Route** — `src/routes/_authenticated/insights.tsx`:
-- Full-width "Generate insights" primary button → mutation → skeleton loaders → 4 cards (This Month, Where Your Money Went, Budget Health, Smart Tips).
-- Quick Tip card at top with refresh icon (separate mutation).
-- Empty state before first generation. Error state with retry.
-- Enable `/insights` link in `src/components/app-shell.tsx` nav.
+## 2. GDPR pages
 
-### Out of scope this phase
-- No DB migrations, no RLS changes.
-- No edits to Dashboard, Transactions, Budgets, Auth beyond adding the two nav entries.
-- Landing page, GDPR banner, badge removal, Settings modal, /privacy, /terms — deferred to Phase 3.
+- `src/routes/privacy.tsx` — public route, full copy from spec, semantic headings, `head()` meta.
+- `src/routes/terms.tsx` — public route, full copy from spec, `head()` meta.
 
-### Build order
-1. `planner.functions.ts` + `planner.tsx` + nav link → verify calendar + add/toggle/delete.
-2. `insights.functions.ts` + `insights.tsx` + nav link → verify Generate produces 4 cards.
+Both use existing typography classes, no new colors.
+
+## 3. Cookie consent banner
+
+`src/components/cookie-banner.tsx`: fixed bottom, checks `localStorage.getItem('clario-cookie-consent')`; if null, renders banner with copy + Accept/Decline. Both actions write to localStorage and hide. Mount in `src/routes/__root.tsx` inside `RootComponent` so it shows on all routes.
+
+## 4. Landing page `/` (animated, public)
+
+Rewrite `src/routes/index.tsx`:
+- Keep `beforeLoad` redirect: signed-in → `/dashboard`. Signed-out → render landing component (remove the current `throw redirect` to `/auth`).
+- Install `framer-motion` (already used in Transactions per earlier phases — verify; add if missing).
+
+Sections built as small components in `src/components/landing/`:
+- **StickyNav** — logo + Sign in / Start free; scroll-direction hide/show via `useScroll` + `useMotionValueEvent`; backdrop blur once `scrollY > 20`.
+- **Hero** — 3-line headline with per-word stagger (`whileInView` + variants), subtitle fade-up, CTA scale-in. Below: mocked dashboard card (static styled div with fake ₹45,200 / 12 tasks / budget bars / AI briefing) with parallax via `useScroll` + `useTransform` on `y`.
+- **TrustBar** — pill row with dot separators, slide from left.
+- **HowItWorks** — 3 numbered steps with an SVG connecting line animated via `pathLength` on `whileInView`.
+- **Features** — 4 cards, staggered `whileInView`, hover uses Tailwind `hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(14,124,102,0.35)]`.
+- **FinalCTA** — dark emerald bg (`#1a3a2a`) with subtle SVG grid pattern, zoom-in on view.
+- **Footer** — logo + tagline, links to `/privacy`, `/terms`, mailto, copyright.
+
+All motion uses `viewport={{ once: true }}`. `html { scroll-behavior: smooth }` added to `styles.css` if not present.
+
+## 5. Non-goals / guardrails
+
+- No changes to Dashboard, Transactions, Budgets, Planner, Insights, Auth pages.
+- No changes to color tokens, fonts, or shared UI primitives.
+- Existing FAB / sheets untouched.
+
+---
+
+## Technical notes
+
+- Server functions: profile update, export, delete — all `.middleware([requireSupabaseAuth])`. Delete uses dynamic `import('@/integrations/supabase/client.server')` inside handler for admin auth deletion.
+- Landing route stays `ssr: false` so the auth-based redirect works without leaking sessions to SSR.
+- `framer-motion` — check `package.json`; `bun add framer-motion` if absent.
+- Migration only if `profiles.display_name` missing.
+
+Ready to build on approval.
