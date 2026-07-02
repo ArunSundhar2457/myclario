@@ -9,9 +9,11 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useAppStore, type Currency } from "@/lib/app-store";
 import { supabase } from "@/integrations/supabase/client";
+import { SettingsModal } from "@/components/settings-modal";
+
 
 import {
   Select,
@@ -102,7 +104,7 @@ function Brand() {
 }
 
 
-function Sidebar() {
+function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
@@ -111,6 +113,7 @@ function Sidebar() {
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });
   }
+
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
@@ -159,11 +162,12 @@ function Sidebar() {
       <div className="flex flex-col gap-1 border-t border-border pt-3">
         <button
           type="button"
-          onClick={() => toast.info("Settings arrive in the next build.")}
+          onClick={onOpenSettings}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
           <SettingsIcon className="h-4 w-4" /> Settings
         </button>
+
         <button
           type="button"
           onClick={signOut}
@@ -232,9 +236,10 @@ function BottomNav() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <Sidebar />
+      <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileHeader />
         <DesktopHeader />
@@ -243,6 +248,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <BottomNav />
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
+
