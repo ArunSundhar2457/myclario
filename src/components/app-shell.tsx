@@ -9,9 +9,11 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useAppStore, type Currency } from "@/lib/app-store";
 import { supabase } from "@/integrations/supabase/client";
+import { SettingsModal } from "@/components/settings-modal";
+
 
 import {
   Select,
