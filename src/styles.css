@@ -169,3 +169,24 @@
   animation: gradient-shift 18s ease infinite;
 }
 .animate-card-float { animation: card-float 6s ease-in-out infinite; }
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 30px -12px rgba(42,122,106,0.30); }
+  50% { box-shadow: 0 0 45px -8px rgba(42,122,106,0.55); }
+}
+.animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+.shimmer-on-hover { position: relative; overflow: hidden; }
+.shimmer-on-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.shimmer-on-hover:hover::before { animation: shimmer-sweep 0.9s ease; }
