@@ -1,64 +1,66 @@
-# Phase 3 — Polish, Landing Page & GDPR
 
-Ship the remaining Clario surfaces without touching existing working pages (Dashboard, Transactions, Budgets, Planner, Insights, Auth) or the design tokens in `src/styles.css`.
+## Landing Page Additions
 
----
+All edits scoped to `src/routes/index.tsx` + a few keyframes in `src/styles.css`. No design tokens, fonts, or existing sections change.
 
-## 1. Settings modal (fix sidebar gear)
+### 1. Trust Bar copy update
+Update items array in `TrustBar` to:
+`["Free to use", "Made in India 🇮🇳", "AI-powered", "PWA installable", "GDPR compliant", "Secure"]`
+Add per-item `motion.span` with `initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}` staggered by index. Flag emoji wrapped in a `motion.span` with a one-shot scale pop (1 → 1.3 → 1) on mount.
 
-Create `src/components/settings-modal.tsx` using shadcn `Dialog` + `AlertDialog`. Wire it up in `src/components/app-shell.tsx` — replace the `toast.info(...)` stub on the Settings button (and add a matching entry in the mobile bottom nav overflow if needed) with a state-controlled open handler.
+### 2. `<AudienceTicker />` — inserted after `<TrustBar />`
+- Full-width section, `overflow-hidden`, vertical padding matching other section rhythm.
+- CSS mask: `maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'` for edge fade.
+- Inner flex row with the 10-item array rendered twice back-to-back, animated via Framer Motion `animate={{ x: ['0%', '-50%'] }}` with `repeat: Infinity, ease: 'linear', duration: 40`.
+- Pause on hover via `whileHover={{ animationPlayState: 'paused' }}` fallback: use state to toggle `duration` between 40 and a very large number.
+- Text: `text-muted-foreground`, `text-sm uppercase tracking-widest`, dot separators already in strings.
 
-Contents:
-- **Display name** — text input, prefilled from `profiles.display_name` (add column if missing via migration).
-- **Currency** — select (INR/USD/EUR/GBP), synced with `useAppStore` + `profiles.currency`.
-- **Save** — updates the `profiles` row via a new `updateProfile` server fn (`src/lib/profile.functions.ts`, `requireSupabaseAuth`).
-- **Export my data** — calls new `exportUserData` server fn that returns `{ profile, expenses, income, budgets, todos }`; client triggers download of `clario-data-export.json`.
-- **Delete Account** — destructive button opens `AlertDialog` confirming permanent deletion. On confirm calls `deleteAccount` server fn: deletes rows from `todos, budgets, expenses, income, profiles` for `auth.uid()`, then client signs out and navigates to `/auth`. (Auth user row deletion requires service role — do inside handler with `supabaseAdmin` after `requireSupabaseAuth`.)
-- Footer: `Need help? myclario.help@gmail.com`.
+### 3. `<Comparison />` — inserted after ticker
+- Section wrapper matching existing padding (`px-4 py-24 md:py-32`).
+- H2: "Everything scattered. Now everything sorted." — reuse existing `font-display text-3xl md:text-4xl` style.
+- Two `motion.div` cards in a `grid md:grid-cols-2 gap-6` using existing `rounded-2xl border border-border bg-card p-6` styles.
+  - Left: `initial={{ x: -60, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }}`.
+  - Right: `initial={{ x: 60, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }}`, adds `ring-1 ring-primary/30 shadow-[0_0_40px_-10px_rgba(42,122,106,0.35)]` and a subtle `animate-glow-pulse` keyframe.
+  - Both: `whileHover={{ y: -6 }}` spring `{ stiffness: 300, damping: 20 }`.
+- Items list: each row is a `motion.li` with `staggerChildren: 0.1`.
+  - Left uses red `XCircle` icon (`text-red-500`) with tiny shake variant (`x: [-2, 2, -2, 0]`).
+  - Right uses `CheckCircle2` (`text-primary`) with bounce (`y: [8, -3, 0]`).
+- All `whileInView` calls use `viewport={{ once: true, margin: '-100px' }}`.
 
-Migration: add `display_name text` to `profiles` if not present (safe `add column if not exists`).
+### 4. `<About />` — inserted between `<Features />` and `<FinalCTA />`
+- Section with centered max-w-3xl content.
+- Title "Built from frustration." reuses the existing `AnimatedLine` word-reveal component.
+- Quote: typewriter — split into chars, `motion.span` per char with staggered `opacity 0 → 1` (~0.02s each) triggered `whileInView`.
+- Founder card:
+  - Warm soft bg (`bg-secondary/60`), `rounded-2xl`, `border-l-[3px] border-primary`, existing border/shadow tokens otherwise.
+  - Left border height animates 0 → 100% via a wrapping `motion.div` with `initial={{ height: 0 }} whileInView={{ height: '100%' }}`.
+  - Oval photo: `<img src="/arun.jpg">`, `w-24 h-32 rounded-[50%] object-cover`, wrapped in `motion.div` with infinite float `y: [0, -6, 0]` over 3s ease.
+  - Name (Arun Sundhar N), role (Founder & Creator of Clario).
+  - LinkedIn: `lucide-react` `Linkedin` icon in a pill button with a `::before` shimmer gradient sweep on hover (CSS keyframe added to styles.css). `target="_blank" rel="noopener noreferrer"`.
+  - Card entrance: `whileInView={{ opacity: 1, scale: 1 }}` from `{ opacity: 0, scale: 0.95 }` after quote.
 
-## 2. GDPR pages
+Note: user must drop `arun.jpg` into `public/`; page will render a broken img otherwise. I will call this out but not add a placeholder.
 
-- `src/routes/privacy.tsx` — public route, full copy from spec, semantic headings, `head()` meta.
-- `src/routes/terms.tsx` — public route, full copy from spec, `head()` meta.
+### 5. Page-level polish
+- **Scroll progress bar**: `motion.div` fixed top, `h-0.5 bg-primary origin-left`, `scaleX={useScroll().scrollYProgress}`. Added inside `LandingPage` root, above `<StickyNav />`.
+- **Initial fade-in**: root wrapper gets `motion.div` with `initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}`.
+- **Hero floating particles**: add 12 absolutely-positioned dots (`w-1 h-1 rounded-full bg-primary/20`) inside Hero's existing `-z-10` background layer with individual Framer Motion drifts (`y: [0, -40, 0], x: [0, 20, 0]`, 8–14s, staggered). Existing hero blobs untouched.
+- **Section parallax**: light `useScroll` + `useTransform` giving each new section a small `y` offset (max ±20px) — applied only to the three new sections, not existing ones.
 
-Both use existing typography classes, no new colors.
+### 6. `src/styles.css` additions
+Append (does not touch existing tokens):
+```
+@keyframes glow-pulse { 0%,100% { box-shadow: 0 0 30px -12px rgba(42,122,106,0.30);} 50% { box-shadow: 0 0 45px -8px rgba(42,122,106,0.50);} }
+.animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+@keyframes shimmer-sweep { 0% { transform: translateX(-120%);} 100% { transform: translateX(120%);} }
+.shimmer-on-hover { position: relative; overflow: hidden; }
+.shimmer-on-hover::before { content:''; position:absolute; inset:0; background:linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%); transform: translateX(-120%); }
+.shimmer-on-hover:hover::before { animation: shimmer-sweep 0.9s ease; }
+```
 
-## 3. Cookie consent banner
+### Files touched
+- `src/routes/index.tsx` — add `AudienceTicker`, `Comparison`, `About` components, mount them in `LandingPage`, add scroll progress + fade-in wrapper, add hero particles, update `TrustBar` copy/animations.
+- `src/styles.css` — append glow-pulse + shimmer keyframes/utilities.
 
-`src/components/cookie-banner.tsx`: fixed bottom, checks `localStorage.getItem('clario-cookie-consent')`; if null, renders banner with copy + Accept/Decline. Both actions write to localStorage and hide. Mount in `src/routes/__root.tsx` inside `RootComponent` so it shows on all routes.
-
-## 4. Landing page `/` (animated, public)
-
-Rewrite `src/routes/index.tsx`:
-- Keep `beforeLoad` redirect: signed-in → `/dashboard`. Signed-out → render landing component (remove the current `throw redirect` to `/auth`).
-- Install `framer-motion` (already used in Transactions per earlier phases — verify; add if missing).
-
-Sections built as small components in `src/components/landing/`:
-- **StickyNav** — logo + Sign in / Start free; scroll-direction hide/show via `useScroll` + `useMotionValueEvent`; backdrop blur once `scrollY > 20`.
-- **Hero** — 3-line headline with per-word stagger (`whileInView` + variants), subtitle fade-up, CTA scale-in. Below: mocked dashboard card (static styled div with fake ₹45,200 / 12 tasks / budget bars / AI briefing) with parallax via `useScroll` + `useTransform` on `y`.
-- **TrustBar** — pill row with dot separators, slide from left.
-- **HowItWorks** — 3 numbered steps with an SVG connecting line animated via `pathLength` on `whileInView`.
-- **Features** — 4 cards, staggered `whileInView`, hover uses Tailwind `hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(14,124,102,0.35)]`.
-- **FinalCTA** — dark emerald bg (`#1a3a2a`) with subtle SVG grid pattern, zoom-in on view.
-- **Footer** — logo + tagline, links to `/privacy`, `/terms`, mailto, copyright.
-
-All motion uses `viewport={{ once: true }}`. `html { scroll-behavior: smooth }` added to `styles.css` if not present.
-
-## 5. Non-goals / guardrails
-
-- No changes to Dashboard, Transactions, Budgets, Planner, Insights, Auth pages.
-- No changes to color tokens, fonts, or shared UI primitives.
-- Existing FAB / sheets untouched.
-
----
-
-## Technical notes
-
-- Server functions: profile update, export, delete — all `.middleware([requireSupabaseAuth])`. Delete uses dynamic `import('@/integrations/supabase/client.server')` inside handler for admin auth deletion.
-- Landing route stays `ssr: false` so the auth-based redirect works without leaking sessions to SSR.
-- `framer-motion` — check `package.json`; `bun add framer-motion` if absent.
-- Migration only if `profiles.display_name` missing.
-
-Ready to build on approval.
+### Out of scope
+Hero (except added particles in existing bg layer), Features, Final CTA, Footer, Sticky Nav, color tokens, fonts, existing card/shadow/radius styles.
