@@ -15,6 +15,8 @@ import {
   CalendarCheck,
   Sparkles,
   CheckCircle2,
+  XCircle,
+  Linkedin,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const { scrollYProgress } = useScroll();
 
   useEffect(() => {
     let mounted = true;
@@ -60,15 +63,27 @@ function LandingPage() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground scroll-smooth">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-background text-foreground scroll-smooth"
+    >
+      <motion.div
+        style={{ scaleX: scrollYProgress }}
+        className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary"
+      />
       <StickyNav />
       <Hero />
       <TrustBar />
+      <AudienceTicker />
+      <Comparison />
       <HowItWorks />
       <Features />
+      <About />
       <FinalCTA />
       <Footer />
-    </div>
+    </motion.div>
   );
 }
 
@@ -139,6 +154,31 @@ function AnimatedLine({ text, delay = 0 }: { text: string; delay?: number }) {
   );
 }
 
+function HeroParticles() {
+  // Deterministic pseudo-random positions
+  const particles = Array.from({ length: 14 }).map((_, i) => {
+    const left = (i * 37) % 100;
+    const top = (i * 53) % 100;
+    const dur = 8 + (i % 6);
+    const dx = ((i % 4) - 2) * 15;
+    const dy = -20 - (i % 5) * 8;
+    return { left, top, dur, dx, dy, i };
+  });
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {particles.map((p) => (
+        <motion.span
+          key={p.i}
+          className="absolute h-1 w-1 rounded-full bg-primary/30"
+          style={{ left: `${p.left}%`, top: `${p.top}%` }}
+          animate={{ y: [0, p.dy, 0], x: [0, p.dx, 0], opacity: [0.2, 0.6, 0.2] }}
+          transition={{ duration: p.dur, repeat: Infinity, ease: "easeInOut", delay: p.i * 0.3 }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function Hero() {
   const { scrollY } = useScroll();
   const mockupY = useTransform(scrollY, [0, 600], [0, -80]);
@@ -148,6 +188,7 @@ function Hero() {
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
+        <HeroParticles />
       </div>
 
       <div className="mx-auto max-w-4xl text-center">
@@ -273,23 +314,204 @@ function StatMock({
 /* ---------------- Trust ---------------- */
 
 function TrustBar() {
-  const items = ["Free to use", "AI-powered", "PWA installable", "GDPR compliant", "Secure"];
+  const items = [
+    "Free to use",
+    "Made in India 🇮🇳",
+    "AI-powered",
+    "PWA installable",
+    "GDPR compliant",
+    "Secure",
+  ];
   return (
     <section className="border-y border-border bg-secondary/40 py-6">
-      <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 0.6 }}
-        className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 text-xs text-muted-foreground md:text-sm"
-      >
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 text-xs text-muted-foreground md:text-sm">
         {items.map((it, i) => (
-          <span key={it} className="flex items-center gap-3">
-            <span>{it}</span>
+          <motion.span
+            key={it}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: i * 0.06 }}
+            className="flex items-center gap-3"
+          >
+            {it.includes("🇮🇳") ? (
+              <span>
+                Made in India{" "}
+                <motion.span
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.35, 1] }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="inline-block"
+                >
+                  🇮🇳
+                </motion.span>
+              </span>
+            ) : (
+              <span>{it}</span>
+            )}
             {i < items.length - 1 && <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />}
+          </motion.span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Audience Ticker ---------------- */
+
+function AudienceTicker() {
+  const audiences = [
+    "WORKING PROFESSIONALS",
+    "FREELANCERS",
+    "STUDENTS",
+    "ENTREPRENEURS",
+    "STARTUP FOUNDERS",
+    "REMOTE WORKERS",
+    "SMALL BUSINESS",
+    "CONTENT CREATORS",
+    "BUDGET PLANNERS",
+    "GOAL SETTERS",
+  ];
+  const [paused, setPaused] = useState(false);
+  const loop = [...audiences, ...audiences];
+
+  return (
+    <section
+      className="relative overflow-hidden border-b border-border bg-background py-5"
+      style={{
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        maskImage:
+          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+      }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <motion.div
+        className="flex whitespace-nowrap"
+        animate={{ x: paused ? undefined : ["0%", "-50%"] }}
+        transition={{ duration: 45, ease: "linear", repeat: Infinity }}
+      >
+        {loop.map((word, i) => (
+          <span
+            key={i}
+            className="mx-6 text-xs uppercase tracking-[0.2em] text-muted-foreground md:text-sm"
+          >
+            {word} <span className="ml-6 text-muted-foreground/40">·</span>
           </span>
         ))}
       </motion.div>
+    </section>
+  );
+}
+
+/* ---------------- Comparison ---------------- */
+
+const listContainer: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+};
+
+const shakeItem: Variants = {
+  hidden: { opacity: 0, x: -10 },
+  show: { opacity: 1, x: [-6, 6, -3, 0], transition: { duration: 0.5 } },
+};
+
+const bounceItem: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: [8, -3, 0], transition: { duration: 0.5 } },
+};
+
+function Comparison() {
+  const beforeItems = [
+    "Multiple apps, zero clarity",
+    "No idea where money goes",
+    "Tasks and finances never connected",
+    "End of month surprises",
+    "Feels overwhelming",
+  ];
+  const afterItems = [
+    "One app for money and time",
+    "AI that explains your finances",
+    "Tasks connected to your goals",
+    "Always know where you stand",
+    "Feels effortless",
+  ];
+
+  return (
+    <section className="px-4 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center font-display text-3xl font-bold tracking-tight md:text-4xl"
+        >
+          Everything scattered. Now everything sorted.
+        </motion.h2>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {/* Before */}
+          <motion.div
+            initial={{ opacity: 0, x: -60 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
+            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+          >
+            <h3 className="font-display text-lg font-semibold text-foreground">Before Clario</h3>
+            <motion.ul
+              variants={listContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-100px" }}
+              className="mt-5 space-y-3"
+            >
+              {beforeItems.map((it) => (
+                <motion.li
+                  key={it}
+                  variants={shakeItem}
+                  className="flex items-start gap-3 text-sm text-muted-foreground"
+                >
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                  <span>{it}</span>
+                </motion.li>
+              ))}
+            </motion.ul>
+          </motion.div>
+
+          {/* After */}
+          <motion.div
+            initial={{ opacity: 0, x: 60 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
+            className="animate-glow-pulse rounded-2xl border border-primary/30 bg-card p-6 ring-1 ring-primary/20"
+          >
+            <h3 className="font-display text-lg font-semibold text-primary">With Clario</h3>
+            <motion.ul
+              variants={listContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-100px" }}
+              className="mt-5 space-y-3"
+            >
+              {afterItems.map((it) => (
+                <motion.li
+                  key={it}
+                  variants={bounceItem}
+                  className="flex items-start gap-3 text-sm text-foreground"
+                >
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{it}</span>
+                </motion.li>
+              ))}
+            </motion.ul>
+          </motion.div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -418,6 +640,95 @@ function Features() {
             );
           })}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- About ---------------- */
+
+function Typewriter({ text }: { text: string }) {
+  const chars = Array.from(text);
+  return (
+    <motion.span
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ staggerChildren: 0.018 }}
+      className="inline"
+    >
+      {chars.map((c, i) => (
+        <motion.span
+          key={i}
+          variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
+          transition={{ duration: 0.02 }}
+        >
+          {c}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+}
+
+function About() {
+  return (
+    <section className="px-4 py-24 md:py-32">
+      <div className="mx-auto max-w-3xl text-center">
+        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+          <AnimatedLine text="Built from frustration." />
+        </h2>
+
+        <p className="mx-auto mt-6 max-w-2xl text-base italic text-muted-foreground md:text-lg">
+          "
+          <Typewriter text="I got tired of switching between apps just to understand my own finances. So I built Clario — one app that connects your money and your day, with AI that ties it all together." />
+          "
+        </p>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="relative mx-auto mt-12 max-w-md overflow-hidden rounded-2xl border border-border bg-secondary/50 p-6 text-left shadow-sm"
+        >
+          <motion.div
+            initial={{ height: 0 }}
+            whileInView={{ height: "100%" }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            className="absolute left-0 top-0 w-[3px] bg-primary"
+          />
+          <div className="flex items-center gap-5 pl-3">
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="shrink-0"
+            >
+              <img
+                src="/arun.jpg"
+                alt="Arun Sundhar N"
+                className="h-32 w-24 rounded-[50%] border border-border object-cover shadow-md"
+              />
+            </motion.div>
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-lg font-semibold text-foreground">
+                Arun Sundhar N
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                Founder & Creator of Clario
+              </div>
+              <a
+                href="https://linkedin.com/in/arun-sundhar-n-6aba50249"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shimmer-on-hover mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <Linkedin className="h-3.5 w-3.5" />
+                Connect on LinkedIn
+              </a>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
