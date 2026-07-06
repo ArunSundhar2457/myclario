@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
@@ -17,23 +18,39 @@ import {
   Wallet,
   TrendingUp,
   TrendingDown,
-  PiggyBank,
   Sparkles,
   CheckCircle2,
   Circle,
+  AlertTriangle,
 } from "lucide-react";
-import { useAppStore, formatMoney } from "@/lib/app-store";
+import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
 import { getDailyBriefing } from "@/lib/briefing.functions";
-import { listTodayTodos, toggleTodo } from "@/lib/todos.functions";
+import { toggleTodo } from "@/lib/todos.functions";
+import {
+  getSnapshot,
+  getSpendingTrend,
+  getCategoryBreakdown,
+  getBudgetAlerts,
+  getTodayTodos,
+} from "@/lib/dashboard.functions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Clario" }] }),
   component: Dashboard,
 });
+
+type Range = "month" | "all";
 
 function monthLabel(ym: string): string {
   const [y, m] = ym.split("-").map(Number);
@@ -57,14 +74,15 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <Header />
-      <SnapshotCards currency={currency} />
+      <SnapshotSection currency={currency} />
+      <BudgetAlertStrip currency={currency} />
       <div className="grid gap-5 lg:grid-cols-2">
         <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
         <TasksCard />
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
         <SpendingTrendCard currency={currency} />
-        <CategoryDonutCard />
+        <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
       </div>
     </div>
   );
@@ -87,9 +105,10 @@ type SnapshotCardProps = {
   icon: React.ComponentType<{ className?: string }>;
   tone: "primary" | "success" | "destructive" | "accent";
   delay: number;
+  loading?: boolean;
 };
 
-function SnapshotCard({ label, value, icon: Icon, tone, delay }: SnapshotCardProps) {
+function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: SnapshotCardProps) {
   const toneBg: Record<SnapshotCardProps["tone"], string> = {
     primary: "bg-primary-soft text-primary",
     success: "bg-[color-mix(in_oklab,var(--success)_18%,var(--background))] text-success",
@@ -113,27 +132,108 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay }: SnapshotCardPro
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="mt-3 font-display text-2xl font-semibold tabular-nums tracking-tight">
-        {value}
-      </div>
+      {loading ? (
+        <Skeleton className="mt-3 h-8 w-24" />
+      ) : (
+        <div className="mt-3 font-display text-2xl font-semibold tabular-nums tracking-tight">
+          {value}
+        </div>
+      )}
     </motion.div>
   );
 }
 
-function SnapshotCards({ currency }: { currency: "INR" | "USD" | "EUR" | "GBP" }) {
-  // Placeholder zeros until Transactions ships
-  const items: Array<Omit<SnapshotCardProps, "delay">> = [
-    { label: "Income", value: formatMoney(0, currency), icon: TrendingUp, tone: "success" },
-    { label: "Spent", value: formatMoney(0, currency), icon: TrendingDown, tone: "destructive" },
-    { label: "Saved", value: formatMoney(0, currency), icon: PiggyBank, tone: "primary" },
-    { label: "Balance", value: formatMoney(0, currency), icon: Wallet, tone: "accent" },
-  ];
+function SnapshotSection({ currency }: { currency: Currency }) {
+  const [range, setRange] = useState<Range>("month");
+  const snapshotFn = useServerFn(getSnapshot);
+  const { data, isLoading } = useQuery({
+    queryKey: ["snapshot", range],
+    queryFn: () => snapshotFn({ data: { range } }),
+  });
+
+  const income = data?.income ?? 0;
+  const spent = data?.spent ?? 0;
+  const balance = data?.balance ?? 0;
+  const balanceTone: SnapshotCardProps["tone"] = balance >= 0 ? "success" : "destructive";
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-      {items.map((it, i) => (
-        <SnapshotCard key={it.label} {...it} delay={i * 0.05} />
-      ))}
-    </div>
+    <section className="space-y-3">
+      <div className="flex justify-end">
+        <Select value={range} onValueChange={(v) => setRange(v as Range)}>
+          <SelectTrigger className="h-8 w-[130px] border-border/60 bg-transparent text-xs text-muted-foreground">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="month">This Month</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <SnapshotCard
+          label="Income"
+          value={formatMoney(income, currency)}
+          icon={TrendingUp}
+          tone="success"
+          delay={0}
+          loading={isLoading}
+        />
+        <SnapshotCard
+          label="Spent"
+          value={formatMoney(spent, currency)}
+          icon={TrendingDown}
+          tone="destructive"
+          delay={0.05}
+          loading={isLoading}
+        />
+        <SnapshotCard
+          label="Balance"
+          value={formatMoney(balance, currency)}
+          icon={Wallet}
+          tone={balanceTone}
+          delay={0.1}
+          loading={isLoading}
+        />
+      </div>
+    </section>
+  );
+}
+
+function BudgetAlertStrip({ currency }: { currency: Currency }) {
+  const fn = useServerFn(getBudgetAlerts);
+  const { data, isLoading } = useQuery({
+    queryKey: ["budget-alerts"],
+    queryFn: () => fn(),
+  });
+  if (isLoading || !data || data.length === 0) return null;
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="rounded-2xl border border-border bg-card p-4 shadow-card"
+    >
+      <div className="flex items-center gap-2 text-destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <span className="text-xs font-semibold uppercase tracking-wide">
+          Budget alerts
+        </span>
+      </div>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {data.map((b) => (
+          <li
+            key={b.id}
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs"
+          >
+            <span className="font-medium text-foreground">{b.category}</span>
+            <span className="ml-2 text-destructive">{Math.round(b.percent_used)}% used</span>
+            <span className="ml-2 tabular-nums text-muted-foreground">
+              {formatMoney(b.spent, currency)} / {formatMoney(b.monthly_limit, currency)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </motion.section>
   );
 }
 
@@ -185,7 +285,7 @@ function BriefingCard({
 
 function TasksCard() {
   const queryClient = useQueryClient();
-  const listFn = useServerFn(listTodayTodos);
+  const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
   const { data, isLoading } = useQuery({
     queryKey: ["today-todos"],
@@ -195,9 +295,30 @@ function TasksCard() {
   const mutate = useMutation({
     mutationFn: (vars: { id: string; is_completed: boolean }) =>
       toggleFn({ data: vars }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["today-todos"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: ["today-todos"] });
+      const prev = queryClient.getQueryData<{ rows: Array<{ id: string; is_completed: boolean }>; total: number }>(
+        ["today-todos"],
+      );
+      if (prev) {
+        queryClient.setQueryData(["today-todos"], {
+          ...prev,
+          rows: prev.rows.map((r) =>
+            r.id === vars.id ? { ...r, is_completed: vars.is_completed } : r,
+          ),
+        });
+      }
+      return { prev };
+    },
+    onError: (e: Error, _v, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["today-todos"], ctx.prev);
+      toast.error(e.message);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["today-todos"] }),
   });
+
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
 
   return (
     <motion.section
@@ -210,13 +331,8 @@ function TasksCard() {
         <h2 className="font-display text-lg font-semibold tracking-tight">
           Today's tasks
         </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled
-          className="text-xs text-muted-foreground"
-        >
-          View all
+        <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground">
+          <Link to="/planner">View all</Link>
         </Button>
       </div>
       {isLoading ? (
@@ -225,47 +341,54 @@ function TasksCard() {
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
-      ) : !data || data.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="mt-4 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-8 text-center">
           <Circle className="h-6 w-6 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No tasks yet. The Planner ships next.
-          </p>
+          <p className="text-sm text-muted-foreground">No tasks due today 🎉</p>
         </div>
       ) : (
-        <ul className="mt-3 divide-y divide-border">
-          {data.map((t) => (
-            <li key={t.id} className="flex items-center gap-3 py-2.5">
-              <Checkbox
-                checked={t.is_completed}
-                onCheckedChange={(c) =>
-                  mutate.mutate({ id: t.id, is_completed: c === true })
-                }
-              />
-              <span
-                className={
-                  t.is_completed
-                    ? "flex-1 text-sm text-muted-foreground line-through"
-                    : "flex-1 text-sm text-foreground"
-                }
-              >
-                {t.title}
-              </span>
-              {t.is_completed && <CheckCircle2 className="h-4 w-4 text-success" />}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="mt-3 divide-y divide-border">
+            {rows.map((t) => (
+              <li key={t.id} className="flex items-center gap-3 py-2.5">
+                <Checkbox
+                  checked={t.is_completed}
+                  onCheckedChange={(c) =>
+                    mutate.mutate({ id: t.id, is_completed: c === true })
+                  }
+                />
+                <span
+                  className={
+                    t.is_completed
+                      ? "flex-1 text-sm text-muted-foreground line-through"
+                      : "flex-1 text-sm text-foreground"
+                  }
+                >
+                  {t.title}
+                </span>
+                {t.is_completed && <CheckCircle2 className="h-4 w-4 text-success" />}
+              </li>
+            ))}
+          </ul>
+          {total > rows.length && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              +{total - rows.length} more due today
+            </p>
+          )}
+        </>
       )}
     </motion.section>
   );
 }
 
-function SpendingTrendCard({ currency }: { currency: "INR" | "USD" | "EUR" | "GBP" }) {
-  // Placeholder series until Transactions ships
-  const data = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    spent: 0,
-  }));
+function SpendingTrendCard({ currency }: { currency: Currency }) {
+  const fn = useServerFn(getSpendingTrend);
+  const { data, isLoading } = useQuery({
+    queryKey: ["spending-trend"],
+    queryFn: () => fn(),
+  });
+  const chartData = data ?? [];
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -278,47 +401,87 @@ function SpendingTrendCard({ currency }: { currency: "INR" | "USD" | "EUR" | "GB
       </h2>
       <p className="text-xs text-muted-foreground">Last 30 days</p>
       <div className="mt-4 h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="day"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-            />
-            <YAxis hide />
-            <Tooltip
-              contentStyle={{
-                background: "var(--popover)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              formatter={(v: number) => formatMoney(v, currency)}
-            />
-            <Area
-              type="monotone"
-              dataKey="spent"
-              stroke="var(--primary)"
-              strokeWidth={2}
-              fill="url(#spendFill)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <Skeleton className="h-full w-full" />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--success)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="var(--success)" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                tickFormatter={(v: string) => {
+                  const [, m, d] = v.split("-");
+                  return `${m}/${d}`;
+                }}
+                minTickGap={24}
+              />
+              <YAxis hide />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                formatter={(v: number) => formatMoney(v, currency)}
+              />
+              <Area
+                type="monotone"
+                dataKey="income"
+                stroke="var(--success)"
+                strokeWidth={2}
+                fill="url(#incomeFill)"
+              />
+              <Area
+                type="monotone"
+                dataKey="spent"
+                stroke="var(--primary)"
+                strokeWidth={2}
+                fill="url(#spendFill)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </motion.section>
   );
 }
 
-function CategoryDonutCard() {
-  const data = [{ name: "No data yet", value: 1 }];
-  const colors = ["var(--muted)"];
+const DONUT_COLORS = [
+  "var(--primary)",
+  "var(--success)",
+  "var(--accent)",
+  "var(--destructive)",
+  "var(--muted-foreground)",
+];
+
+function CategoryDonutCard({
+  selectedMonth,
+  currency,
+}: {
+  selectedMonth: string;
+  currency: Currency;
+}) {
+  const fn = useServerFn(getCategoryBreakdown);
+  const { data, isLoading } = useQuery({
+    queryKey: ["category-breakdown", selectedMonth],
+    queryFn: () => fn({ data: { month: selectedMonth } }),
+  });
+  const rows = data ?? [];
+  const hasData = rows.length > 0;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -326,30 +489,49 @@ function CategoryDonutCard() {
       transition={{ duration: 0.4, delay: 0.3 }}
       className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
-      <h2 className="font-display text-lg font-semibold tracking-tight">
-        By category
-      </h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight">By category</h2>
       <p className="text-xs text-muted-foreground">This month</p>
       <div className="mt-4 h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              innerRadius={48}
-              outerRadius={75}
-              stroke="none"
-            >
-              {data.map((_, i) => (
-                <Cell key={i} fill={colors[i % colors.length]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <Skeleton className="h-full w-full" />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={hasData ? rows : [{ category: "No data yet", total: 1 }]}
+                dataKey="total"
+                nameKey="category"
+                innerRadius={48}
+                outerRadius={75}
+                stroke="none"
+              >
+                {(hasData ? rows : [{ category: "empty", total: 1 }]).map((_, i) => (
+                  <Cell
+                    key={i}
+                    fill={hasData ? DONUT_COLORS[i % DONUT_COLORS.length] : "var(--muted)"}
+                  />
+                ))}
+              </Pie>
+              {hasData && (
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number) => formatMoney(v, currency)}
+                />
+              )}
+            </PieChart>
+          </ResponsiveContainer>
+        )}
       </div>
-      <p className="text-center text-xs text-muted-foreground">
-        Add transactions to see your category mix.
-      </p>
+      {!isLoading && !hasData && (
+        <p className="text-center text-xs text-muted-foreground">
+          Add transactions to see your category mix.
+        </p>
+      )}
     </motion.section>
   );
 }
