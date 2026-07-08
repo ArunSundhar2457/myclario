@@ -90,6 +90,43 @@ export const createTransaction = createServerFn({ method: "POST" })
     return { ...row, amount: Number(row.amount) };
   });
 
+const updateSchema = z.object({
+  kind: kindSchema,
+  id: z.string().uuid(),
+  amount: z.number().positive(),
+  category: z.string().min(1),
+  description: z.string().max(500).optional().nullable(),
+  occurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  is_recurring: z.boolean().default(false),
+  recurrence: recurrenceSchema,
+});
+
+export const updateTransaction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => {
+    const parsed = updateSchema.parse(d);
+    if (parsed.is_recurring && !parsed.recurrence) {
+      throw new Error("Recurrence required for recurring transactions");
+    }
+    return parsed;
+  })
+  .handler(async ({ data, context }) => {
+    const table = tableFor(data.kind);
+    const { error } = await context.supabase
+      .from(table)
+      .update({
+        amount: data.amount,
+        category: data.category,
+        description: data.description ?? null,
+        occurred_on: data.occurred_on,
+        is_recurring: data.is_recurring,
+        recurrence: data.is_recurring ? (data.recurrence ?? null) : null,
+      })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const deleteTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

@@ -80,6 +80,25 @@ export const createBudget = createServerFn({ method: "POST" })
     return { ...row, monthly_limit: Number(row.monthly_limit), spent: 0 };
   });
 
+export const updateBudget = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        monthly_limit: z.number().positive(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("budgets")
+      .update({ monthly_limit: data.monthly_limit })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const deleteBudget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
