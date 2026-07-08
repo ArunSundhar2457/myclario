@@ -328,27 +328,30 @@ function AddTaskSheet({
   const targetDate = editing?.due_date ?? date;
 
   const save = useMutation({
-    mutationFn: () =>
-      isEdit && editing
-        ? updateFn({
-            data: {
-              id: editing.id,
-              title: title.trim(),
-              notes: notes.trim() || null,
-              due_date: targetDate,
-              due_time: time || null,
-              priority,
-            },
-          })
-        : createFn({
-            data: {
-              title: title.trim(),
-              notes: notes.trim() || null,
-              due_date: date,
-              due_time: time || null,
-              priority,
-            },
-          }),
+    mutationFn: async () => {
+      if (isEdit && editing) {
+        await updateFn({
+          data: {
+            id: editing.id,
+            title: title.trim(),
+            notes: notes.trim() || null,
+            due_date: targetDate,
+            due_time: time || null,
+            priority,
+          },
+        });
+      } else {
+        await createFn({
+          data: {
+            title: title.trim(),
+            notes: notes.trim() || null,
+            due_date: date,
+            due_time: time || null,
+            priority,
+          },
+        });
+      }
+    },
     onSuccess: () => {
       toast.success(isEdit ? "Task updated" : "Task added");
       onOpenChange(false);
