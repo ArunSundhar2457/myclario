@@ -88,6 +88,7 @@ function TransactionsPage() {
   const navigate = Route.useNavigate();
   const { currency } = useAppStore();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<TxRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filters = {
@@ -145,7 +146,14 @@ function TransactionsPage() {
         currency={currency}
         rows={data?.rows ?? []}
         loading={isLoading}
-        onEmptyCta={() => setSheetOpen(true)}
+        onEmptyCta={() => {
+          setEditing(null);
+          setSheetOpen(true);
+        }}
+        onEdit={(row) => {
+          setEditing(row);
+          setSheetOpen(true);
+        }}
         queryKey={queryKey}
       />
 
@@ -179,7 +187,10 @@ function TransactionsPage() {
 
       <Button
         size="icon"
-        onClick={() => setSheetOpen(true)}
+        onClick={() => {
+          setEditing(null);
+          setSheetOpen(true);
+        }}
         className="fixed bottom-24 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
         aria-label="Add transaction"
       >
@@ -188,9 +199,13 @@ function TransactionsPage() {
 
       <AddTransactionSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditing(null);
+        }}
         defaultKind={search.kind}
         currency={currency}
+        editing={editing}
       />
     </div>
   );
