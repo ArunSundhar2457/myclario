@@ -285,7 +285,7 @@ function TaskRow({
   );
 }
 
-function AddTaskSheet({
+export function AddTaskSheet({
   open,
   onOpenChange,
   date,
