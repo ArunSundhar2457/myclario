@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
-import { Plus, Trash2, PiggyBank } from "lucide-react";
+import { Plus, Trash2, PiggyBank, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   listBudgets,
   listAvailableCategories,
   createBudget,
+  updateBudget,
   deleteBudget,
 } from "@/lib/budgets.functions";
 
