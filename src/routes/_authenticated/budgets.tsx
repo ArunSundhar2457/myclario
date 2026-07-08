@@ -245,12 +245,14 @@ function BudgetCard({
   limit,
   spent,
   currency,
+  onEdit,
 }: {
   id: string;
   category: string;
   limit: number;
   spent: number;
   currency: "INR" | "USD" | "EUR" | "GBP";
+  onEdit: () => void;
 }) {
   const Icon = categoryIcon(category);
   const pct = limit > 0 ? (spent / limit) * 100 : 0;
@@ -331,7 +333,10 @@ function BudgetCard({
         of {formatMoney(limit, currency)} · {Math.round(pct)}%
       </p>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-1">
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          <Pencil className="mr-1 h-4 w-4" /> Edit
+        </Button>
         <Button variant="ghost" size="sm" onClick={() => del.mutate()} disabled={del.isPending}>
           <Trash2 className="mr-1 h-4 w-4" /> Delete
         </Button>
