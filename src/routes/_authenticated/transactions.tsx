@@ -570,11 +570,13 @@ function AddTransactionSheet({
   onOpenChange,
   defaultKind,
   currency,
+  editing,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   defaultKind: Kind;
   currency: Currency;
+  editing: TxRow | null;
 }) {
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [amount, setAmount] = useState<string>("");
@@ -584,59 +586,50 @@ function AddTransactionSheet({
   const [recurring, setRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isEdit = !!editing;
 
-  // sync kind when opening
+  // sync when opening
   useMemo(() => {
     if (open) {
-      setKind(defaultKind);
-      setCategory("");
+      if (editing) {
+        setKind(defaultKind);
+        setAmount(String(editing.amount));
+        setCategory(editing.category);
+        setDescription(editing.description ?? "");
+        setDate(new Date(editing.occurred_on + "T00:00:00"));
+        setRecurring(editing.is_recurring);
+        setRecurrence((editing.recurrence as "daily" | "weekly" | "monthly") ?? "monthly");
+      } else {
+        setKind(defaultKind);
+        setAmount("");
+        setCategory("");
+        setDescription("");
+        setDate(new Date());
+        setRecurring(false);
+        setRecurrence("monthly");
+      }
       setErrors({});
     }
-  }, [open, defaultKind]);
+  }, [open, defaultKind, editing]);
 
   const cats = kind === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createTransaction);
-  const create = useMutation({
-    mutationFn: (vars: { data: z.infer<typeof formSchema> }) => createFn(vars),
-    onMutate: async (vars: { data: z.infer<typeof formSchema> }) => {
-      const data = vars.data;
-      const key = ["transactions"];
-      await queryClient.cancelQueries({ queryKey: key });
-      // optimistic insertion into current page-1 list for this kind
-      const optimistic: TxRow = {
-        id: `temp-${Date.now()}`,
-        amount: data.amount,
-        category: data.category,
-        description: data.description ?? null,
-        occurred_on: data.occurred_on,
-        is_recurring: data.is_recurring,
-        recurrence: data.recurrence ?? null,
-      };
-      const snaps = queryClient.getQueriesData<{ rows: TxRow[]; total: number }>({ queryKey: key });
-      for (const [k, v] of snaps) {
-        const kf = (k as unknown[])[1] as { kind: Kind; page: number } | undefined;
-        if (v && kf && kf.kind === data.kind && kf.page === 1) {
-          queryClient.setQueryData(k, {
-            rows: [optimistic, ...v.rows].slice(0, PAGE_SIZE),
-            total: v.total + 1,
-          });
-        }
+  const updateFn = useServerFn(updateTransaction);
+  const save = useMutation({
+    mutationFn: async (vars: { data: z.infer<typeof formSchema> }) => {
+      if (isEdit && editing) {
+        await updateFn({ data: { ...vars.data, id: editing.id } });
+      } else {
+        await createFn(vars);
       }
-      return { snaps };
     },
-    onError: (e: Error, _v, ctx) => {
-      if (ctx?.snaps) for (const [k, v] of ctx.snaps) queryClient.setQueryData(k, v);
-      toast.error(e.message);
-    },
+    onError: (e: Error) => toast.error(e.message),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["transactions"] }),
     onSuccess: () => {
-      toast.success("Saved");
+      toast.success(isEdit ? "Updated" : "Saved");
       onOpenChange(false);
-      setAmount("");
-      setDescription("");
-      setRecurring(false);
     },
   });
 
