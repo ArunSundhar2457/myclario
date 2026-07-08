@@ -652,15 +652,15 @@ function AddTransactionSheet({
       return;
     }
     setErrors({});
-    create.mutate({ data: parsed.data });
+    save.mutate({ data: parsed.data });
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>New transaction</SheetTitle>
-          <SheetDescription>Log money in or out.</SheetDescription>
+          <SheetTitle>{isEdit ? "Edit transaction" : "New transaction"}</SheetTitle>
+          <SheetDescription>{isEdit ? "Update this entry." : "Log money in or out."}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-5 space-y-5">
@@ -801,9 +801,9 @@ function AddTransactionSheet({
             className="w-full"
             size="lg"
             onClick={submit}
-            disabled={create.isPending}
+            disabled={save.isPending}
           >
-            {create.isPending ? "Saving…" : "Save"}
+            {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Save"}
           </Button>
         </div>
       </SheetContent>
