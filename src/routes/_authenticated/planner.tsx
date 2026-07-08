@@ -52,6 +52,7 @@ function isoDate(d: Date) {
 function PlannerPage() {
   const [selected, setSelected] = useState<Date>(new Date());
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<TodoRow | null>(null);
   const selectedIso = isoDate(selected);
   const year = selected.getFullYear();
   const month = selected.getMonth() + 1;
@@ -139,7 +140,17 @@ function PlannerPage() {
           ) : (
             <ul className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
               {dayRows.map((t) => (
-                <TaskRow key={t.id} row={t} selectedIso={selectedIso} year={year} month={month} />
+                <TaskRow
+                  key={t.id}
+                  row={t}
+                  selectedIso={selectedIso}
+                  year={year}
+                  month={month}
+                  onEdit={(row) => {
+                    setEditingTodo(row);
+                    setSheetOpen(true);
+                  }}
+                />
               ))}
             </ul>
           )}
@@ -148,7 +159,10 @@ function PlannerPage() {
 
       <Button
         size="icon"
-        onClick={() => setSheetOpen(true)}
+        onClick={() => {
+          setEditingTodo(null);
+          setSheetOpen(true);
+        }}
         className="fixed bottom-24 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
         aria-label="Add task"
       >
@@ -157,10 +171,14 @@ function PlannerPage() {
 
       <AddTaskSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditingTodo(null);
+        }}
         date={selectedIso}
         year={year}
         month={month}
+        editing={editingTodo}
       />
     </div>
   );
@@ -187,11 +205,13 @@ function TaskRow({
   selectedIso,
   year,
   month,
+  onEdit,
 }: {
   row: TodoRow;
   selectedIso: string;
   year: number;
   month: number;
+  onEdit: (row: TodoRow) => void;
 }) {
   const queryClient = useQueryClient();
   const toggleFn = useServerFn(togglePlannerTodo);
@@ -245,6 +265,14 @@ function TaskRow({
       >
         {pr}
       </span>
+      <button
+        type="button"
+        onClick={() => onEdit(row)}
+        className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+        aria-label="Edit task"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
       <button
         type="button"
         onClick={() => del.mutate()}
