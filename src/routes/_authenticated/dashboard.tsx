@@ -307,6 +307,8 @@ function TasksCard() {
   const queryClient = useQueryClient();
   const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
+  const [editing, setEditing] = useState<TodoRow | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["today-todos"],
     queryFn: () => listFn(),
@@ -339,6 +341,10 @@ function TasksCard() {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const iso = `${y}-${String(m).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
     <motion.section
@@ -387,6 +393,25 @@ function TasksCard() {
                   {t.title}
                 </span>
                 {t.is_completed && <CheckCircle2 className="h-4 w-4 text-success" />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing({
+                      id: t.id,
+                      title: t.title,
+                      notes: t.notes ?? null,
+                      is_completed: t.is_completed,
+                      priority: t.priority,
+                      due_date: t.due_date ?? iso,
+                      due_time: t.due_time ?? null,
+                    });
+                    setSheetOpen(true);
+                  }}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  aria-label="Edit task"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
               </li>
             ))}
           </ul>
@@ -397,6 +422,17 @@ function TasksCard() {
           )}
         </>
       )}
+      <AddTaskSheet
+        open={sheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditing(null);
+        }}
+        date={iso}
+        year={y}
+        month={m}
+        editing={editing}
+      />
     </motion.section>
   );
 }
