@@ -5,6 +5,7 @@ import { Sparkles, RefreshCcw, TrendingUp, PiggyBank, Lightbulb, Wallet } from "
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/lib/app-store";
 import { generateInsights, quickTip, type Insights } from "@/lib/insights.functions";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -24,15 +25,17 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
+  const { currency } = useAppStore();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
 
   const generate = useMutation({
-    mutationFn: () => genFn({}),
+    mutationFn: () => genFn({ data: { currency } }),
   });
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
+
 
   const insights = generate.data as Insights | undefined;
 

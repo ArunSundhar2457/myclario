@@ -114,22 +114,22 @@ export const generateInsights = createServerFn({ method: "POST" })
       thisMonth:
         totalIncome === 0 && totalExpenses === 0
           ? "No activity yet this month — add a few transactions and Clario will get to work."
-          : `You earned ${totalIncome.toFixed(0)} and spent ${totalExpenses.toFixed(0)} so far. Net ${net.toFixed(0)}.`,
+          : `You earned ${fmt(totalIncome, currency)} and spent ${fmt(totalExpenses, currency)} so far. Net ${fmt(net, currency)}.`,
       whereMoneyWent: Object.entries(spentByCat)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([category, amt]) => ({
-          category,
+          category: normalizeCat(category),
           pct: totalExpenses > 0 ? Math.round((amt / totalExpenses) * 100) : 0,
-          note: `${amt.toFixed(0)} spent`,
+          note: `${fmt(amt, currency)} spent`,
         })),
       budgetHealth: budgets.map((b) => {
         const pct = b.limit > 0 ? b.spent / b.limit : 0;
         const status = pct >= 1 ? "over" : pct >= 0.8 ? "warning" : "on_track";
         return {
-          category: b.category,
+          category: normalizeCat(b.category),
           status,
-          note: `${b.spent.toFixed(0)} of ${b.limit.toFixed(0)}`,
+          note: `${fmt(b.spent, currency)} of ${fmt(b.limit, currency)}`,
         };
       }),
       tips: [
@@ -139,22 +139,33 @@ export const generateInsights = createServerFn({ method: "POST" })
       ],
     };
 
+    const spentByCatNorm: Record<string, number> = {};
+    for (const [k, v] of Object.entries(spentByCat)) {
+      spentByCatNorm[normalizeCat(k)] = (spentByCatNorm[normalizeCat(k)] ?? 0) + v;
+    }
+    const budgetsNorm = budgets.map((b) => ({
+      category: normalizeCat(b.category),
+      limit: b.limit,
+      spent: b.spent,
+    }));
+
     const prompt = `You are Clario, a calm and encouraging personal finance coach.
 Return ONLY compact JSON with this exact shape:
 {"thisMonth": string, "whereMoneyWent": [{"category": string, "pct": number, "note": string}], "budgetHealth": [{"category": string, "status": "on_track"|"warning"|"over", "note": string}], "tips": [string, string, string]}
 Rules:
-- thisMonth: 1-2 sentences summarizing income vs expenses and net.
-- whereMoneyWent: top 3 spending categories with % share and a short note.
-- budgetHealth: 1 entry per budget with status and short note.
+- thisMonth: 1-2 sentences. When you mention a monetary amount, format it EXACTLY as one of these strings and never write a raw number: ${fmt(totalIncome, currency)} (income), ${fmt(totalExpenses, currency)} (expenses), ${fmt(net, currency)} (net).
+- whereMoneyWent: top 3 spending categories with % share and a short note. In "note", format money as "${fmt(0, currency).replace(/[0-9.,]/g, "")}<number>" using the currency prefix "${fmt(0, currency).replace(/[0-9.,\s]/g, "")}" and grouped digits.
+- budgetHealth: 1 entry per budget with status and short note. Format money the same way.
 - tips: exactly 3 short, actionable, encouraging tips.
+- Never write "Other" as a category; use "Miscellaneous" instead.
 - No markdown, no preamble, just JSON.
 
-Data:
+Data (amounts in ${currency}):
 - Total income: ${totalIncome}
 - Total expenses: ${totalExpenses}
 - Net: ${net}
-- Spending by category: ${JSON.stringify(spentByCat)}
-- Budgets: ${JSON.stringify(budgets)}`;
+- Spending by category: ${JSON.stringify(spentByCatNorm)}
+- Budgets: ${JSON.stringify(budgetsNorm)}`;
 
     const text = await callGemini(prompt);
     if (!text) return fallback;
