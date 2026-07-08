@@ -291,12 +291,14 @@ function AddTaskSheet({
   date,
   year,
   month,
+  editing,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   date: string;
   year: number;
   month: number;
+  editing: TodoRow | null;
 }) {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -304,27 +306,56 @@ function AddTaskSheet({
   const [priority, setPriority] = useState<Priority>("medium");
   const queryClient = useQueryClient();
   const createFn = useServerFn(createTodo);
+  const updateFn = useServerFn(updateTodo);
+  const isEdit = !!editing;
 
-  const create = useMutation({
+  useMemo(() => {
+    if (open) {
+      if (editing) {
+        setTitle(editing.title);
+        setNotes(editing.notes ?? "");
+        setTime(editing.due_time ? editing.due_time.slice(0, 5) : "");
+        setPriority((editing.priority as Priority) ?? "medium");
+      } else {
+        setTitle("");
+        setNotes("");
+        setTime("");
+        setPriority("medium");
+      }
+    }
+  }, [open, editing]);
+
+  const targetDate = editing?.due_date ?? date;
+
+  const save = useMutation({
     mutationFn: () =>
-      createFn({
-        data: {
-          title: title.trim(),
-          notes: notes.trim() || null,
-          due_date: date,
-          due_time: time || null,
-          priority,
-        },
-      }),
+      isEdit && editing
+        ? updateFn({
+            data: {
+              id: editing.id,
+              title: title.trim(),
+              notes: notes.trim() || null,
+              due_date: targetDate,
+              due_time: time || null,
+              priority,
+            },
+          })
+        : createFn({
+            data: {
+              title: title.trim(),
+              notes: notes.trim() || null,
+              due_date: date,
+              due_time: time || null,
+              priority,
+            },
+          }),
     onSuccess: () => {
-      toast.success("Task added");
-      setTitle("");
-      setNotes("");
-      setTime("");
-      setPriority("medium");
+      toast.success(isEdit ? "Task updated" : "Task added");
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ["planner-day", date] });
+      queryClient.invalidateQueries({ queryKey: ["planner-day", targetDate] });
       queryClient.invalidateQueries({ queryKey: ["planner-month", year, month] });
+      queryClient.invalidateQueries({ queryKey: ["today-todos"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -335,16 +366,17 @@ function AddTaskSheet({
       toast.error("Add a title");
       return;
     }
-    create.mutate();
+    save.mutate();
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl md:max-w-lg md:mx-auto">
         <SheetHeader>
-          <SheetTitle>New task</SheetTitle>
-          <SheetDescription>For {format(new Date(date + "T00:00:00"), "MMM d, yyyy")}</SheetDescription>
+          <SheetTitle>{isEdit ? "Edit task" : "New task"}</SheetTitle>
+          <SheetDescription>For {format(new Date(targetDate + "T00:00:00"), "MMM d, yyyy")}</SheetDescription>
         </SheetHeader>
+
         <form onSubmit={submit} className="mt-4 space-y-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Title</label>
@@ -390,8 +422,8 @@ function AddTaskSheet({
               </div>
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={create.isPending}>
-            {create.isPending ? "Saving…" : "Save task"}
+          <Button type="submit" className="w-full" disabled={save.isPending}>
+            {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Save task"}
           </Button>
         </form>
       </SheetContent>
