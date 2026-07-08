@@ -1,5 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
+
+const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
+type Cur = z.infer<typeof currencySchema>;
+
+function fmt(v: number, currency: Cur): string {
+  try {
+    return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(v);
+  } catch {
+    return `${currency} ${Math.round(v)}`;
+  }
+}
+
+function normalizeCat(c: string): string {
+  return c === "Other" ? "Miscellaneous" : c;
+}
 
 export type Insights = {
   thisMonth: string;
@@ -48,7 +68,11 @@ async function callGemini(prompt: string): Promise<string | null> {
 
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<Insights> => {
+  .inputValidator((d: unknown) =>
+    z.object({ currency: currencySchema.default("INR") }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<Insights> => {
+    const currency = data.currency;
     const { first, nextFirst, monthFirst } = currentMonthBounds();
 
     const [expRes, incRes, budRes] = await Promise.all([
