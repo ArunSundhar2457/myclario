@@ -22,10 +22,12 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
+import { AddTaskSheet, type TodoRow } from "@/routes/_authenticated/planner";
 import {
   getSnapshot,
   getSpendingTrend,
@@ -205,13 +207,31 @@ function BudgetAlertStrip({ currency }: { currency: Currency }) {
     queryKey: ["budget-alerts"],
     queryFn: () => fn(),
   });
-  if (isLoading || !data || data.length === 0) return null;
+  if (isLoading) return null;
+  const alerts = data ?? [];
+  if (alerts.length === 0) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      >
+        <div className="flex items-center gap-2 text-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm font-medium text-foreground">
+            You're on track this month.
+          </span>
+        </div>
+      </motion.section>
+    );
+  }
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-2xl border border-border bg-card p-4 shadow-card"
+      className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
@@ -220,7 +240,7 @@ function BudgetAlertStrip({ currency }: { currency: Currency }) {
         </span>
       </div>
       <ul className="mt-3 flex flex-wrap gap-2">
-        {data.map((b) => (
+        {alerts.map((b) => (
           <li
             key={b.id}
             className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs"
