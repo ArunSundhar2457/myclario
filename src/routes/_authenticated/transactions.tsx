@@ -378,6 +378,7 @@ function TransactionList({
   rows,
   loading,
   onEmptyCta,
+  onEdit,
   queryKey,
 }: {
   kind: Kind;
@@ -385,6 +386,7 @@ function TransactionList({
   rows: TxRow[];
   loading: boolean;
   onEmptyCta: () => void;
+  onEdit: (row: TxRow) => void;
   queryKey: readonly unknown[];
 }) {
   const queryClient = useQueryClient();
@@ -441,6 +443,7 @@ function TransactionList({
             kind={kind}
             currency={currency}
             onDelete={() => del.mutate(r.id)}
+            onEdit={() => onEdit(r)}
           />
         ))}
       </AnimatePresence>
@@ -453,11 +456,13 @@ function TransactionRow({
   kind,
   currency,
   onDelete,
+  onEdit,
 }: {
   row: TxRow;
   kind: Kind;
   currency: Currency;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const Icon = categoryIcon(row.category);
   const amountColor = kind === "income" ? "text-success" : "text-destructive";
@@ -497,8 +502,16 @@ function TransactionRow({
       </div>
       <button
         type="button"
+        onClick={onEdit}
+        className="ml-1 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground md:inline-flex"
+        aria-label="Edit"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
         onClick={onDelete}
-        className="ml-2 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-destructive md:inline-flex"
+        className="ml-1 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-destructive md:inline-flex"
         aria-label="Delete"
       >
         <Trash2 className="h-4 w-4" />
