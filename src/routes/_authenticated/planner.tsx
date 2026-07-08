@@ -184,7 +184,7 @@ function PlannerPage() {
   );
 }
 
-type TodoRow = {
+export type TodoRow = {
   id: string;
   title: string;
   notes: string | null;
