@@ -13,6 +13,7 @@ import {
   Download,
   X,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ import {
 import {
   listTransactions,
   createTransaction,
+  updateTransaction,
   deleteTransaction,
   exportTransactionsCsv,
 } from "@/lib/transactions.functions";
