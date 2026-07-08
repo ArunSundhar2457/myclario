@@ -146,7 +146,7 @@ export const getTodayTodos = createServerFn({ method: "GET" })
     const today = iso(new Date());
     const { data, error, count } = await context.supabase
       .from("todos")
-      .select("id, title, is_completed, priority", { count: "exact" })
+      .select("id, title, notes, is_completed, priority, due_date, due_time", { count: "exact" })
       .eq("due_date", today)
       .order("is_completed", { ascending: true })
       .order("priority", { ascending: false })

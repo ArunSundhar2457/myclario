@@ -22,10 +22,12 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
+import { AddTaskSheet, type TodoRow } from "@/routes/_authenticated/planner";
 import {
   getSnapshot,
   getSpendingTrend,
@@ -205,13 +207,31 @@ function BudgetAlertStrip({ currency }: { currency: Currency }) {
     queryKey: ["budget-alerts"],
     queryFn: () => fn(),
   });
-  if (isLoading || !data || data.length === 0) return null;
+  if (isLoading) return null;
+  const alerts = data ?? [];
+  if (alerts.length === 0) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      >
+        <div className="flex items-center gap-2 text-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm font-medium text-foreground">
+            You're on track this month.
+          </span>
+        </div>
+      </motion.section>
+    );
+  }
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-2xl border border-border bg-card p-4 shadow-card"
+      className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
@@ -220,7 +240,7 @@ function BudgetAlertStrip({ currency }: { currency: Currency }) {
         </span>
       </div>
       <ul className="mt-3 flex flex-wrap gap-2">
-        {data.map((b) => (
+        {alerts.map((b) => (
           <li
             key={b.id}
             className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs"
@@ -287,6 +307,8 @@ function TasksCard() {
   const queryClient = useQueryClient();
   const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
+  const [editing, setEditing] = useState<TodoRow | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["today-todos"],
     queryFn: () => listFn(),
@@ -319,6 +341,10 @@ function TasksCard() {
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const iso = `${y}-${String(m).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
     <motion.section
@@ -367,6 +393,25 @@ function TasksCard() {
                   {t.title}
                 </span>
                 {t.is_completed && <CheckCircle2 className="h-4 w-4 text-success" />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing({
+                      id: t.id,
+                      title: t.title,
+                      notes: t.notes ?? null,
+                      is_completed: t.is_completed,
+                      priority: t.priority,
+                      due_date: t.due_date ?? iso,
+                      due_time: t.due_time ?? null,
+                    });
+                    setSheetOpen(true);
+                  }}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  aria-label="Edit task"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
               </li>
             ))}
           </ul>
@@ -377,6 +422,17 @@ function TasksCard() {
           )}
         </>
       )}
+      <AddTaskSheet
+        open={sheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditing(null);
+        }}
+        date={iso}
+        year={y}
+        month={m}
+        editing={editing}
+      />
     </motion.section>
   );
 }

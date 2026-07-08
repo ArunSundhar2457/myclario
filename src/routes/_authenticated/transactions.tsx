@@ -13,6 +13,7 @@ import {
   Download,
   X,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ import {
 import {
   listTransactions,
   createTransaction,
+  updateTransaction,
   deleteTransaction,
   exportTransactionsCsv,
 } from "@/lib/transactions.functions";
@@ -86,6 +88,7 @@ function TransactionsPage() {
   const navigate = Route.useNavigate();
   const { currency } = useAppStore();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<TxRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filters = {
@@ -143,7 +146,14 @@ function TransactionsPage() {
         currency={currency}
         rows={data?.rows ?? []}
         loading={isLoading}
-        onEmptyCta={() => setSheetOpen(true)}
+        onEmptyCta={() => {
+          setEditing(null);
+          setSheetOpen(true);
+        }}
+        onEdit={(row) => {
+          setEditing(row);
+          setSheetOpen(true);
+        }}
         queryKey={queryKey}
       />
 
@@ -177,7 +187,10 @@ function TransactionsPage() {
 
       <Button
         size="icon"
-        onClick={() => setSheetOpen(true)}
+        onClick={() => {
+          setEditing(null);
+          setSheetOpen(true);
+        }}
         className="fixed bottom-24 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
         aria-label="Add transaction"
       >
@@ -186,9 +199,13 @@ function TransactionsPage() {
 
       <AddTransactionSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditing(null);
+        }}
         defaultKind={search.kind}
         currency={currency}
+        editing={editing}
       />
     </div>
   );
@@ -361,6 +378,7 @@ function TransactionList({
   rows,
   loading,
   onEmptyCta,
+  onEdit,
   queryKey,
 }: {
   kind: Kind;
@@ -368,6 +386,7 @@ function TransactionList({
   rows: TxRow[];
   loading: boolean;
   onEmptyCta: () => void;
+  onEdit: (row: TxRow) => void;
   queryKey: readonly unknown[];
 }) {
   const queryClient = useQueryClient();
@@ -424,6 +443,7 @@ function TransactionList({
             kind={kind}
             currency={currency}
             onDelete={() => del.mutate(r.id)}
+            onEdit={() => onEdit(r)}
           />
         ))}
       </AnimatePresence>
@@ -436,11 +456,13 @@ function TransactionRow({
   kind,
   currency,
   onDelete,
+  onEdit,
 }: {
   row: TxRow;
   kind: Kind;
   currency: Currency;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const Icon = categoryIcon(row.category);
   const amountColor = kind === "income" ? "text-success" : "text-destructive";
@@ -480,8 +502,16 @@ function TransactionRow({
       </div>
       <button
         type="button"
+        onClick={onEdit}
+        className="ml-1 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground md:inline-flex"
+        aria-label="Edit"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
         onClick={onDelete}
-        className="ml-2 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-destructive md:inline-flex"
+        className="ml-1 hidden rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-destructive md:inline-flex"
         aria-label="Delete"
       >
         <Trash2 className="h-4 w-4" />
@@ -540,11 +570,13 @@ function AddTransactionSheet({
   onOpenChange,
   defaultKind,
   currency,
+  editing,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   defaultKind: Kind;
   currency: Currency;
+  editing: TxRow | null;
 }) {
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [amount, setAmount] = useState<string>("");
@@ -554,59 +586,50 @@ function AddTransactionSheet({
   const [recurring, setRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isEdit = !!editing;
 
-  // sync kind when opening
+  // sync when opening
   useMemo(() => {
     if (open) {
-      setKind(defaultKind);
-      setCategory("");
+      if (editing) {
+        setKind(defaultKind);
+        setAmount(String(editing.amount));
+        setCategory(editing.category);
+        setDescription(editing.description ?? "");
+        setDate(new Date(editing.occurred_on + "T00:00:00"));
+        setRecurring(editing.is_recurring);
+        setRecurrence((editing.recurrence as "daily" | "weekly" | "monthly") ?? "monthly");
+      } else {
+        setKind(defaultKind);
+        setAmount("");
+        setCategory("");
+        setDescription("");
+        setDate(new Date());
+        setRecurring(false);
+        setRecurrence("monthly");
+      }
       setErrors({});
     }
-  }, [open, defaultKind]);
+  }, [open, defaultKind, editing]);
 
   const cats = kind === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createTransaction);
-  const create = useMutation({
-    mutationFn: (vars: { data: z.infer<typeof formSchema> }) => createFn(vars),
-    onMutate: async (vars: { data: z.infer<typeof formSchema> }) => {
-      const data = vars.data;
-      const key = ["transactions"];
-      await queryClient.cancelQueries({ queryKey: key });
-      // optimistic insertion into current page-1 list for this kind
-      const optimistic: TxRow = {
-        id: `temp-${Date.now()}`,
-        amount: data.amount,
-        category: data.category,
-        description: data.description ?? null,
-        occurred_on: data.occurred_on,
-        is_recurring: data.is_recurring,
-        recurrence: data.recurrence ?? null,
-      };
-      const snaps = queryClient.getQueriesData<{ rows: TxRow[]; total: number }>({ queryKey: key });
-      for (const [k, v] of snaps) {
-        const kf = (k as unknown[])[1] as { kind: Kind; page: number } | undefined;
-        if (v && kf && kf.kind === data.kind && kf.page === 1) {
-          queryClient.setQueryData(k, {
-            rows: [optimistic, ...v.rows].slice(0, PAGE_SIZE),
-            total: v.total + 1,
-          });
-        }
+  const updateFn = useServerFn(updateTransaction);
+  const save = useMutation({
+    mutationFn: async (vars: { data: z.infer<typeof formSchema> }) => {
+      if (isEdit && editing) {
+        await updateFn({ data: { ...vars.data, id: editing.id } });
+      } else {
+        await createFn(vars);
       }
-      return { snaps };
     },
-    onError: (e: Error, _v, ctx) => {
-      if (ctx?.snaps) for (const [k, v] of ctx.snaps) queryClient.setQueryData(k, v);
-      toast.error(e.message);
-    },
+    onError: (e: Error) => toast.error(e.message),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["transactions"] }),
     onSuccess: () => {
-      toast.success("Saved");
+      toast.success(isEdit ? "Updated" : "Saved");
       onOpenChange(false);
-      setAmount("");
-      setDescription("");
-      setRecurring(false);
     },
   });
 
@@ -629,15 +652,15 @@ function AddTransactionSheet({
       return;
     }
     setErrors({});
-    create.mutate({ data: parsed.data });
+    save.mutate({ data: parsed.data });
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>New transaction</SheetTitle>
-          <SheetDescription>Log money in or out.</SheetDescription>
+          <SheetTitle>{isEdit ? "Edit transaction" : "New transaction"}</SheetTitle>
+          <SheetDescription>{isEdit ? "Update this entry." : "Log money in or out."}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-5 space-y-5">
@@ -778,9 +801,9 @@ function AddTransactionSheet({
             className="w-full"
             size="lg"
             onClick={submit}
-            disabled={create.isPending}
+            disabled={save.isPending}
           >
-            {create.isPending ? "Saving…" : "Save"}
+            {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Save"}
           </Button>
         </div>
       </SheetContent>

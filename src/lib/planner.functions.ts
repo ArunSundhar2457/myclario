@@ -89,6 +89,35 @@ export const togglePlannerTodo = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateTodo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        title: z.string().min(1).max(200),
+        notes: z.string().max(2000).optional().nullable(),
+        due_date: z.string(),
+        due_time: z.string().optional().nullable(),
+        priority,
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("todos")
+      .update({
+        title: data.title,
+        notes: data.notes ?? null,
+        due_date: data.due_date,
+        due_time: data.due_time || null,
+        priority: data.priority,
+      })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const deleteTodo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
@@ -97,3 +126,4 @@ export const deleteTodo = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+

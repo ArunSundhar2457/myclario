@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { format } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   listTodosForMonth,
   listTodosForDay,
   createTodo,
+  updateTodo,
   togglePlannerTodo,
   deleteTodo,
 } from "@/lib/planner.functions";
@@ -51,6 +52,7 @@ function isoDate(d: Date) {
 function PlannerPage() {
   const [selected, setSelected] = useState<Date>(new Date());
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<TodoRow | null>(null);
   const selectedIso = isoDate(selected);
   const year = selected.getFullYear();
   const month = selected.getMonth() + 1;
@@ -138,7 +140,17 @@ function PlannerPage() {
           ) : (
             <ul className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
               {dayRows.map((t) => (
-                <TaskRow key={t.id} row={t} selectedIso={selectedIso} year={year} month={month} />
+                <TaskRow
+                  key={t.id}
+                  row={t}
+                  selectedIso={selectedIso}
+                  year={year}
+                  month={month}
+                  onEdit={(row) => {
+                    setEditingTodo(row);
+                    setSheetOpen(true);
+                  }}
+                />
               ))}
             </ul>
           )}
@@ -147,7 +159,10 @@ function PlannerPage() {
 
       <Button
         size="icon"
-        onClick={() => setSheetOpen(true)}
+        onClick={() => {
+          setEditingTodo(null);
+          setSheetOpen(true);
+        }}
         className="fixed bottom-24 right-5 z-30 h-14 w-14 rounded-full shadow-elevated md:bottom-8 md:right-8"
         aria-label="Add task"
       >
@@ -156,16 +171,20 @@ function PlannerPage() {
 
       <AddTaskSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v);
+          if (!v) setEditingTodo(null);
+        }}
         date={selectedIso}
         year={year}
         month={month}
+        editing={editingTodo}
       />
     </div>
   );
 }
 
-type TodoRow = {
+export type TodoRow = {
   id: string;
   title: string;
   notes: string | null;
@@ -186,11 +205,13 @@ function TaskRow({
   selectedIso,
   year,
   month,
+  onEdit,
 }: {
   row: TodoRow;
   selectedIso: string;
   year: number;
   month: number;
+  onEdit: (row: TodoRow) => void;
 }) {
   const queryClient = useQueryClient();
   const toggleFn = useServerFn(togglePlannerTodo);
@@ -246,6 +267,14 @@ function TaskRow({
       </span>
       <button
         type="button"
+        onClick={() => onEdit(row)}
+        className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+        aria-label="Edit task"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
         onClick={() => del.mutate()}
         className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-destructive"
         aria-label="Delete task"
@@ -256,18 +285,20 @@ function TaskRow({
   );
 }
 
-function AddTaskSheet({
+export function AddTaskSheet({
   open,
   onOpenChange,
   date,
   year,
   month,
+  editing,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   date: string;
   year: number;
   month: number;
+  editing: TodoRow | null;
 }) {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -275,27 +306,59 @@ function AddTaskSheet({
   const [priority, setPriority] = useState<Priority>("medium");
   const queryClient = useQueryClient();
   const createFn = useServerFn(createTodo);
+  const updateFn = useServerFn(updateTodo);
+  const isEdit = !!editing;
 
-  const create = useMutation({
-    mutationFn: () =>
-      createFn({
-        data: {
-          title: title.trim(),
-          notes: notes.trim() || null,
-          due_date: date,
-          due_time: time || null,
-          priority,
-        },
-      }),
+  useMemo(() => {
+    if (open) {
+      if (editing) {
+        setTitle(editing.title);
+        setNotes(editing.notes ?? "");
+        setTime(editing.due_time ? editing.due_time.slice(0, 5) : "");
+        setPriority((editing.priority as Priority) ?? "medium");
+      } else {
+        setTitle("");
+        setNotes("");
+        setTime("");
+        setPriority("medium");
+      }
+    }
+  }, [open, editing]);
+
+  const targetDate = editing?.due_date ?? date;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (isEdit && editing) {
+        await updateFn({
+          data: {
+            id: editing.id,
+            title: title.trim(),
+            notes: notes.trim() || null,
+            due_date: targetDate,
+            due_time: time || null,
+            priority,
+          },
+        });
+      } else {
+        await createFn({
+          data: {
+            title: title.trim(),
+            notes: notes.trim() || null,
+            due_date: date,
+            due_time: time || null,
+            priority,
+          },
+        });
+      }
+    },
     onSuccess: () => {
-      toast.success("Task added");
-      setTitle("");
-      setNotes("");
-      setTime("");
-      setPriority("medium");
+      toast.success(isEdit ? "Task updated" : "Task added");
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ["planner-day", date] });
+      queryClient.invalidateQueries({ queryKey: ["planner-day", targetDate] });
       queryClient.invalidateQueries({ queryKey: ["planner-month", year, month] });
+      queryClient.invalidateQueries({ queryKey: ["today-todos"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -306,16 +369,17 @@ function AddTaskSheet({
       toast.error("Add a title");
       return;
     }
-    create.mutate();
+    save.mutate();
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl md:max-w-lg md:mx-auto">
         <SheetHeader>
-          <SheetTitle>New task</SheetTitle>
-          <SheetDescription>For {format(new Date(date + "T00:00:00"), "MMM d, yyyy")}</SheetDescription>
+          <SheetTitle>{isEdit ? "Edit task" : "New task"}</SheetTitle>
+          <SheetDescription>For {format(new Date(targetDate + "T00:00:00"), "MMM d, yyyy")}</SheetDescription>
         </SheetHeader>
+
         <form onSubmit={submit} className="mt-4 space-y-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Title</label>
@@ -361,8 +425,8 @@ function AddTaskSheet({
               </div>
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={create.isPending}>
-            {create.isPending ? "Saving…" : "Save task"}
+          <Button type="submit" className="w-full" disabled={save.isPending}>
+            {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Save task"}
           </Button>
         </form>
       </SheetContent>
