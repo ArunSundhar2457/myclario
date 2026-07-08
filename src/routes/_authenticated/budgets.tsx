@@ -47,6 +47,7 @@ const monthLabel = () =>
 
 function BudgetsPage() {
   const { currency } = useAppStore();
+  const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
   const listFn = useServerFn(listBudgets);
   const availFn = useServerFn(listAvailableCategories);
   const { data: budgets, isLoading } = useQuery({
@@ -67,7 +68,11 @@ function BudgetsPage() {
         </p>
       </div>
 
-      <CreateBudgetForm available={available ?? []} />
+      <CreateBudgetForm
+        available={available ?? []}
+        editing={editing}
+        onCancelEdit={() => setEditing(null)}
+      />
 
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
@@ -85,6 +90,9 @@ function BudgetsPage() {
               limit={b.monthly_limit}
               spent={b.spent}
               currency={currency}
+              onEdit={() =>
+                setEditing({ id: b.id, category: b.category, monthly_limit: b.monthly_limit })
+              }
             />
           ))}
         </div>
@@ -93,47 +101,94 @@ function BudgetsPage() {
   );
 }
 
-function CreateBudgetForm({ available }: { available: string[] }) {
+function CreateBudgetForm({
+  available,
+  editing,
+  onCancelEdit,
+}: {
+  available: string[];
+  editing: { id: string; category: string; monthly_limit: number } | null;
+  onCancelEdit: () => void;
+}) {
   const [category, setCategory] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
   const queryClient = useQueryClient();
   const createFn = useServerFn(createBudget);
+  const updateFn = useServerFn(updateBudget);
+  const isEdit = !!editing;
+
+  useMemo(() => {
+    if (editing) {
+      setCategory(editing.category);
+      setLimit(String(editing.monthly_limit));
+    } else {
+      setCategory("");
+      setLimit("");
+    }
+  }, [editing]);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["budgets"] });
+    queryClient.invalidateQueries({ queryKey: ["budgets-available"] });
+    queryClient.invalidateQueries({ queryKey: ["budget-alerts"] });
+  };
+
   const create = useMutation({
     mutationFn: createFn,
     onSuccess: () => {
       toast.success("Budget created");
       setCategory("");
       setLimit("");
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["budgets-available"] });
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const update = useMutation({
+    mutationFn: (vars: { id: string; monthly_limit: number }) =>
+      updateFn({ data: vars }),
+    onSuccess: () => {
+      toast.success("Budget updated");
+      onCancelEdit();
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   function submit() {
     const num = Number(limit);
-    if (!category) return toast.error("Pick a category");
     if (!(num > 0)) return toast.error("Enter a limit greater than 0");
+    if (isEdit && editing) {
+      update.mutate({ id: editing.id, monthly_limit: num });
+      return;
+    }
+    if (!category) return toast.error("Pick a category");
     create.mutate({
       data: { category: category as never, monthly_limit: num },
     });
   }
+
+  const pending = create.isPending || update.isPending;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
       <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">Category</label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={setCategory} disabled={isEdit}>
             <SelectTrigger>
               <SelectValue placeholder={available.length ? "Choose…" : "All categories have budgets"} />
             </SelectTrigger>
             <SelectContent>
-              {available.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
+              {isEdit && editing ? (
+                <SelectItem value={editing.category}>{editing.category}</SelectItem>
+              ) : (
+                available.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -149,10 +204,23 @@ function CreateBudgetForm({ available }: { available: string[] }) {
             onChange={(e) => setLimit(e.target.value)}
           />
         </div>
-        <div className="flex items-end">
-          <Button onClick={submit} disabled={create.isPending || available.length === 0}>
-            <Plus className="mr-1 h-4 w-4" /> Create
+        <div className="flex items-end gap-2">
+          <Button onClick={submit} disabled={pending || (!isEdit && available.length === 0)}>
+            {isEdit ? (
+              <>
+                <Pencil className="mr-1 h-4 w-4" /> Update
+              </>
+            ) : (
+              <>
+                <Plus className="mr-1 h-4 w-4" /> Create
+              </>
+            )}
           </Button>
+          {isEdit && (
+            <Button variant="ghost" onClick={onCancelEdit} disabled={pending}>
+              <X className="mr-1 h-4 w-4" /> Cancel
+            </Button>
+          )}
         </div>
       </div>
     </div>
