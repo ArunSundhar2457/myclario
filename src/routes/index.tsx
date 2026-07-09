@@ -256,8 +256,8 @@ function MockDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <StatMock label="Saved this month" value="₹45,200" tone="primary" />
-        <StatMock label="Tasks completed" value="12 / 15" />
+        <StatMock label="Saved this month" value={<CountUp value={45200} prefix="₹" />} tone="primary" />
+        <StatMock label="Tasks completed" value={<CountUp value={12} suffix=" / 15" />} />
         <StatMock label="Budget health" value="On track" tone="primary" />
       </div>
 
