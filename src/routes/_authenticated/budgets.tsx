@@ -212,7 +212,7 @@ function CreateBudgetForm({
           />
         </div>
         <div className="flex items-end gap-2">
-          <Button onClick={submit} disabled={pending || (!isEdit && available.length === 0)}>
+          <Button onClick={submit} disabled={pending || noneAvailable}>
             {isEdit ? (
               <>
                 <Pencil className="mr-1 h-4 w-4" /> Update
