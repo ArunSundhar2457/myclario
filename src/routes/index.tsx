@@ -824,7 +824,7 @@ function Footer() {
     <footer className="border-t border-border px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex items-center gap-3">
-          <img src="/clario-logo.svg" alt="Clario" className="h-8 w-auto" />
+          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
