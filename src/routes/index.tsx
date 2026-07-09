@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  animate,
   motion,
+  useInView,
+  useMotionValue,
   useMotionValueEvent,
   useScroll,
   useTransform,
@@ -108,9 +111,9 @@ function StickyNav() {
         blurred ? "border-b border-border/60 bg-background/80 backdrop-blur-md" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 md:px-6">
         <Link to="/" className="flex items-center">
-          <img src="/clario-logo.svg" alt="Clario" className="h-9 w-auto" />
+          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/auth">
@@ -253,8 +256,8 @@ function MockDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <StatMock label="Saved this month" value="₹45,200" tone="primary" />
-        <StatMock label="Tasks completed" value="12 / 15" />
+        <StatMock label="Saved this month" value={<CountUp value={45200} prefix="₹" />} tone="primary" />
+        <StatMock label="Tasks completed" value={<CountUp value={12} suffix=" / 15" />} />
         <StatMock label="Budget health" value="On track" tone="primary" />
       </div>
 
@@ -294,7 +297,7 @@ function StatMock({
   tone,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   tone?: "primary";
 }) {
   return (
@@ -308,6 +311,39 @@ function StatMock({
         {value}
       </div>
     </div>
+  );
+}
+
+function CountUp({
+  value,
+  prefix = "",
+  suffix = "",
+  duration = 1.2,
+}: {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  duration?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(mv, value, { duration, ease: "easeOut" });
+    return () => controls.stop();
+  }, [inView, value, duration, mv]);
+
+  useMotionValueEvent(mv, "change", (v) => setDisplay(Math.round(v)));
+
+  return (
+    <span ref={ref}>
+      {prefix}
+      {display.toLocaleString("en-IN")}
+      {suffix}
+    </span>
   );
 }
 
@@ -675,12 +711,12 @@ function About() {
     <section className="px-4 py-24 md:py-32">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-          <AnimatedLine text="Built from frustration." />
+          <AnimatedLine text="Why Clario exists." />
         </h2>
 
         <p className="mx-auto mt-6 max-w-2xl text-base italic text-muted-foreground md:text-lg">
           "
-          <Typewriter text="I got tired of switching between apps just to understand my own finances. So I built Clario — one app that connects your money and your day, with AI that ties it all together." />
+          <Typewriter text="I got tired of switching between to-do apps and banking tools just to keep my finances and my day straight. So I built Clario — one app that connects your money and your tasks, with AI that ties it all together." />
           "
         </p>
 
@@ -757,7 +793,7 @@ function FinalCTA() {
         />
         <div className="relative">
           <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
-            Take control of your finances today.
+            Take control of your money and your day.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/75">
             Join thousands organizing their money and time with Clario.
@@ -788,7 +824,7 @@ function Footer() {
     <footer className="border-t border-border px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex items-center gap-3">
-          <img src="/clario-logo.svg" alt="Clario" className="h-8 w-auto" />
+          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
