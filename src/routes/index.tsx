@@ -793,7 +793,7 @@ function FinalCTA() {
         />
         <div className="relative">
           <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
-            Take control of your finances today.
+            Take control of your money and your day.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/75">
             Join thousands organizing their money and time with Clario.
