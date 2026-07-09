@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  animate,
   motion,
+  useInView,
+  useMotionValue,
   useMotionValueEvent,
   useScroll,
   useTransform,
