@@ -297,7 +297,7 @@ function StatMock({
   tone,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   tone?: "primary";
 }) {
   return (
@@ -311,6 +311,39 @@ function StatMock({
         {value}
       </div>
     </div>
+  );
+}
+
+function CountUp({
+  value,
+  prefix = "",
+  suffix = "",
+  duration = 1.2,
+}: {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  duration?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(mv, value, { duration, ease: "easeOut" });
+    return () => controls.stop();
+  }, [inView, value, duration, mv]);
+
+  useMotionValueEvent(mv, "change", (v) => setDisplay(Math.round(v)));
+
+  return (
+    <span ref={ref}>
+      {prefix}
+      {display.toLocaleString("en-IN")}
+      {suffix}
+    </span>
   );
 }
 
