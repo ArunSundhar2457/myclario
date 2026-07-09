@@ -1,32 +1,19 @@
-## Landing page polish batch
+## Budget form validation fix
 
-All changes scoped to `src/routes/index.tsx`. No design system, color, or layout changes beyond the items below.
+**File:** `src/routes/_authenticated/budgets.tsx` (only)
 
-### 1. Logo size — nav bar + footer
-- `StickyNav` (line 113): change `<img … className="h-9 w-auto" />` → `h-12 w-auto`, and bump the header row height from `h-16` → `h-20` so the larger logo has breathing room. This roughly matches the `h-12` treatment on `/auth`.
-- `Footer` (line 791): change `<img … className="h-8 w-auto" />` → `h-12 w-auto`.
-- Sidebar logo (`app-shell.tsx`) is explicitly out of scope and will not be touched.
+**Change:** Update the `submit()` function inside `CreateBudgetForm` and the Create button's `disabled` condition.
 
-### 2. "Built from frustration." → "Why Clario exists."
-In `About` (lines 673–685):
-- Replace the `AnimatedLine` heading text `"Built from frustration."` → `"Why Clario exists."`.
-- Replace the `Typewriter` quote body with:
-  > "I got tired of switching between to-do apps and banking tools just to keep my finances and my day straight. So I built Clario — one app that connects your money and your tasks, with AI that ties it all together."
-- No layout/style changes; the existing italic paragraph, quote marks, and founder card stay identical.
+### Current issue
+1. In create mode, the button is `disabled` when `available.length === 0`. While `listAvailableCategories` is still loading, `available ?? []` is `[]`, so the button appears clickable-looking but the click can be silently swallowed / feel unresponsive.
+2. Validation order checks the limit before the category, and the messages don't match the spec.
 
-### 3. Final CTA heading
-Line 760 in `FinalCTA`: replace heading text `"Take control of your finances today."` → `"Take control of your money and your day."`. Subheading, button, and badge unchanged.
+### Fix
+1. In `submit()` (create mode only — edit mode unchanged):
+   - If `!category` → `toast.error("Please select a category.")` and return.
+   - Else if `limit.trim() === ""` or `Number(limit)` is `NaN` or `<= 0` → `toast.error("Please enter a monthly limit greater than 0.")` and return.
+   - Only then call `create.mutate({ data: { category, monthly_limit: num } })`.
+2. Keep edit-mode branch as-is (it doesn't need a category check, only the limit check — reuse the same limit message).
+3. Tighten the Create button's `disabled` prop so it only disables on `pending` or (in create mode) when the available-categories query has resolved AND is empty. Use `available` presence (not just length) so the button remains clickable during load and the new toasts can fire.
 
-### 4. Hero preview card — count-up animation on numbers
-In `MockDashboard` / `StatMock` (lines 244–312):
-- Add a small internal `CountUp` helper component (Framer Motion `useMotionValue` + `animate` + `useMotionValueEvent`, no new libraries) that animates from `0` to a target number over ~1.2s with `easeOut` when it enters the viewport (`useInView` from framer-motion, once: true).
-- It accepts `value: number`, optional `prefix` (e.g. `"₹"`), optional `suffix` (e.g. `" / 15"`), and formats with `toLocaleString("en-IN")` for the ₹45,200 case.
-- Update the three `StatMock` calls:
-  - `Saved this month` → `CountUp value={45200} prefix="₹" />` (tone="primary")
-  - `Tasks completed` → `CountUp value={12} suffix=" / 15" />`
-  - `Budget health` → keep as static text `"On track"` (non-numeric, nothing to count).
-- `StatMock` gets a small tweak to render a `ReactNode` for `value` instead of only `string`, so it can accept the `<CountUp />` element. Styling classes unchanged.
-- Numbers remain fake marketing values — no Supabase, no data wiring.
-
-### Out of scope
-Sidebar logo, real data on landing, any other landing section, design tokens, colors, spacing beyond the small nav height bump needed to accommodate the larger logo.
+Reuses the existing `sonner` `toast.error` pattern already used elsewhere in the form. No new components, no styling changes, no changes to the edit flow, categories source, or layout.

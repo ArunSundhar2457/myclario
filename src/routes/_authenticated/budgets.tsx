@@ -156,19 +156,26 @@ function CreateBudgetForm({
   });
 
   function submit() {
-    const num = Number(limit);
-    if (!(num > 0)) return toast.error("Enter a limit greater than 0");
     if (isEdit && editing) {
+      const num = Number(limit);
+      if (limit.trim() === "" || !Number.isFinite(num) || num <= 0) {
+        return toast.error("Please enter a monthly limit greater than 0.");
+      }
       update.mutate({ id: editing.id, monthly_limit: num });
       return;
     }
-    if (!category) return toast.error("Pick a category");
+    if (!category) return toast.error("Please select a category.");
+    const num = Number(limit);
+    if (limit.trim() === "" || !Number.isFinite(num) || num <= 0) {
+      return toast.error("Please enter a monthly limit greater than 0.");
+    }
     create.mutate({
       data: { category: category as never, monthly_limit: num },
     });
   }
 
   const pending = create.isPending || update.isPending;
+  const noneAvailable = !isEdit && Array.isArray(available) && available.length === 0;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -205,7 +212,7 @@ function CreateBudgetForm({
           />
         </div>
         <div className="flex items-end gap-2">
-          <Button onClick={submit} disabled={pending || (!isEdit && available.length === 0)}>
+          <Button onClick={submit} disabled={pending || noneAvailable}>
             {isEdit ? (
               <>
                 <Pencil className="mr-1 h-4 w-4" /> Update
