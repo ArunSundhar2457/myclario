@@ -711,12 +711,12 @@ function About() {
     <section className="px-4 py-24 md:py-32">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-          <AnimatedLine text="Built from frustration." />
+          <AnimatedLine text="Why Clario exists." />
         </h2>
 
         <p className="mx-auto mt-6 max-w-2xl text-base italic text-muted-foreground md:text-lg">
           "
-          <Typewriter text="I got tired of switching between apps just to understand my own finances. So I built Clario — one app that connects your money and your day, with AI that ties it all together." />
+          <Typewriter text="I got tired of switching between to-do apps and banking tools just to keep my finances and my day straight. So I built Clario — one app that connects your money and your tasks, with AI that ties it all together." />
           "
         </p>
 
