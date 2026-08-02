@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Check, Circle, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -213,6 +213,25 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+function PasswordToggle({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={visible ? "Hide password" : "Show password"}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
+  );
+}
+
 function SignInForm({
   onForgot,
   onSwitch,
@@ -223,30 +242,48 @@ function SignInForm({
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setEmailError("");
+    setPasswordError("");
+
+    if (!email.trim()) {
+      setEmailError("Please enter your email.");
+      return;
+    }
+    if (!password) {
+      setPasswordError("Please enter your password.");
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Incorrect email or password.");
     toast.success("Welcome back");
     navigate({ to: "/dashboard", replace: true });
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
       <div className="space-y-2">
         <Label htmlFor="si-email">Email</Label>
         <Input
           id="si-email"
           type="email"
           autoComplete="email"
-          required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (emailError) setEmailError("");
+          }}
         />
+        {emailError && <p className="text-xs text-destructive">{emailError}</p>}
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -259,14 +296,24 @@ function SignInForm({
             Forgot password?
           </button>
         </div>
-        <Input
-          id="si-password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <Input
+            id="si-password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            className="pr-10"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (passwordError) setPasswordError("");
+            }}
+          />
+          <PasswordToggle
+            visible={showPassword}
+            onToggle={() => setShowPassword((v) => !v)}
+          />
+        </div>
+        {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -289,10 +336,23 @@ function SignInForm({
 function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const rules = [
+    { label: "At least 6 characters", met: password.length >= 6 },
+    { label: "At least 1 number", met: /[0-9]/.test(password) },
+    { label: "At least 1 letter", met: /[a-zA-Z]/.test(password) },
+    {
+      label: "At least 1 special character (e.g. !@#$%^&*)",
+      met: /[^a-zA-Z0-9]/.test(password),
+    },
+  ];
+  const allMet = rules.every((r) => r.met);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!allMet) return;
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -320,18 +380,41 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="su-password">Password</Label>
-        <Input
-          id="su-password"
-          type="password"
-          autoComplete="new-password"
-          minLength={6}
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <p className="text-xs text-muted-foreground">At least 6 characters.</p>
+        <div className="relative">
+          <Input
+            id="su-password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            required
+            className="pr-10"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <PasswordToggle
+            visible={showPassword}
+            onToggle={() => setShowPassword((v) => !v)}
+          />
+        </div>
+        <ul className="mt-1 space-y-1">
+          {rules.map((r) => (
+            <li
+              key={r.label}
+              className={
+                "flex items-center gap-2 text-xs " +
+                (r.met ? "text-primary" : "text-muted-foreground")
+              }
+            >
+              {r.met ? (
+                <Check className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Circle className="h-3.5 w-3.5 shrink-0" />
+              )}
+              {r.label}
+            </li>
+          ))}
+        </ul>
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || !allMet}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Create account
       </Button>
@@ -360,8 +443,8 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("If that email exists, a reset link is on its way.");
+    if (error) return toast.error("Couldn't send reset link. Please try again.");
+    toast.success("Password reset link sent. Check your email.");
     onBack();
   }
 
