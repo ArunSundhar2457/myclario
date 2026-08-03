@@ -452,10 +452,24 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
       transition={{ duration: 0.4, delay: 0.25 }}
       className="rounded-2xl border border-border bg-card p-5 shadow-card lg:col-span-2"
     >
-      <h2 className="font-display text-lg font-semibold tracking-tight">
-        Spending trend
-      </h2>
-      <p className="text-xs text-muted-foreground">Last 30 days</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Spending trend
+          </h2>
+          <p className="text-xs text-muted-foreground">Last 30 days</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-success" />
+            Income
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-destructive" />
+            Spent
+          </span>
+        </div>
+      </div>
       <div className="mt-4 h-56">
         {isLoading ? (
           <Skeleton className="h-full w-full" />
@@ -464,8 +478,8 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
             <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="var(--destructive)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--destructive)" stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--success)" stopOpacity={0.3} />
@@ -503,7 +517,7 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
               <Area
                 type="monotone"
                 dataKey="spent"
-                stroke="var(--primary)"
+                stroke="var(--destructive)"
                 strokeWidth={2}
                 fill="url(#spendFill)"
               />
