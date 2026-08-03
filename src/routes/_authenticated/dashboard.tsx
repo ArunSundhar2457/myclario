@@ -452,10 +452,24 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
       transition={{ duration: 0.4, delay: 0.25 }}
       className="rounded-2xl border border-border bg-card p-5 shadow-card lg:col-span-2"
     >
-      <h2 className="font-display text-lg font-semibold tracking-tight">
-        Spending trend
-      </h2>
-      <p className="text-xs text-muted-foreground">Last 30 days</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Spending trend
+          </h2>
+          <p className="text-xs text-muted-foreground">Last 30 days</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-success" />
+            Income
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-destructive" />
+            Spent
+          </span>
+        </div>
+      </div>
       <div className="mt-4 h-56">
         {isLoading ? (
           <Skeleton className="h-full w-full" />
