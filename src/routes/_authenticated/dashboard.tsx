@@ -92,11 +92,19 @@ function Dashboard() {
 }
 
 function Header() {
+  const profileFn = useServerFn(getProfile);
+  const { data: profile } = useQuery({
+    queryKey: ["profile", "me"],
+    queryFn: () => profileFn(),
+  });
+  const displayName = profile?.display_name;
+  const greeting = displayName ? `Good to see you, ${displayName}.` : "Good to see you.";
+
   return (
     <div>
       <p className="text-sm text-muted-foreground">{todayLabel()}</p>
       <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
-        Good to see you.
+        {greeting}
       </h1>
     </div>
   );
