@@ -42,6 +42,7 @@ import {
   getProfile,
   updateProfile,
 } from "@/lib/profile.functions";
+import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 
 export function SettingsModal({
   open,
