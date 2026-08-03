@@ -27,6 +27,7 @@ import {
 import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
+import { getProfile } from "@/lib/profile.functions";
 import { AddTaskSheet, type TodoRow } from "@/routes/_authenticated/planner";
 import {
   getSnapshot,
@@ -91,11 +92,19 @@ function Dashboard() {
 }
 
 function Header() {
+  const profileFn = useServerFn(getProfile);
+  const { data: profile } = useQuery({
+    queryKey: ["profile", "me"],
+    queryFn: () => profileFn(),
+  });
+  const displayName = profile?.display_name;
+  const greeting = displayName ? `Good to see you, ${displayName}.` : "Good to see you.";
+
   return (
     <div>
       <p className="text-sm text-muted-foreground">{todayLabel()}</p>
       <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
-        Good to see you.
+        {greeting}
       </h1>
     </div>
   );
