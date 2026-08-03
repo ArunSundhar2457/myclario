@@ -478,8 +478,8 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
             <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="var(--destructive)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--destructive)" stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--success)" stopOpacity={0.3} />
@@ -517,7 +517,7 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
               <Area
                 type="monotone"
                 dataKey="spent"
-                stroke="var(--primary)"
+                stroke="var(--destructive)"
                 strokeWidth={2}
                 fill="url(#spendFill)"
               />
