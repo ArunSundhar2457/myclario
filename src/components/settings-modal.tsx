@@ -190,6 +190,10 @@ export function SettingsModal({
                 myclario.help@gmail.com
               </a>
             </p>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Clario v{APP_VERSION} · Updated {BUILD_DATE}
+            </p>
           </div>
 
           <DialogFooter>
