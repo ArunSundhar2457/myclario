@@ -42,6 +42,7 @@ import {
   getProfile,
   updateProfile,
 } from "@/lib/profile.functions";
+import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 
 export function SettingsModal({
   open,
@@ -188,6 +189,10 @@ export function SettingsModal({
               >
                 myclario.help@gmail.com
               </a>
+            </p>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Clario v{APP_VERSION} · Updated {BUILD_DATE}
             </p>
           </div>
 
