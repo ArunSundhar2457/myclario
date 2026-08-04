@@ -461,11 +461,17 @@ function TasksCard() {
   );
 }
 
-function SpendingTrendCard({ currency }: { currency: Currency }) {
+function SpendingTrendCard({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const fn = useServerFn(getSpendingTrend);
   const { data, isLoading } = useQuery({
-    queryKey: ["spending-trend"],
-    queryFn: () => fn(),
+    queryKey: ["spending-trend", selectedMonth],
+    queryFn: () => fn({ data: { month: selectedMonth } }),
   });
   const chartData = data ?? [];
 
@@ -481,8 +487,9 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
           <h2 className="font-display text-lg font-semibold tracking-tight">
             Spending trend
           </h2>
-          <p className="text-xs text-muted-foreground">Last 30 days</p>
+          <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
         </div>
+
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-success" />
