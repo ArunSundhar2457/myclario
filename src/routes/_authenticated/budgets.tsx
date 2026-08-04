@@ -112,11 +112,14 @@ function CreateBudgetForm({
   available,
   editing,
   onCancelEdit,
+  selectedMonth,
 }: {
   available: string[];
   editing: { id: string; category: string; monthly_limit: number } | null;
   onCancelEdit: () => void;
+  selectedMonth: string;
 }) {
+
   const [category, setCategory] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
   const queryClient = useQueryClient();
