@@ -97,6 +97,8 @@ function BudgetsPage() {
               limit={b.monthly_limit}
               spent={b.spent}
               currency={currency}
+              selectedMonth={selectedMonth}
+
               onEdit={() =>
                 setEditing({ id: b.id, category: b.category, monthly_limit: b.monthly_limit })
               }
