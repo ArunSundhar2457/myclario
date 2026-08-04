@@ -1,31 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { MONTH_REGEX, isoDate, monthBounds, monthDayRange } from "./month";
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function monthBounds(ym?: string): { first: string; nextFirst: string } {
-  const now = new Date();
-  const [y, m] = ym
-    ? ym.split("-").map(Number)
-    : [now.getFullYear(), now.getMonth() + 1];
-  const first = new Date(y, m - 1, 1);
-  const next = new Date(y, m, 1);
-  return { first: iso(first), nextFirst: iso(next) };
-}
+const iso = isoDate;
+const monthSchema = z.string().regex(MONTH_REGEX);
 
 export const getSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ range: z.enum(["month", "all"]) }).parse(d),
+    z.object({ range: z.enum(["month", "all"]), month: monthSchema.optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const q = (table: "income" | "expenses") => {
       let qb = context.supabase.from(table).select("amount");
       if (data.range === "month") {
-        const { first, nextFirst } = monthBounds();
+        const { first, nextFirst } = monthBounds(data.month);
         qb = qb.gte("occurred_on", first).lt("occurred_on", nextFirst);
       }
       return qb;
@@ -38,14 +28,18 @@ export const getSnapshot = createServerFn({ method: "POST" })
     return { income, spent, balance: income - spent };
   });
 
-export const getSpendingTrend = createServerFn({ method: "GET" })
+export const getSpendingTrend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - 29);
-    const startIso = iso(start);
-    const endIso = iso(end);
+  .inputValidator((d: unknown) =>
+    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { start: startIso, end: endIso, days } = monthDayRange(data.month);
+    const start = new Date(
+      Number(startIso.slice(0, 4)),
+      Number(startIso.slice(5, 7)) - 1,
+      Number(startIso.slice(8, 10)),
+    );
 
     const [inc, exp] = await Promise.all([
       context.supabase
@@ -63,7 +57,7 @@ export const getSpendingTrend = createServerFn({ method: "GET" })
     if (exp.error) throw exp.error;
 
     const byDay: Record<string, { income: number; spent: number }> = {};
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < days; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       byDay[iso(d)] = { income: 0, spent: 0 };
@@ -81,9 +75,7 @@ export const getSpendingTrend = createServerFn({ method: "GET" })
 
 export const getCategoryBreakdown = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ month: monthSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const { first, nextFirst } = monthBounds(data.month);
     const { data: rows, error } = await context.supabase
@@ -102,10 +94,13 @@ export const getCategoryBreakdown = createServerFn({ method: "POST" })
       .sort((a, b) => b.total - a.total);
   });
 
-export const getBudgetAlerts = createServerFn({ method: "GET" })
+export const getBudgetAlerts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { first, nextFirst } = monthBounds();
+  .inputValidator((d: unknown) =>
+    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { first, nextFirst } = monthBounds(data.month);
     const [budgets, exp] = await Promise.all([
       context.supabase
         .from("budgets")
@@ -139,6 +134,7 @@ export const getBudgetAlerts = createServerFn({ method: "GET" })
       .filter((b) => b.percent_used >= 80)
       .sort((a, b) => b.percent_used - a.percent_used);
   });
+
 
 export const getTodayTodos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -77,15 +77,16 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <Header />
-      <SnapshotSection currency={currency} />
-      <BudgetAlertStrip currency={currency} />
+      <SnapshotSection currency={currency} selectedMonth={selectedMonth} />
+      <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
       <div className="grid gap-5 lg:grid-cols-2">
         <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
         <TasksCard />
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <SpendingTrendCard currency={currency} />
+        <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
         <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+
       </div>
     </div>
   );
@@ -154,13 +155,20 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
   );
 }
 
-function SnapshotSection({ currency }: { currency: Currency }) {
+function SnapshotSection({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const [range, setRange] = useState<Range>("month");
   const snapshotFn = useServerFn(getSnapshot);
   const { data, isLoading } = useQuery({
-    queryKey: ["snapshot", range],
-    queryFn: () => snapshotFn({ data: { range } }),
+    queryKey: ["snapshot", range, selectedMonth],
+    queryFn: () => snapshotFn({ data: { range, month: selectedMonth } }),
   });
+
 
   const income = data?.income ?? 0;
   const spent = data?.spent ?? 0;
@@ -210,12 +218,19 @@ function SnapshotSection({ currency }: { currency: Currency }) {
   );
 }
 
-function BudgetAlertStrip({ currency }: { currency: Currency }) {
+function BudgetAlertStrip({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const fn = useServerFn(getBudgetAlerts);
   const { data, isLoading } = useQuery({
-    queryKey: ["budget-alerts"],
-    queryFn: () => fn(),
+    queryKey: ["budget-alerts", selectedMonth],
+    queryFn: () => fn({ data: { month: selectedMonth } }),
   });
+
   if (isLoading) return null;
   const alerts = data ?? [];
   if (alerts.length === 0) {
@@ -446,11 +461,17 @@ function TasksCard() {
   );
 }
 
-function SpendingTrendCard({ currency }: { currency: Currency }) {
+function SpendingTrendCard({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const fn = useServerFn(getSpendingTrend);
   const { data, isLoading } = useQuery({
-    queryKey: ["spending-trend"],
-    queryFn: () => fn(),
+    queryKey: ["spending-trend", selectedMonth],
+    queryFn: () => fn({ data: { month: selectedMonth } }),
   });
   const chartData = data ?? [];
 
@@ -466,8 +487,9 @@ function SpendingTrendCard({ currency }: { currency: Currency }) {
           <h2 className="font-display text-lg font-semibold tracking-tight">
             Spending trend
           </h2>
-          <p className="text-xs text-muted-foreground">Last 30 days</p>
+          <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
         </div>
+
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-success" />
@@ -569,7 +591,7 @@ function CategoryDonutCard({
       className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
       <h2 className="font-display text-lg font-semibold tracking-tight">By category</h2>
-      <p className="text-xs text-muted-foreground">This month</p>
+      <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
       <div className="mt-4 h-56">
         {isLoading ? (
           <Skeleton className="h-full w-full" />

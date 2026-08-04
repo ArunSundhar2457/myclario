@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { MONTH_REGEX, monthBounds } from "./month";
+
 
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 type Cur = z.infer<typeof currencySchema>;
@@ -28,14 +30,11 @@ export type Insights = {
   tips: string[];
 };
 
-function currentMonthBounds() {
-  const d = new Date();
-  const first = new Date(d.getFullYear(), d.getMonth(), 1);
-  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  const iso = (x: Date) =>
-    `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
-  return { first: iso(first), nextFirst: iso(next), monthFirst: iso(first) };
+function monthWindow(ym?: string) {
+  const { first, nextFirst, monthDate } = monthBounds(ym);
+  return { first, nextFirst, monthFirst: monthDate };
 }
+
 
 async function callGemini(prompt: string): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
@@ -69,11 +68,17 @@ async function callGemini(prompt: string): Promise<string | null> {
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ currency: currencySchema.default("INR") }).parse(d ?? {}),
+    z
+      .object({
+        currency: currencySchema.default("INR"),
+        month: z.string().regex(MONTH_REGEX).optional(),
+      })
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }): Promise<Insights> => {
     const currency = data.currency;
-    const { first, nextFirst, monthFirst } = currentMonthBounds();
+    const { first, nextFirst, monthFirst } = monthWindow(data.month);
+
 
     const [expRes, incRes, budRes] = await Promise.all([
       context.supabase

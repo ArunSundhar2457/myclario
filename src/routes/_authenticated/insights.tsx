@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
+
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles, RefreshCcw, TrendingUp, PiggyBank, Lightbulb, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,19 +27,25 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
-  const { currency } = useAppStore();
+  const { currency, selectedMonth } = useAppStore();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
 
   const generate = useMutation({
-    mutationFn: () => genFn({ data: { currency } }),
+    mutationFn: () => genFn({ data: { currency, month: selectedMonth } }),
   });
+
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
-
+  const resetGenerate = generate.reset;
+  useEffect(() => {
+    // Insights are month-scoped: drop stale results when the month changes.
+    resetGenerate();
+  }, [selectedMonth, resetGenerate]);
 
   const insights = generate.data as Insights | undefined;
+
 
   return (
     <div className="space-y-6">
@@ -114,7 +122,15 @@ function InsightsPage() {
             </Button>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <InsightCard icon={Wallet} title="This month">
+            <InsightCard
+              icon={Wallet}
+              title={new Date(
+                Number(selectedMonth.slice(0, 4)),
+                Number(selectedMonth.slice(5, 7)) - 1,
+                1,
+              ).toLocaleString(undefined, { month: "long", year: "numeric" })}
+            >
+
               <p className="text-sm leading-relaxed">{insights.thisMonth}</p>
             </InsightCard>
 
