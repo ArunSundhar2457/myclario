@@ -180,8 +180,9 @@ function CreateBudgetForm({
       return toast.error("Please enter a monthly limit greater than 0.");
     }
     create.mutate({
-      data: { category: category as never, monthly_limit: num },
+      data: { category: category as never, monthly_limit: num, month: selectedMonth },
     });
+
   }
 
   const pending = create.isPending || update.isPending;
