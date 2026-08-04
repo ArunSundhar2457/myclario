@@ -38,9 +38,14 @@ function InsightsPage() {
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
-
+  const resetGenerate = generate.reset;
+  useEffect(() => {
+    // Insights are month-scoped: drop stale results when the month changes.
+    resetGenerate();
+  }, [selectedMonth, resetGenerate]);
 
   const insights = generate.data as Insights | undefined;
+
 
   return (
     <div className="space-y-6">
