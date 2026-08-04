@@ -155,13 +155,20 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
   );
 }
 
-function SnapshotSection({ currency }: { currency: Currency }) {
+function SnapshotSection({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const [range, setRange] = useState<Range>("month");
   const snapshotFn = useServerFn(getSnapshot);
   const { data, isLoading } = useQuery({
-    queryKey: ["snapshot", range],
-    queryFn: () => snapshotFn({ data: { range } }),
+    queryKey: ["snapshot", range, selectedMonth],
+    queryFn: () => snapshotFn({ data: { range, month: selectedMonth } }),
   });
+
 
   const income = data?.income ?? 0;
   const spent = data?.spent ?? 0;
