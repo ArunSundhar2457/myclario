@@ -329,7 +329,7 @@ function BudgetCard({
           </span>
           <div>
             <p className="font-display text-lg font-semibold leading-tight">{category}</p>
-            <p className="text-xs text-muted-foreground">{monthLabel()}</p>
+            <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
           </div>
         </div>
         <Badge className={cn("border-0", badgeClass)}>{status.label}</Badge>
