@@ -28,14 +28,11 @@ export type Insights = {
   tips: string[];
 };
 
-function currentMonthBounds() {
-  const d = new Date();
-  const first = new Date(d.getFullYear(), d.getMonth(), 1);
-  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  const iso = (x: Date) =>
-    `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
-  return { first: iso(first), nextFirst: iso(next), monthFirst: iso(first) };
+function monthWindow(ym?: string) {
+  const { first, nextFirst, monthDate } = monthBounds(ym);
+  return { first, nextFirst, monthFirst: monthDate };
 }
+
 
 async function callGemini(prompt: string): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
