@@ -264,12 +264,15 @@ function BudgetCard({
   spent,
   currency,
   onEdit,
+  selectedMonth,
 }: {
   id: string;
   category: string;
   limit: number;
   spent: number;
+  selectedMonth: string;
   currency: "INR" | "USD" | "EUR" | "GBP";
+
   onEdit: () => void;
 }) {
   const Icon = categoryIcon(category);
