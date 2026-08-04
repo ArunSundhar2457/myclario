@@ -2,20 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { EXPENSE_CATEGORIES } from "./categories";
+import { MONTH_REGEX, monthBounds } from "./month";
 
-function monthBounds(): { first: string; nextFirst: string; monthDate: string } {
-  const d = new Date();
-  const first = new Date(d.getFullYear(), d.getMonth(), 1);
-  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  const iso = (x: Date) =>
-    `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
-  return { first: iso(first), nextFirst: iso(next), monthDate: iso(first) };
-}
+const monthSchema = z.string().regex(MONTH_REGEX);
 
-export const listBudgets = createServerFn({ method: "GET" })
+export const listBudgets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { first, nextFirst, monthDate } = monthBounds();
+  .inputValidator((d: unknown) =>
+    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { first, nextFirst, monthDate } = monthBounds(data.month);
     const { data: budgets, error } = await context.supabase
       .from("budgets")
       .select("id, category, monthly_limit, month")
@@ -41,16 +38,19 @@ export const listBudgets = createServerFn({ method: "GET" })
     }));
   });
 
-export const listAvailableCategories = createServerFn({ method: "GET" })
+export const listAvailableCategories = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { monthDate } = monthBounds();
-    const { data, error } = await context.supabase
+  .inputValidator((d: unknown) =>
+    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { monthDate } = monthBounds(data.month);
+    const { data: rows, error } = await context.supabase
       .from("budgets")
       .select("category")
       .eq("month", monthDate);
     if (error) throw error;
-    const taken = new Set((data ?? []).map((r) => r.category));
+    const taken = new Set((rows ?? []).map((r) => r.category));
     return EXPENSE_CATEGORIES.filter((c) => !taken.has(c));
   });
 
@@ -61,11 +61,12 @@ export const createBudget = createServerFn({ method: "POST" })
       .object({
         category: z.enum(EXPENSE_CATEGORIES),
         monthly_limit: z.number().positive(),
+        month: monthSchema.optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { monthDate } = monthBounds();
+    const { monthDate } = monthBounds(data.month);
     const { data: row, error } = await context.supabase
       .from("budgets")
       .insert({
@@ -79,6 +80,7 @@ export const createBudget = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ...row, monthly_limit: Number(row.monthly_limit), spent: 0 };
   });
+
 
 export const updateBudget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
