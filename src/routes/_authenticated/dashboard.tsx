@@ -591,7 +591,7 @@ function CategoryDonutCard({
       className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
       <h2 className="font-display text-lg font-semibold tracking-tight">By category</h2>
-      <p className="text-xs text-muted-foreground">This month</p>
+      <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
       <div className="mt-4 h-56">
         {isLoading ? (
           <Skeleton className="h-full w-full" />
