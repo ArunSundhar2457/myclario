@@ -218,12 +218,19 @@ function SnapshotSection({
   );
 }
 
-function BudgetAlertStrip({ currency }: { currency: Currency }) {
+function BudgetAlertStrip({
+  currency,
+  selectedMonth,
+}: {
+  currency: Currency;
+  selectedMonth: string;
+}) {
   const fn = useServerFn(getBudgetAlerts);
   const { data, isLoading } = useQuery({
-    queryKey: ["budget-alerts"],
-    queryFn: () => fn(),
+    queryKey: ["budget-alerts", selectedMonth],
+    queryFn: () => fn({ data: { month: selectedMonth } }),
   });
+
   if (isLoading) return null;
   const alerts = data ?? [];
   if (alerts.length === 0) {
