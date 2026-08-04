@@ -77,15 +77,16 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <Header />
-      <SnapshotSection currency={currency} />
-      <BudgetAlertStrip currency={currency} />
+      <SnapshotSection currency={currency} selectedMonth={selectedMonth} />
+      <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
       <div className="grid gap-5 lg:grid-cols-2">
         <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
         <TasksCard />
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <SpendingTrendCard currency={currency} />
+        <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
         <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+
       </div>
     </div>
   );
