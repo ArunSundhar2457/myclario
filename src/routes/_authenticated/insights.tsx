@@ -122,7 +122,15 @@ function InsightsPage() {
             </Button>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <InsightCard icon={Wallet} title="This month">
+            <InsightCard
+              icon={Wallet}
+              title={new Date(
+                Number(selectedMonth.slice(0, 4)),
+                Number(selectedMonth.slice(5, 7)) - 1,
+                1,
+              ).toLocaleString(undefined, { month: "long", year: "numeric" })}
+            >
+
               <p className="text-sm leading-relaxed">{insights.thisMonth}</p>
             </InsightCard>
 
