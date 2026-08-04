@@ -25,13 +25,14 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
-  const { currency } = useAppStore();
+  const { currency, selectedMonth } = useAppStore();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
 
   const generate = useMutation({
-    mutationFn: () => genFn({ data: { currency } }),
+    mutationFn: () => genFn({ data: { currency, month: selectedMonth } }),
   });
+
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
