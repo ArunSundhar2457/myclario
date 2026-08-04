@@ -68,11 +68,17 @@ async function callGemini(prompt: string): Promise<string | null> {
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ currency: currencySchema.default("INR") }).parse(d ?? {}),
+    z
+      .object({
+        currency: currencySchema.default("INR"),
+        month: z.string().regex(MONTH_REGEX).optional(),
+      })
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }): Promise<Insights> => {
     const currency = data.currency;
-    const { first, nextFirst, monthFirst } = currentMonthBounds();
+    const { first, nextFirst, monthFirst } = monthWindow(data.month);
+
 
     const [expRes, incRes, budRes] = await Promise.all([
       context.supabase
