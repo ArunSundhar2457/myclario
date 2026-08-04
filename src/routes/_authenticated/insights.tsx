@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
+
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles, RefreshCcw, TrendingUp, PiggyBank, Lightbulb, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
