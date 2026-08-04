@@ -42,21 +42,26 @@ export const Route = createFileRoute("/_authenticated/budgets")({
   notFoundComponent: () => <div className="p-6 text-sm">Not found.</div>,
 });
 
-const monthLabel = () =>
-  new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
+const monthLabel = (ym: string) => {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+};
 
 function BudgetsPage() {
-  const { currency } = useAppStore();
+  const { currency, selectedMonth } = useAppStore();
   const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
   const listFn = useServerFn(listBudgets);
   const availFn = useServerFn(listAvailableCategories);
   const { data: budgets, isLoading } = useQuery({
-    queryKey: ["budgets"],
-    queryFn: () => listFn(),
+    queryKey: ["budgets", selectedMonth],
+    queryFn: () => listFn({ data: { month: selectedMonth } }),
   });
   const { data: available } = useQuery({
-    queryKey: ["budgets-available"],
-    queryFn: () => availFn(),
+    queryKey: ["budgets-available", selectedMonth],
+    queryFn: () => availFn({ data: { month: selectedMonth } }),
   });
 
   return (
@@ -64,7 +69,7 @@ function BudgetsPage() {
       <div>
         <h1 className="font-display text-3xl font-semibold tracking-tight">Budgets</h1>
         <p className="text-sm text-muted-foreground">
-          Set a monthly limit for each category. Tracks against {monthLabel()}.
+          Set a monthly limit for each category. Tracks against {monthLabel(selectedMonth)}.
         </p>
       </div>
 
@@ -72,7 +77,9 @@ function BudgetsPage() {
         available={available ?? []}
         editing={editing}
         onCancelEdit={() => setEditing(null)}
+        selectedMonth={selectedMonth}
       />
+
 
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
