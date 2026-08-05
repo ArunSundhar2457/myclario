@@ -106,7 +106,14 @@ function PlannerPage() {
             Plan your day, one task at a time.
           </p>
         </div>
-        <Button variant="outline" onClick={() => setSelected(new Date())}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const now = new Date();
+            setSelected(now);
+            setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+          }}
+        >
           Today
         </Button>
       </div>
@@ -116,6 +123,8 @@ function PlannerPage() {
           <Calendar
             mode="single"
             selected={selected}
+            month={viewMonth}
+            onMonthChange={setViewMonth}
             onSelect={(d) => d && setSelected(d)}
             modifiers={{
               hasTodos: (d) => daysWithTodos.has(isoDate(d)),
@@ -127,6 +136,7 @@ function PlannerPage() {
             className={cn("pointer-events-auto")}
           />
         </div>
+
 
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-card">
