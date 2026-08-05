@@ -328,6 +328,7 @@ export function AddTaskSheet({
   editing: TodoRow | null;
 }) {
   const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState(false);
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
@@ -338,6 +339,7 @@ export function AddTaskSheet({
 
   useMemo(() => {
     if (open) {
+      setTitleError(false);
       if (editing) {
         setTitle(editing.title);
         setNotes(editing.notes ?? "");
@@ -351,6 +353,7 @@ export function AddTaskSheet({
       }
     }
   }, [open, editing]);
+
 
   const targetDate = editing?.due_date ?? date;
 
