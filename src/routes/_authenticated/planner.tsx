@@ -50,12 +50,27 @@ function isoDate(d: Date) {
 }
 
 function PlannerPage() {
+  const { selectedMonth } = useAppStore();
   const [selected, setSelected] = useState<Date>(new Date());
+  const [viewMonth, setViewMonth] = useState<Date>(new Date());
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<TodoRow | null>(null);
   const selectedIso = isoDate(selected);
-  const year = selected.getFullYear();
-  const month = selected.getMonth() + 1;
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth() + 1;
+
+  // One-directional sync: global month dropdown -> planner calendar.
+  const syncedMonthRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (syncedMonthRef.current === selectedMonth) return;
+    syncedMonthRef.current = selectedMonth;
+    const [y, m] = selectedMonth.split("-").map(Number);
+    if (!y || !m) return;
+    const now = new Date();
+    const isCurrent = y === now.getFullYear() && m === now.getMonth() + 1;
+    setViewMonth(new Date(y, m - 1, 1));
+    setSelected(isCurrent ? now : new Date(y, m - 1, 1));
+  }, [selectedMonth]);
 
   const monthFn = useServerFn(listTodosForMonth);
   const dayFn = useServerFn(listTodosForDay);
@@ -68,6 +83,7 @@ function PlannerPage() {
     queryKey: ["planner-day", selectedIso],
     queryFn: () => dayFn({ data: { date: selectedIso } }),
   });
+
 
   const daysWithTodos = useMemo(() => {
     const set = new Set<string>();
