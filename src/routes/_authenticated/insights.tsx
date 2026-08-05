@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles, RefreshCcw, TrendingUp, PiggyBank, Lightbulb, Wallet } from "lucide-react";
@@ -30,21 +30,25 @@ function InsightsPage() {
   const { currency, selectedMonth } = useAppStore();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
+  const [started, setStarted] = useState(false);
 
-  const generate = useMutation({
-    mutationFn: () => genFn({ data: { currency, month: selectedMonth } }),
+  // Keyed on the selected month, so changing the global dropdown refetches
+  // insights for that month instead of showing stale data.
+  const generate = useQuery({
+    queryKey: ["insights", currency, selectedMonth],
+    queryFn: () => genFn({ data: { currency, month: selectedMonth } }),
+    enabled: started,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
   });
 
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
-  const resetGenerate = generate.reset;
-  useEffect(() => {
-    // Insights are month-scoped: drop stale results when the month changes.
-    resetGenerate();
-  }, [selectedMonth, resetGenerate]);
 
   const insights = generate.data as Insights | undefined;
+
 
 
   return (
@@ -88,27 +92,36 @@ function InsightsPage() {
         </div>
       </div>
 
-      {!insights && !generate.isPending && (
+      {!insights && !generate.isFetching && !generate.isError && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
           <p className="font-display text-lg">Generate your insights</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Clario will analyze your current month's income, spending, and budgets, then hand back a
+            Clario will analyze the selected month's income, spending, and budgets, then hand back a
             calm read of where you stand.
           </p>
-          <Button onClick={() => generate.mutate()} className="mt-2" size="lg">
+          <Button
+            onClick={() => (started ? generate.refetch() : setStarted(true))}
+            className="mt-2"
+            size="lg"
+          >
             <Sparkles className="mr-2 h-4 w-4" /> Generate insights
           </Button>
         </div>
       )}
 
-      {generate.isPending && <InsightsSkeleton />}
+      {generate.isFetching && <InsightsSkeleton />}
 
-      {generate.isError && (
+      {generate.isError && !generate.isFetching && (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">
           <p className="font-medium text-destructive">Couldn't generate insights.</p>
           <p className="mt-1 text-muted-foreground">Give it another try in a moment.</p>
-          <Button className="mt-3" variant="outline" size="sm" onClick={() => generate.mutate()}>
+          <Button
+            className="mt-3"
+            variant="outline"
+            size="sm"
+            onClick={() => generate.refetch()}
+          >
             Try again
           </Button>
         </div>
@@ -117,10 +130,11 @@ function InsightsPage() {
       {insights && (
         <>
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => generate.mutate()}>
+            <Button variant="outline" size="sm" onClick={() => generate.refetch()}>
               <RefreshCcw className="mr-1 h-3 w-3" /> Regenerate
             </Button>
           </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <InsightCard
               icon={Wallet}

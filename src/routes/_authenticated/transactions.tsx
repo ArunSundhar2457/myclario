@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "motion/react";
@@ -40,6 +40,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
+import { monthDayRange } from "@/lib/month";
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -86,10 +87,24 @@ const PAGE_SIZE = 10;
 function TransactionsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { currency } = useAppStore();
+  const { currency, selectedMonth } = useAppStore();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TxRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Global month dropdown drives the From/To range, until the user edits it manually.
+  const syncedMonthRef = useRef<string | null>(null);
+  const manualRangeRef = useRef(false);
+  useEffect(() => {
+    if (syncedMonthRef.current === selectedMonth) return;
+    syncedMonthRef.current = selectedMonth;
+    manualRangeRef.current = false;
+    const { start, end } = monthDayRange(selectedMonth);
+    navigate({ search: { ...search, from: start, to: end, page: 1 } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  }, [selectedMonth, navigate]);
+
 
   const filters = {
     kind: search.kind,
@@ -136,9 +151,11 @@ function TransactionsPage() {
         open={filtersOpen}
         onToggle={() => setFiltersOpen((v) => !v)}
         search={search}
-        onChange={(patch) =>
-          navigate({ search: { ...search, ...patch, page: 1 } })
-        }
+        onChange={(patch) => {
+          if ("from" in patch || "to" in patch) manualRangeRef.current = true;
+          navigate({ search: { ...search, ...patch, page: 1 } });
+        }}
+
       />
 
       <TransactionList

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { format } from "date-fns";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/lib/app-store";
 import {
   listTodosForMonth,
   listTodosForDay,
@@ -50,12 +51,27 @@ function isoDate(d: Date) {
 }
 
 function PlannerPage() {
+  const { selectedMonth } = useAppStore();
   const [selected, setSelected] = useState<Date>(new Date());
+  const [viewMonth, setViewMonth] = useState<Date>(new Date());
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<TodoRow | null>(null);
   const selectedIso = isoDate(selected);
-  const year = selected.getFullYear();
-  const month = selected.getMonth() + 1;
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth() + 1;
+
+  // One-directional sync: global month dropdown -> planner calendar.
+  const syncedMonthRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (syncedMonthRef.current === selectedMonth) return;
+    syncedMonthRef.current = selectedMonth;
+    const [y, m] = selectedMonth.split("-").map(Number);
+    if (!y || !m) return;
+    const now = new Date();
+    const isCurrent = y === now.getFullYear() && m === now.getMonth() + 1;
+    setViewMonth(new Date(y, m - 1, 1));
+    setSelected(isCurrent ? now : new Date(y, m - 1, 1));
+  }, [selectedMonth]);
 
   const monthFn = useServerFn(listTodosForMonth);
   const dayFn = useServerFn(listTodosForDay);
@@ -68,6 +84,7 @@ function PlannerPage() {
     queryKey: ["planner-day", selectedIso],
     queryFn: () => dayFn({ data: { date: selectedIso } }),
   });
+
 
   const daysWithTodos = useMemo(() => {
     const set = new Set<string>();
@@ -89,7 +106,14 @@ function PlannerPage() {
             Plan your day, one task at a time.
           </p>
         </div>
-        <Button variant="outline" onClick={() => setSelected(new Date())}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const now = new Date();
+            setSelected(now);
+            setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+          }}
+        >
           Today
         </Button>
       </div>
@@ -99,6 +123,8 @@ function PlannerPage() {
           <Calendar
             mode="single"
             selected={selected}
+            month={viewMonth}
+            onMonthChange={setViewMonth}
             onSelect={(d) => d && setSelected(d)}
             modifiers={{
               hasTodos: (d) => daysWithTodos.has(isoDate(d)),
@@ -110,6 +136,7 @@ function PlannerPage() {
             className={cn("pointer-events-auto")}
           />
         </div>
+
 
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-card">
@@ -301,6 +328,7 @@ export function AddTaskSheet({
   editing: TodoRow | null;
 }) {
   const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState(false);
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
@@ -311,6 +339,7 @@ export function AddTaskSheet({
 
   useMemo(() => {
     if (open) {
+      setTitleError(false);
       if (editing) {
         setTitle(editing.title);
         setNotes(editing.notes ?? "");
@@ -324,6 +353,7 @@ export function AddTaskSheet({
       }
     }
   }, [open, editing]);
+
 
   const targetDate = editing?.due_date ?? date;
 
@@ -366,9 +396,10 @@ export function AddTaskSheet({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      toast.error("Add a title");
+      setTitleError(true);
       return;
     }
+    setTitleError(false);
     save.mutate();
   }
 
@@ -386,10 +417,25 @@ export function AddTaskSheet({
             <Input
               autoFocus
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (e.target.value.trim()) setTitleError(false);
+              }}
+              aria-invalid={titleError}
+              aria-describedby={titleError ? "task-title-error" : undefined}
               placeholder="e.g. Review this week's budget"
             />
+            {titleError && (
+              <p
+                id="task-title-error"
+                className="mt-1 flex items-center gap-1 text-xs font-medium text-destructive"
+              >
+                <Info className="h-3.5 w-3.5" />
+                Title is required
+              </p>
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Notes</label>
             <Textarea
