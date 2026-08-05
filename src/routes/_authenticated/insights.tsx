@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles, RefreshCcw, TrendingUp, PiggyBank, Lightbulb, Wallet } from "lucide-react";
@@ -30,21 +30,25 @@ function InsightsPage() {
   const { currency, selectedMonth } = useAppStore();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
+  const [started, setStarted] = useState(false);
 
-  const generate = useMutation({
-    mutationFn: () => genFn({ data: { currency, month: selectedMonth } }),
+  // Keyed on the selected month, so changing the global dropdown refetches
+  // insights for that month instead of showing stale data.
+  const generate = useQuery({
+    queryKey: ["insights", currency, selectedMonth],
+    queryFn: () => genFn({ data: { currency, month: selectedMonth } }),
+    enabled: started,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
   });
 
   const tip = useMutation({
     mutationFn: () => tipFn({}),
   });
-  const resetGenerate = generate.reset;
-  useEffect(() => {
-    // Insights are month-scoped: drop stale results when the month changes.
-    resetGenerate();
-  }, [selectedMonth, resetGenerate]);
 
   const insights = generate.data as Insights | undefined;
+
 
 
   return (
