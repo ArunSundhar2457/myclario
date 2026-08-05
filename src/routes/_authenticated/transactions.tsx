@@ -151,9 +151,11 @@ function TransactionsPage() {
         open={filtersOpen}
         onToggle={() => setFiltersOpen((v) => !v)}
         search={search}
-        onChange={(patch) =>
-          navigate({ search: { ...search, ...patch, page: 1 } })
-        }
+        onChange={(patch) => {
+          if ("from" in patch || "to" in patch) manualRangeRef.current = true;
+          navigate({ search: { ...search, ...patch, page: 1 } });
+        }}
+
       />
 
       <TransactionList
