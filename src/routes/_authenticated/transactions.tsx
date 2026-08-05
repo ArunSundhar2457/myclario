@@ -100,7 +100,9 @@ function TransactionsPage() {
     syncedMonthRef.current = selectedMonth;
     manualRangeRef.current = false;
     const { start, end } = monthDayRange(selectedMonth);
-    navigate({ search: (prev) => ({ ...prev, from: start, to: end, page: 1 }) });
+    navigate({ search: { ...search, from: start, to: end, page: 1 } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [selectedMonth, navigate]);
 
 
