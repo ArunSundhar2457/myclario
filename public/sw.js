@@ -17,7 +17,11 @@ if (workbox.navigationPreload.isSupported()) {
   workbox.navigationPreload.enable();
 }
 workbox.routing.registerRoute(
-  new RegExp('/*'),
+  ({ request }) =>
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.destination === 'image' ||
+    request.destination === 'font',
   new workbox.strategies.StaleWhileRevalidate({
     cacheName: CACHE
   })
