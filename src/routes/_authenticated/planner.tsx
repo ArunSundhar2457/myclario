@@ -396,9 +396,10 @@ export function AddTaskSheet({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      toast.error("Add a title");
+      setTitleError(true);
       return;
     }
+    setTitleError(false);
     save.mutate();
   }
 
@@ -416,10 +417,25 @@ export function AddTaskSheet({
             <Input
               autoFocus
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (e.target.value.trim()) setTitleError(false);
+              }}
+              aria-invalid={titleError}
+              aria-describedby={titleError ? "task-title-error" : undefined}
               placeholder="e.g. Review this week's budget"
             />
+            {titleError && (
+              <p
+                id="task-title-error"
+                className="mt-1 flex items-center gap-1 text-xs font-medium text-destructive"
+              >
+                <Info className="h-3.5 w-3.5" />
+                Title is required
+              </p>
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Notes</label>
             <Textarea
