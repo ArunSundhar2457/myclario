@@ -87,10 +87,22 @@ const PAGE_SIZE = 10;
 function TransactionsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { currency } = useAppStore();
+  const { currency, selectedMonth } = useAppStore();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TxRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Global month dropdown drives the From/To range, until the user edits it manually.
+  const syncedMonthRef = useRef<string | null>(null);
+  const manualRangeRef = useRef(false);
+  useEffect(() => {
+    if (syncedMonthRef.current === selectedMonth) return;
+    syncedMonthRef.current = selectedMonth;
+    manualRangeRef.current = false;
+    const { start, end } = monthDayRange(selectedMonth);
+    navigate({ search: (prev) => ({ ...prev, from: start, to: end, page: 1 }) });
+  }, [selectedMonth, navigate]);
+
 
   const filters = {
     kind: search.kind,
