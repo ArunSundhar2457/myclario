@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/public/hooks/fetch-rates")({
         let payload: z.infer<typeof frankfurterSchema>;
         try {
           const res = await fetch(
-            `https://api.frankfurter.dev/v2/latest?base=INR&symbols=${CODES.join(",")}`,
+            `https://api.frankfurter.dev/v1/latest?base=INR&symbols=${CODES.join(",")}`,
           );
           if (!res.ok) {
             console.error("[fetch-rates] upstream failed", res.status);
