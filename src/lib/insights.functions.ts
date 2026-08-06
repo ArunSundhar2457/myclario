@@ -7,9 +7,16 @@ import { MONTH_REGEX, monthBounds } from "./month";
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 type Cur = z.infer<typeof currencySchema>;
 
-function fmt(v: number, currency: Cur): string {
+const LOCALE: Record<Cur, string> = {
+  INR: "en-IN",
+  USD: "en-US",
+  EUR: "de-DE",
+  GBP: "en-GB",
+};
+
+function format(v: number, currency: Cur): string {
   try {
-    return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+    return new Intl.NumberFormat(LOCALE[currency], {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
@@ -71,12 +78,16 @@ export const generateInsights = createServerFn({ method: "POST" })
     z
       .object({
         currency: currencySchema.default("INR"),
+        // Multiplier applied to INR amounts for display only. Data stays in INR.
+        rate: z.number().positive().finite().default(1),
         month: z.string().regex(MONTH_REGEX).optional(),
       })
       .parse(d ?? {}),
   )
   .handler(async ({ data, context }): Promise<Insights> => {
     const currency = data.currency;
+    const rate = data.rate;
+    const fmt = (v: number) => format(v * rate, currency);
     const { first, nextFirst, monthFirst } = monthWindow(data.month);
 
 
@@ -119,14 +130,14 @@ export const generateInsights = createServerFn({ method: "POST" })
       thisMonth:
         totalIncome === 0 && totalExpenses === 0
           ? "No activity yet this month — add a few transactions and Clario will get to work."
-          : `You earned ${fmt(totalIncome, currency)} and spent ${fmt(totalExpenses, currency)} so far. Net ${fmt(net, currency)}.`,
+          : `You earned ${fmt(totalIncome)} and spent ${fmt(totalExpenses)} so far. Net ${fmt(net)}.`,
       whereMoneyWent: Object.entries(spentByCat)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([category, amt]) => ({
           category: normalizeCat(category),
           pct: totalExpenses > 0 ? Math.round((amt / totalExpenses) * 100) : 0,
-          note: `${fmt(amt, currency)} spent`,
+          note: `${fmt(amt)} spent`,
         })),
       budgetHealth: budgets.map((b) => {
         const pct = b.limit > 0 ? b.spent / b.limit : 0;
@@ -134,7 +145,7 @@ export const generateInsights = createServerFn({ method: "POST" })
         return {
           category: normalizeCat(b.category),
           status,
-          note: `${fmt(b.spent, currency)} of ${fmt(b.limit, currency)}`,
+          note: `${fmt(b.spent)} of ${fmt(b.limit)}`,
         };
       }),
       tips: [
@@ -158,8 +169,8 @@ export const generateInsights = createServerFn({ method: "POST" })
 Return ONLY compact JSON with this exact shape:
 {"thisMonth": string, "whereMoneyWent": [{"category": string, "pct": number, "note": string}], "budgetHealth": [{"category": string, "status": "on_track"|"warning"|"over", "note": string}], "tips": [string, string, string]}
 Rules:
-- thisMonth: 1-2 sentences. When you mention a monetary amount, format it EXACTLY as one of these strings and never write a raw number: ${fmt(totalIncome, currency)} (income), ${fmt(totalExpenses, currency)} (expenses), ${fmt(net, currency)} (net).
-- whereMoneyWent: top 3 spending categories with % share and a short note. In "note", format money as "${fmt(0, currency).replace(/[0-9.,]/g, "")}<number>" using the currency prefix "${fmt(0, currency).replace(/[0-9.,\s]/g, "")}" and grouped digits.
+- thisMonth: 1-2 sentences. When you mention a monetary amount, format it EXACTLY as one of these strings and never write a raw number: ${fmt(totalIncome)} (income), ${fmt(totalExpenses)} (expenses), ${fmt(net)} (net).
+- whereMoneyWent: top 3 spending categories with % share and a short note. In "note", format money as "${fmt(0).replace(/[0-9.,]/g, "")}<number>" using the currency prefix "${fmt(0).replace(/[0-9.,\s]/g, "")}" and grouped digits.
 - budgetHealth: 1 entry per budget with status and short note. Format money the same way.
 - tips: exactly 3 short, actionable, encouraging tips.
 - Never write "Other" as a category; use "Miscellaneous" instead.

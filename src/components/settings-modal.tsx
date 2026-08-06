@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAppStore, type Currency } from "@/lib/app-store";
+import type { Currency } from "@/lib/currency";
 import {
   deleteAccount,
   exportUserData,
@@ -53,7 +53,6 @@ export function SettingsModal({
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { currency: storeCurrency, setCurrency } = useAppStore();
 
   const getProfileFn = useServerFn(getProfile);
   const updateProfileFn = useServerFn(updateProfile);
@@ -67,21 +66,20 @@ export function SettingsModal({
   });
 
   const [displayName, setDisplayName] = useState("");
-  const [currency, setLocalCurrency] = useState<Currency>(storeCurrency);
+  const [currency, setLocalCurrency] = useState<Currency>("INR");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
-      setLocalCurrency((profile.currency as Currency) ?? storeCurrency);
+      setLocalCurrency((profile.currency as Currency) ?? "INR");
     }
-  }, [profile, storeCurrency]);
+  }, [profile]);
 
   const save = useMutation({
     mutationFn: () =>
       updateProfileFn({ data: { display_name: displayName || null, currency } }),
     onSuccess: () => {
-      setCurrency(currency);
       qc.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Saved");
       onOpenChange(false);

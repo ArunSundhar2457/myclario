@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/app-store";
+import { useCurrency } from "@/components/currency-provider";
 import { generateInsights, quickTip, type Insights } from "@/lib/insights.functions";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -27,7 +28,8 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
-  const { currency, selectedMonth } = useAppStore();
+  const { selectedMonth } = useAppStore();
+  const { currency, rate } = useCurrency();
   const genFn = useServerFn(generateInsights);
   const tipFn = useServerFn(quickTip);
   const [started, setStarted] = useState(false);
@@ -35,8 +37,8 @@ function InsightsPage() {
   // Keyed on the selected month, so changing the global dropdown refetches
   // insights for that month instead of showing stale data.
   const generate = useQuery({
-    queryKey: ["insights", currency, selectedMonth],
-    queryFn: () => genFn({ data: { currency, month: selectedMonth } }),
+    queryKey: ["insights", currency, rate, selectedMonth],
+    queryFn: () => genFn({ data: { currency, rate, month: selectedMonth } }),
     enabled: started,
     staleTime: 0,
     gcTime: 0,

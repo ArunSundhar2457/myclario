@@ -24,7 +24,9 @@ import {
   AlertTriangle,
   Pencil,
 } from "lucide-react";
-import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
+import { useAppStore } from "@/lib/app-store";
+import { useCurrency } from "@/components/currency-provider";
+import type { Currency } from "@/lib/currency";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
 import { getProfile } from "@/lib/profile.functions";
@@ -72,7 +74,8 @@ function todayLabel(): string {
 }
 
 function Dashboard() {
-  const { selectedMonth, currency } = useAppStore();
+  const { selectedMonth } = useAppStore();
+  const { currency } = useCurrency();
 
   return (
     <div className="space-y-6">
@@ -163,6 +166,7 @@ function SnapshotSection({
   selectedMonth: string;
 }) {
   const [range, setRange] = useState<Range>("month");
+  const { fmt } = useCurrency();
   const snapshotFn = useServerFn(getSnapshot);
   const { data, isLoading } = useQuery({
     queryKey: ["snapshot", range, selectedMonth],
@@ -191,7 +195,7 @@ function SnapshotSection({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <SnapshotCard
           label="Income"
-          value={formatMoney(income, currency)}
+          value={fmt(income)}
           icon={TrendingUp}
           tone="success"
           delay={0}
@@ -199,7 +203,7 @@ function SnapshotSection({
         />
         <SnapshotCard
           label="Spent"
-          value={formatMoney(spent, currency)}
+          value={fmt(spent)}
           icon={TrendingDown}
           tone="destructive"
           delay={0.05}
@@ -207,7 +211,7 @@ function SnapshotSection({
         />
         <SnapshotCard
           label="Balance"
-          value={formatMoney(balance, currency)}
+          value={fmt(balance)}
           icon={Wallet}
           tone={balanceTone}
           delay={0.1}
@@ -226,6 +230,7 @@ function BudgetAlertStrip({
   selectedMonth: string;
 }) {
   const fn = useServerFn(getBudgetAlerts);
+  const { fmt } = useCurrency();
   const { data, isLoading } = useQuery({
     queryKey: ["budget-alerts", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -272,7 +277,7 @@ function BudgetAlertStrip({
             <span className="font-medium text-foreground">{b.category}</span>
             <span className="ml-2 text-destructive">{Math.round(b.percent_used)}% used</span>
             <span className="ml-2 tabular-nums text-muted-foreground">
-              {formatMoney(b.spent, currency)} / {formatMoney(b.monthly_limit, currency)}
+              {fmt(b.spent)} / {fmt(b.monthly_limit)}
             </span>
           </li>
         ))}
@@ -469,6 +474,7 @@ function SpendingTrendCard({
   selectedMonth: string;
 }) {
   const fn = useServerFn(getSpendingTrend);
+  const { fmt } = useCurrency();
   const { data, isLoading } = useQuery({
     queryKey: ["spending-trend", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -536,7 +542,7 @@ function SpendingTrendCard({
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(v: number) => formatMoney(v, currency)}
+                formatter={(v: number) => fmt(v)}
               />
               <Area
                 type="monotone"
@@ -576,6 +582,7 @@ function CategoryDonutCard({
   currency: Currency;
 }) {
   const fn = useServerFn(getCategoryBreakdown);
+  const { fmt } = useCurrency();
   const { data, isLoading } = useQuery({
     queryKey: ["category-breakdown", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -621,7 +628,7 @@ function CategoryDonutCard({
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(v: number) => formatMoney(v, currency)}
+                  formatter={(v: number) => fmt(v)}
                 />
               )}
             </PieChart>

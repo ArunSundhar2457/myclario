@@ -39,7 +39,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useAppStore, formatMoney, type Currency } from "@/lib/app-store";
+import { useAppStore } from "@/lib/app-store";
+import { useCurrency } from "@/components/currency-provider";
+import type { Currency } from "@/lib/currency";
 import { monthDayRange } from "@/lib/month";
 import {
   EXPENSE_CATEGORIES,
@@ -87,7 +89,8 @@ const PAGE_SIZE = 10;
 function TransactionsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { currency, selectedMonth } = useAppStore();
+  const { selectedMonth } = useAppStore();
+  const { currency } = useCurrency();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TxRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -482,6 +485,7 @@ function TransactionRow({
   onEdit: () => void;
 }) {
   const Icon = categoryIcon(row.category);
+  const { fmt } = useCurrency();
   const amountColor = kind === "income" ? "text-success" : "text-destructive";
   const sign = kind === "income" ? "+" : "−";
   return (
@@ -511,7 +515,7 @@ function TransactionRow({
       <div className="text-right">
         <p className={cn("text-sm font-semibold tabular-nums", amountColor)}>
           {sign}
-          {formatMoney(row.amount, currency)}
+          {fmt(row.amount)}
         </p>
         <p className="text-xs text-muted-foreground">
           {format(new Date(row.occurred_on + "T00:00:00"), "MMM d")}
@@ -718,7 +722,7 @@ function AddTransactionSheet({
               placeholder="0"
               className="mt-1 h-16 border-0 border-b border-border bg-transparent px-0 font-display text-4xl font-semibold tabular-nums shadow-none focus-visible:ring-0"
             />
-            <p className="mt-1 text-xs text-muted-foreground">{currency}</p>
+            <p className="mt-1 text-xs text-muted-foreground">INR</p>
             {errors.amount && <InlineError msg={errors.amount} />}
           </div>
 

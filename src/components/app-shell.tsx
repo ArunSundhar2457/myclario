@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
-import { useAppStore, type Currency } from "@/lib/app-store";
+import { useAppStore } from "@/lib/app-store";
+import { CurrencyProvider } from "@/components/currency-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
 
@@ -46,7 +47,7 @@ function monthOptions(): { value: string; label: string }[] {
 }
 
 function GlobalControls() {
-  const { selectedMonth, setSelectedMonth, currency, setCurrency } = useAppStore();
+  const { selectedMonth, setSelectedMonth } = useAppStore();
   return (
     <div className="flex items-center gap-2">
       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -61,21 +62,10 @@ function GlobalControls() {
           ))}
         </SelectContent>
       </Select>
-      <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
-        <SelectTrigger className="h-9 w-[78px] text-sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {(["INR", "USD", "EUR", "GBP"] as const).map((c) => (
-            <SelectItem key={c} value={c}>
-              {c}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }
+
 
 function Brand() {
   return (
@@ -238,6 +228,7 @@ function BottomNav() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
+    <CurrencyProvider>
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -250,6 +241,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <BottomNav />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
+    </CurrencyProvider>
   );
 }
 
