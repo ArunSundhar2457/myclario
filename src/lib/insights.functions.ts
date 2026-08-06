@@ -7,9 +7,16 @@ import { MONTH_REGEX, monthBounds } from "./month";
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 type Cur = z.infer<typeof currencySchema>;
 
-function fmt(v: number, currency: Cur): string {
+const LOCALE: Record<Cur, string> = {
+  INR: "en-IN",
+  USD: "en-US",
+  EUR: "de-DE",
+  GBP: "en-GB",
+};
+
+function format(v: number, currency: Cur): string {
   try {
-    return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+    return new Intl.NumberFormat(LOCALE[currency], {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
@@ -71,12 +78,16 @@ export const generateInsights = createServerFn({ method: "POST" })
     z
       .object({
         currency: currencySchema.default("INR"),
+        // Multiplier applied to INR amounts for display only. Data stays in INR.
+        rate: z.number().positive().finite().default(1),
         month: z.string().regex(MONTH_REGEX).optional(),
       })
       .parse(d ?? {}),
   )
   .handler(async ({ data, context }): Promise<Insights> => {
     const currency = data.currency;
+    const rate = data.rate;
+    const fmt = (v: number) => format(v * rate, currency);
     const { first, nextFirst, monthFirst } = monthWindow(data.month);
 
 
