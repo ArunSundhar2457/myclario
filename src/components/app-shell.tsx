@@ -46,7 +46,7 @@ function monthOptions(): { value: string; label: string }[] {
 }
 
 function GlobalControls() {
-  const { selectedMonth, setSelectedMonth, currency, setCurrency } = useAppStore();
+  const { selectedMonth, setSelectedMonth } = useAppStore();
   return (
     <div className="flex items-center gap-2">
       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -61,21 +61,10 @@ function GlobalControls() {
           ))}
         </SelectContent>
       </Select>
-      <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
-        <SelectTrigger className="h-9 w-[78px] text-sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {(["INR", "USD", "EUR", "GBP"] as const).map((c) => (
-            <SelectItem key={c} value={c}>
-              {c}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }
+
 
 function Brand() {
   return (
