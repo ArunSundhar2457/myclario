@@ -20,6 +20,7 @@ import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated/budgets'
+import { Route as ApiPublicHooksFetchRatesRouteImport } from './routes/api/public/hooks/fetch-rates'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -76,6 +77,12 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksFetchRatesRoute =
+  ApiPublicHooksFetchRatesRouteImport.update({
+    id: '/api/public/hooks/fetch-rates',
+    path: '/api/public/hooks/fetch-rates',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/insights': typeof AuthenticatedInsightsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/insights': typeof AuthenticatedInsightsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/planner'
     | '/transactions'
+    | '/api/public/hooks/fetch-rates'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/planner'
     | '/transactions'
+    | '/api/public/hooks/fetch-rates'
   id:
     | '__root__'
     | '/'
@@ -153,6 +165,7 @@ export interface FileRouteTypes {
     | '/_authenticated/insights'
     | '/_authenticated/planner'
     | '/_authenticated/transactions'
+    | '/api/public/hooks/fetch-rates'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,6 +175,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  ApiPublicHooksFetchRatesRoute: typeof ApiPublicHooksFetchRatesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -243,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/fetch-rates': {
+      id: '/api/public/hooks/fetch-rates'
+      path: '/api/public/hooks/fetch-rates'
+      fullPath: '/api/public/hooks/fetch-rates'
+      preLoaderRoute: typeof ApiPublicHooksFetchRatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,17 +293,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  ApiPublicHooksFetchRatesRoute: ApiPublicHooksFetchRatesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
