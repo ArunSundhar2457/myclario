@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
-import { useAppStore, type Currency } from "@/lib/app-store";
+import { useAppStore } from "@/lib/app-store";
+import { CurrencyProvider } from "@/components/currency-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
 
@@ -227,6 +228,7 @@ function BottomNav() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
+    <CurrencyProvider>
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -239,6 +241,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <BottomNav />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
+    </CurrencyProvider>
   );
 }
 
