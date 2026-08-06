@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useAppStore, formatMoney } from "@/lib/app-store";
+import { useAppStore } from "@/lib/app-store";
+import { useCurrency } from "@/components/currency-provider";
 import { categoryIcon } from "@/lib/categories";
 import {
   listBudgets,
@@ -51,7 +52,8 @@ const monthLabel = (ym: string) => {
 };
 
 function BudgetsPage() {
-  const { currency, selectedMonth } = useAppStore();
+  const { selectedMonth } = useAppStore();
+  const { currency } = useCurrency();
   const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
   const listFn = useServerFn(listBudgets);
   const availFn = useServerFn(listAvailableCategories);
@@ -278,6 +280,7 @@ function BudgetCard({
   onEdit: () => void;
 }) {
   const Icon = categoryIcon(category);
+  const { fmt } = useCurrency();
   const pct = limit > 0 ? (spent / limit) * 100 : 0;
   const clamped = Math.min(100, pct);
   const remaining = Math.max(0, limit - spent);
@@ -346,14 +349,14 @@ function BudgetCard({
 
       <div className="mt-3 flex justify-between text-sm">
         <span className="text-muted-foreground">
-          Spent <span className="font-semibold tabular-nums text-foreground">{formatMoney(spent, currency)}</span>
+          Spent <span className="font-semibold tabular-nums text-foreground">{fmt(spent)}</span>
         </span>
         <span className="text-muted-foreground">
-          Remaining <span className="font-semibold tabular-nums text-foreground">{formatMoney(remaining, currency)}</span>
+          Remaining <span className="font-semibold tabular-nums text-foreground">{fmt(remaining)}</span>
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        of {formatMoney(limit, currency)} · {Math.round(pct)}%
+        of {fmt(limit)} · {Math.round(pct)}%
       </p>
 
       <div className="mt-4 flex justify-end gap-1">
