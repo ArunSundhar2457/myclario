@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          fetched_at: string
+          id: string
+          rate_date: string
+          rates: Json
+          updated_at: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          rate_date: string
+          rates: Json
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          rate_date?: string
+          rates?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
