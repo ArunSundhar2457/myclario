@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/app-store";
 import { useCurrency } from "@/components/currency-provider";
+import { useLanguage } from "@/components/language-provider";
 import type { Currency } from "@/lib/currency";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
@@ -170,6 +171,7 @@ function SnapshotSection({
 }) {
   const [range, setRange] = useState<Range>("month");
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const snapshotFn = useServerFn(getSnapshot);
   const { data, isLoading } = useQuery({
     queryKey: ["snapshot", range, selectedMonth],
@@ -336,6 +338,7 @@ function BriefingCard({
 }
 
 function TasksCard() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
@@ -478,6 +481,7 @@ function SpendingTrendCard({
 }) {
   const fn = useServerFn(getSpendingTrend);
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ["spending-trend", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -586,6 +590,7 @@ function CategoryDonutCard({
 }) {
   const fn = useServerFn(getCategoryBreakdown);
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ["category-breakdown", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
