@@ -7,12 +7,18 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id, display_name, currency, consent_at")
+      .select("id, display_name, currency, language, consent_at")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw error;
     return (
-      data ?? { id: context.userId, display_name: null, currency: "INR", consent_at: null }
+      data ?? {
+        id: context.userId,
+        display_name: null,
+        currency: "INR",
+        language: "en",
+        consent_at: null,
+      }
     );
   });
 
@@ -23,6 +29,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       .object({
         display_name: z.string().trim().max(80).nullable().optional(),
         currency: z.enum(["INR", "USD", "EUR", "GBP"]).optional(),
+        language: z.enum(["en", "de", "es"]).optional(),
       })
       .parse(d),
   )

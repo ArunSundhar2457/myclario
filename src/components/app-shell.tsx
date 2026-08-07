@@ -12,6 +12,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { useAppStore } from "@/lib/app-store";
 import { CurrencyProvider } from "@/components/currency-provider";
+import { LanguageProvider, useLanguage } from "@/components/language-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
 
@@ -27,11 +28,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/dashboard", label: "Home", icon: Home, enabled: true },
-  { to: "/transactions", label: "Transactions", icon: Wallet, enabled: true },
-  { to: "/budgets", label: "Budgets", icon: PiggyBank, enabled: true },
-  { to: "/planner", label: "Planner", icon: CalendarCheck, enabled: true },
-  { to: "/insights", label: "Insights", icon: Sparkles, enabled: true },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: Home, enabled: true },
+  { to: "/transactions", labelKey: "nav.transactions", icon: Wallet, enabled: true },
+  { to: "/budgets", labelKey: "nav.budgets", icon: PiggyBank, enabled: true },
+  { to: "/planner", labelKey: "nav.planner", icon: CalendarCheck, enabled: true },
+  { to: "/insights", labelKey: "nav.insights", icon: Sparkles, enabled: true },
 ] as const;
 
 function monthOptions(): { value: string; label: string }[] {
@@ -68,6 +69,7 @@ function GlobalControls() {
 
 
 function Brand() {
+  const { t } = useLanguage();
   return (
     <Link
       to="/dashboard"
@@ -86,7 +88,7 @@ function Brand() {
           className="mt-1 text-muted-foreground"
           style={{ fontSize: "10px" }}
         >
-          Your money. Your day. Sorted.
+          {t("brand.tagline")}
         </span>
       </div>
     </Link>
@@ -95,12 +97,13 @@ function Brand() {
 
 
 function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { t } = useLanguage();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
   async function signOut() {
     await supabase.auth.signOut();
-    toast.success("Signed out");
+    toast.success(t("nav.signedOut"));
     navigate({ to: "/auth", replace: true });
   }
 
@@ -125,7 +128,7 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
               )}
             >
               <Icon className="h-4 w-4" />
-              {item.label}
+              {t(item.labelKey)}
               {!item.enabled && (
                 <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
                   soon
@@ -141,7 +144,7 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
             <button
               key={item.to}
               type="button"
-              onClick={() => toast.info(`${item.label} arrives in the next build.`)}
+              onClick={() => toast.info(`${t(item.labelKey)} arrives in the next build.`)}
               className="text-left"
             >
               {content}
@@ -155,7 +158,7 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
           onClick={onOpenSettings}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
-          <SettingsIcon className="h-4 w-4" /> Settings
+          <SettingsIcon className="h-4 w-4" /> {t("nav.settings")}
         </button>
 
         <button
@@ -163,7 +166,7 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
           onClick={signOut}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
-          <LogOut className="h-4 w-4" /> Sign out
+          <LogOut className="h-4 w-4" /> {t("nav.signOut")}
         </button>
       </div>
     </aside>
@@ -188,6 +191,7 @@ function DesktopHeader() {
 }
 
 function BottomNav() {
+  const { t } = useLanguage();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-background/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
@@ -203,7 +207,7 @@ function BottomNav() {
             )}
           >
             <Icon className="h-5 w-5" />
-            {item.label}
+            {t(item.labelKey)}
           </span>
         );
         return item.enabled ? (
@@ -215,7 +219,7 @@ function BottomNav() {
             key={item.to}
             type="button"
             className="flex flex-1"
-            onClick={() => toast.info(`${item.label} arrives in the next build.`)}
+            onClick={() => toast.info(`${t(item.labelKey)} arrives in the next build.`)}
           >
             {inner}
           </button>
@@ -228,6 +232,7 @@ function BottomNav() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
+    <LanguageProvider>
     <CurrencyProvider>
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
@@ -242,6 +247,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
     </CurrencyProvider>
+    </LanguageProvider>
   );
 }
 

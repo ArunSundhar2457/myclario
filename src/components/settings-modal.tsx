@@ -36,6 +36,8 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Currency } from "@/lib/currency";
+import { LANGUAGES, type Language } from "@/lib/i18n";
+import { useLanguage } from "@/components/language-provider";
 import {
   deleteAccount,
   exportUserData,
@@ -53,6 +55,7 @@ export function SettingsModal({
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { t } = useLanguage();
 
   const getProfileFn = useServerFn(getProfile);
   const updateProfileFn = useServerFn(updateProfile);
@@ -67,22 +70,36 @@ export function SettingsModal({
 
   const [displayName, setDisplayName] = useState("");
   const [currency, setLocalCurrency] = useState<Currency>("INR");
+  const [language, setLocalLanguage] = useState<Language>("en");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
       setLocalCurrency((profile.currency as Currency) ?? "INR");
+      setLocalLanguage(((profile as { language?: string }).language as Language) ?? "en");
     }
   }, [profile]);
 
   const save = useMutation({
     mutationFn: () =>
-      updateProfileFn({ data: { display_name: displayName || null, currency } }),
+      updateProfileFn({ data: { display_name: displayName || null, currency, language } }),
     onSuccess: () => {
+      const previousLanguage =
+        ((profile as { language?: string } | undefined)?.language as Language) ?? "en";
       qc.invalidateQueries({ queryKey: ["profile"] });
-      toast.success("Saved");
+      toast.success(t("settings.saved"));
       onOpenChange(false);
+      if (language !== previousLanguage) {
+        const label = LANGUAGES.find((l) => l.code === language)?.label ?? language;
+        toast.success(t("settings.languageToast").replace("{language}", label), {
+          duration: Infinity,
+          action: {
+            label: t("settings.refresh"),
+            onClick: () => window.location.reload(),
+          },
+        });
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -99,7 +116,7 @@ export function SettingsModal({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success("Data exported");
+      toast.success(t("settings.exported"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -108,7 +125,7 @@ export function SettingsModal({
     mutationFn: () => deleteFn(),
     onSuccess: async () => {
       await supabase.auth.signOut();
-      toast.success("Account deleted");
+      toast.success(t("settings.deleted"));
       navigate({ to: "/auth", replace: true });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -119,26 +136,24 @@ export function SettingsModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Manage your profile, currency, and account data.
-            </DialogDescription>
+            <DialogTitle>{t("settings.title")}</DialogTitle>
+            <DialogDescription>{t("settings.description")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-2">
             <div className="space-y-2">
-              <Label htmlFor="display_name">Display name</Label>
+              <Label htmlFor="display_name">{t("settings.displayName")}</Label>
               <Input
                 id="display_name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
+                placeholder={t("settings.displayNamePlaceholder")}
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Currency</Label>
+              <Label>{t("settings.currency")}</Label>
               <Select
                 value={currency}
                 onValueChange={(v) => setLocalCurrency(v as Currency)}
@@ -156,6 +171,25 @@ export function SettingsModal({
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>{t("settings.language")}</Label>
+              <Select
+                value={language}
+                onValueChange={(v) => setLocalLanguage(v as Language)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => (
+                    <SelectItem key={l.code} value={l.code}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex flex-col gap-2 border-t border-border pt-4">
               <Button
                 variant="secondary"
@@ -167,7 +201,7 @@ export function SettingsModal({
                 ) : (
                   <Download className="mr-2 h-4 w-4" />
                 )}
-                Export my data
+                {t("settings.export")}
               </Button>
               <Button
                 variant="destructive"
@@ -175,12 +209,12 @@ export function SettingsModal({
                 disabled={doDelete.isPending}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Account
+                {t("settings.delete")}
               </Button>
             </div>
 
             <p className="text-center text-xs text-muted-foreground">
-              Need help?{" "}
+              {t("settings.needHelp")}{" "}
               <a
                 href="mailto:myclario.help@gmail.com"
                 className="text-primary hover:underline"
@@ -190,17 +224,19 @@ export function SettingsModal({
             </p>
 
             <p className="text-center text-xs text-muted-foreground">
-              Clario v{APP_VERSION} · Updated {BUILD_DATE}
+              {t("settings.versionLine")
+                .replace("{version}", APP_VERSION)
+                .replace("{date}", BUILD_DATE)}
             </p>
           </div>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={() => save.mutate()} disabled={save.isPending || isLoading}>
               {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -209,13 +245,11 @@ export function SettingsModal({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete your account and all data. This cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("settings.confirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("settings.confirmDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={(e) => {
@@ -223,7 +257,7 @@ export function SettingsModal({
                 doDelete.mutate();
               }}
             >
-              {doDelete.isPending ? "Deleting…" : "Delete Account"}
+              {doDelete.isPending ? t("settings.deleting") : t("settings.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

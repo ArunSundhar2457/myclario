@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/app-store";
 import { useCurrency } from "@/components/currency-provider";
+import { useLanguage } from "@/components/language-provider";
 import type { Currency } from "@/lib/currency";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
@@ -96,13 +97,16 @@ function Dashboard() {
 }
 
 function Header() {
+  const { t } = useLanguage();
   const profileFn = useServerFn(getProfile);
   const { data: profile } = useQuery({
     queryKey: ["profile", "me"],
     queryFn: () => profileFn(),
   });
   const displayName = profile?.display_name;
-  const greeting = displayName ? `Good to see you, ${displayName}.` : "Good to see you.";
+  const greeting = displayName
+    ? t("dashboard.greetingNamed").replace("{name}", displayName)
+    : t("dashboard.greeting");
 
   return (
     <div>
@@ -167,6 +171,7 @@ function SnapshotSection({
 }) {
   const [range, setRange] = useState<Range>("month");
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const snapshotFn = useServerFn(getSnapshot);
   const { data, isLoading } = useQuery({
     queryKey: ["snapshot", range, selectedMonth],
@@ -194,7 +199,7 @@ function SnapshotSection({
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <SnapshotCard
-          label="Income"
+          label={t("dashboard.income")}
           value={fmt(income)}
           icon={TrendingUp}
           tone="success"
@@ -202,7 +207,7 @@ function SnapshotSection({
           loading={isLoading}
         />
         <SnapshotCard
-          label="Spent"
+          label={t("dashboard.spent")}
           value={fmt(spent)}
           icon={TrendingDown}
           tone="destructive"
@@ -210,7 +215,7 @@ function SnapshotSection({
           loading={isLoading}
         />
         <SnapshotCard
-          label="Balance"
+          label={t("dashboard.balance")}
           value={fmt(balance)}
           icon={Wallet}
           tone={balanceTone}
@@ -333,6 +338,7 @@ function BriefingCard({
 }
 
 function TasksCard() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
@@ -384,10 +390,10 @@ function TasksCard() {
     >
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold tracking-tight">
-          Today's tasks
+          {t("dashboard.todaysTasks")}
         </h2>
         <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground">
-          <Link to="/planner">View all</Link>
+          <Link to="/planner">{t("dashboard.viewAll")}</Link>
         </Button>
       </div>
       {isLoading ? (
@@ -399,7 +405,7 @@ function TasksCard() {
       ) : rows.length === 0 ? (
         <div className="mt-4 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-8 text-center">
           <Circle className="h-6 w-6 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">No tasks due today 🎉</p>
+          <p className="text-sm text-muted-foreground">{t("dashboard.noTasks")}</p>
         </div>
       ) : (
         <>
@@ -475,6 +481,7 @@ function SpendingTrendCard({
 }) {
   const fn = useServerFn(getSpendingTrend);
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ["spending-trend", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -491,7 +498,7 @@ function SpendingTrendCard({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold tracking-tight">
-            Spending trend
+            {t("dashboard.spendingTrend")}
           </h2>
           <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
         </div>
@@ -583,6 +590,7 @@ function CategoryDonutCard({
 }) {
   const fn = useServerFn(getCategoryBreakdown);
   const { fmt } = useCurrency();
+  const { t } = useLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ["category-breakdown", selectedMonth],
     queryFn: () => fn({ data: { month: selectedMonth } }),
@@ -597,7 +605,7 @@ function CategoryDonutCard({
       transition={{ duration: 0.4, delay: 0.3 }}
       className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
-      <h2 className="font-display text-lg font-semibold tracking-tight">By category</h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight">{t("dashboard.byCategory")}</h2>
       <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
       <div className="mt-4 h-56">
         {isLoading ? (
@@ -606,7 +614,7 @@ function CategoryDonutCard({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={hasData ? rows : [{ category: "No data yet", total: 1 }]}
+                data={hasData ? rows : [{ category: t("dashboard.noDataYet"), total: 1 }]}
                 dataKey="total"
                 nameKey="category"
                 innerRadius={48}
@@ -637,7 +645,7 @@ function CategoryDonutCard({
       </div>
       {!isLoading && !hasData && (
         <p className="text-center text-xs text-muted-foreground">
-          Add transactions to see your category mix.
+          {t("dashboard.noCategoryData")}
         </p>
       )}
     </motion.section>

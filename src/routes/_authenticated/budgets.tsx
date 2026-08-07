@@ -26,6 +26,7 @@ import {
   updateBudget,
   deleteBudget,
 } from "@/lib/budgets.functions";
+import { useLanguage } from "@/components/language-provider";
 
 export const Route = createFileRoute("/_authenticated/budgets")({
   head: () => ({
@@ -52,6 +53,7 @@ const monthLabel = (ym: string) => {
 };
 
 function BudgetsPage() {
+  const { t } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency } = useCurrency();
   const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
@@ -69,7 +71,7 @@ function BudgetsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Budgets</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{t("budgets.title")}</h1>
         <p className="text-sm text-muted-foreground">
           Set a monthly limit for each category. Tracks against {monthLabel(selectedMonth)}.
         </p>
@@ -123,6 +125,7 @@ function CreateBudgetForm({
   onCancelEdit: () => void;
   selectedMonth: string;
 }) {
+  const { t } = useLanguage();
 
   const [category, setCategory] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
@@ -240,7 +243,7 @@ function CreateBudgetForm({
           </Button>
           {isEdit && (
             <Button variant="ghost" onClick={onCancelEdit} disabled={pending}>
-              <X className="mr-1 h-4 w-4" /> Cancel
+              <X className="mr-1 h-4 w-4" /> {t("common.cancel")}
             </Button>
           )}
         </div>
@@ -250,10 +253,11 @@ function CreateBudgetForm({
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
       <PiggyBank className="h-8 w-8 text-muted-foreground" />
-      <p className="font-display text-lg">No budgets yet</p>
+      <p className="font-display text-lg">{t("budgets.empty")}</p>
       <p className="max-w-sm text-sm text-muted-foreground">
         Pick a category above and set a monthly limit to start tracking.
       </p>
@@ -279,6 +283,7 @@ function BudgetCard({
 
   onEdit: () => void;
 }) {
+  const { t } = useLanguage();
   const Icon = categoryIcon(category);
   const { fmt } = useCurrency();
   const pct = limit > 0 ? (spent / limit) * 100 : 0;
@@ -361,10 +366,10 @@ function BudgetCard({
 
       <div className="mt-4 flex justify-end gap-1">
         <Button variant="ghost" size="sm" onClick={onEdit}>
-          <Pencil className="mr-1 h-4 w-4" /> Edit
+          <Pencil className="mr-1 h-4 w-4" /> {t("budgets.edit")}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => del.mutate()} disabled={del.isPending}>
-          <Trash2 className="mr-1 h-4 w-4" /> Delete
+          <Trash2 className="mr-1 h-4 w-4" /> {t("budgets.delete")}
         </Button>
       </div>
     </motion.div>
