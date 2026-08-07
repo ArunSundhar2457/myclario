@@ -55,6 +55,7 @@ import {
   deleteTransaction,
   exportTransactionsCsv,
 } from "@/lib/transactions.functions";
+import { useLanguage } from "@/components/language-provider";
 
 type Kind = "expense" | "income";
 
@@ -87,6 +88,7 @@ export const Route = createFileRoute("/_authenticated/transactions")({
 const PAGE_SIZE = 10;
 
 function TransactionsPage() {
+  const { t } = useLanguage();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { selectedMonth } = useAppStore();
@@ -407,6 +409,7 @@ function TransactionList({
   onEdit: (row: TxRow) => void;
   queryKey: readonly unknown[];
 }) {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const delFn = useServerFn(deleteTransaction);
   const del = useMutation({
@@ -549,6 +552,7 @@ function ExportCsvButton({
   kind: Kind;
   search: { from?: string; to?: string; category?: string; q?: string };
 }) {
+  const { t } = useLanguage();
   const exportFn = useServerFn(exportTransactionsCsv);
   const [busy, setBusy] = useState(false);
   async function onClick() {
@@ -600,6 +604,7 @@ function AddTransactionSheet({
   currency: Currency;
   editing: TxRow | null;
 }) {
+  const { t } = useLanguage();
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [amount, setAmount] = useState<string>("");
   const [category, setCategory] = useState<string>("");

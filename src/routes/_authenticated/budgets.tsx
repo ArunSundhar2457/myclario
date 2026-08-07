@@ -26,6 +26,7 @@ import {
   updateBudget,
   deleteBudget,
 } from "@/lib/budgets.functions";
+import { useLanguage } from "@/components/language-provider";
 
 export const Route = createFileRoute("/_authenticated/budgets")({
   head: () => ({
@@ -52,6 +53,7 @@ const monthLabel = (ym: string) => {
 };
 
 function BudgetsPage() {
+  const { t } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency } = useCurrency();
   const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
@@ -123,6 +125,7 @@ function CreateBudgetForm({
   onCancelEdit: () => void;
   selectedMonth: string;
 }) {
+  const { t } = useLanguage();
 
   const [category, setCategory] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
@@ -250,6 +253,7 @@ function CreateBudgetForm({
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
       <PiggyBank className="h-8 w-8 text-muted-foreground" />
@@ -279,6 +283,7 @@ function BudgetCard({
 
   onEdit: () => void;
 }) {
+  const { t } = useLanguage();
   const Icon = categoryIcon(category);
   const { fmt } = useCurrency();
   const pct = limit > 0 ? (spent / limit) * 100 : 0;

@@ -27,6 +27,7 @@ import {
   togglePlannerTodo,
   deleteTodo,
 } from "@/lib/planner.functions";
+import { useLanguage } from "@/components/language-provider";
 
 type Priority = "low" | "medium" | "high";
 
@@ -51,6 +52,7 @@ function isoDate(d: Date) {
 }
 
 function PlannerPage() {
+  const { t } = useLanguage();
   const { selectedMonth } = useAppStore();
   const [selected, setSelected] = useState<Date>(new Date());
   const [viewMonth, setViewMonth] = useState<Date>(new Date());

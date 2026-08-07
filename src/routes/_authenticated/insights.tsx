@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/app-store";
 import { useCurrency } from "@/components/currency-provider";
 import { generateInsights, quickTip, type Insights } from "@/lib/insights.functions";
+import { useLanguage } from "@/components/language-provider";
 
 export const Route = createFileRoute("/_authenticated/insights")({
   head: () => ({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
+  const { t } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency, rate } = useCurrency();
   const genFn = useServerFn(generateInsights);
