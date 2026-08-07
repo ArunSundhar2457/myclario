@@ -57,10 +57,8 @@ function InsightsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">AI Insights</h1>
-          <p className="text-sm text-muted-foreground">
-            Let Clario read your month and tell you what matters most.
-          </p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("insights.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("insights.subtitle")}</p>
         </div>
       </div>
 
@@ -71,7 +69,7 @@ function InsightsPage() {
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Quick tip</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("insights.quickTip")}</p>
               {tip.isPending ? (
                 <Skeleton className="mt-2 h-4 w-64" />
               ) : (
@@ -89,7 +87,7 @@ function InsightsPage() {
             disabled={tip.isPending}
           >
             <RefreshCcw className={cn("mr-1 h-3 w-3", tip.isPending && "animate-spin")} />
-            Refresh
+            {t("insights.refresh")}
           </Button>
         </div>
       </div>
@@ -97,17 +95,16 @@ function InsightsPage() {
       {!insights && !generate.isFetching && !generate.isError && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
-          <p className="font-display text-lg">Generate your insights</p>
+          <p className="font-display text-lg">{t("insights.generateTitle")}</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Clario will analyze the selected month's income, spending, and budgets, then hand back a
-            calm read of where you stand.
+            {t("insights.generateHint")}
           </p>
           <Button
             onClick={() => (started ? generate.refetch() : setStarted(true))}
             className="mt-2"
             size="lg"
           >
-            <Sparkles className="mr-2 h-4 w-4" /> Generate insights
+            <Sparkles className="mr-2 h-4 w-4" /> {t("insights.generate")}
           </Button>
         </div>
       )}

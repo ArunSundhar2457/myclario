@@ -101,7 +101,7 @@ function PlannerPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Planner</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("planner.title")}</h1>
           <p className="text-sm text-muted-foreground">
             Plan your day, one task at a time.
           </p>
@@ -156,12 +156,12 @@ function PlannerPage() {
             </div>
           ) : dayRows.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-              <p className="font-display text-lg">Nothing planned yet</p>
+              <p className="font-display text-lg">{t("planner.empty")}</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Add your first task for {format(selected, "MMM d")} and set the tone for the day.
+                {t("planner.emptyHint").replace("{date}", format(selected, "MMM d"))}
               </p>
               <Button onClick={() => setSheetOpen(true)} className="mt-2">
-                <Plus className="mr-1 h-4 w-4" /> Add task
+                <Plus className="mr-1 h-4 w-4" /> {t("planner.addTask")}
               </Button>
             </div>
           ) : (

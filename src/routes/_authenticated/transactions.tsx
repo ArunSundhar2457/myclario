@@ -140,11 +140,9 @@ function TransactionsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Transactions
+            {t("transactions.title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Log income and expenses to keep an honest picture of your money.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         <KindToggle value={search.kind} onChange={setKind} />
       </div>
@@ -189,7 +187,7 @@ function TransactionsPage() {
               disabled={search.page <= 1}
               onClick={() => setPage(search.page - 1)}
             >
-              Previous
+              {t("transactions.previous")}
             </Button>
             <Button
               variant="outline"
@@ -197,7 +195,7 @@ function TransactionsPage() {
               disabled={search.page >= totalPages}
               onClick={() => setPage(search.page + 1)}
             >
-              Next
+              {t("transactions.next")}
             </Button>
           </div>
         </div>
@@ -442,12 +440,15 @@ function TransactionList({
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <p className="font-display text-lg">No {kind === "income" ? "income" : "expenses"} yet</p>
+        <p className="font-display text-lg">
+          {kind === "income" ? t("transactions.emptyIncome") : t("transactions.emptyExpenses")}
+        </p>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Add your first entry to start building a picture of your money.
+          {t("transactions.emptyHint")}
         </p>
         <Button onClick={onEmptyCta} className="mt-2">
-          <Plus className="mr-1 h-4 w-4" /> Add {kind}
+          <Plus className="mr-1 h-4 w-4" />{" "}
+          {kind === "income" ? t("transactions.addIncome") : t("transactions.addExpense")}
         </Button>
       </div>
     );
@@ -571,7 +572,7 @@ function ExportCsvButton({
   }
   return (
     <Button variant="outline" size="sm" onClick={onClick} disabled={busy}>
-      <Download className="mr-2 h-4 w-4" /> Export CSV
+      <Download className="mr-2 h-4 w-4" /> {t("transactions.exportCsv")}
     </Button>
   );
 }
