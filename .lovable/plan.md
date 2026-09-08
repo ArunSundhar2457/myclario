@@ -19,8 +19,8 @@ The selected direction is **Ethereal character focus**, translated through the l
 
 ## 2. Create a consistent Lhana asset and component system
 - Use the uploaded concept only as a visual reference, not as an embedded screenshot.
-- Produce a controlled set of matching Lhana illustrations from the same identity: primary welcome pose, compact avatar, thoughtful/insight pose, supportive empty-state pose, and celebratory success pose.
-- Keep fixed identity details across every asset: dark flowing hair, expressive eyes, mature friendly proportions, dark Clario clothing, subtle violet “C”, soft cinematic lighting, and restrained lavender backgrounds.
+- Produce a controlled set of matching Lhana illustrations from one canonical identity: primary welcome pose, compact avatar, thoughtful/insight pose, supportive empty-state pose, and celebratory success pose.
+- Keep fixed identity details across every asset: the same face, hairstyle, hair color, eyes, proportions, dark Clario clothing, subtle violet “C”, soft cinematic lighting, and restrained lavender backgrounds. Vary only pose and expression.
 - Store the approved outputs through the project asset flow and expose them through reusable components:
   - `LhanaAvatar`
   - `LhanaLauncher`
@@ -34,7 +34,7 @@ The selected direction is **Ethereal character focus**, translated through the l
 
 ## 3. Build Ask Lhana V1
 - Add a dedicated authenticated `/lhana` page and an enabled navigation entry without renaming existing core navigation.
-- Build the visible chat surface from AI Elements primitives for conversation scrolling, message parts/markdown, prompt input, loading shimmer, actions, and tool/result presentation.
+- Build the visible chat surface from AI Elements primitives for conversation scrolling, message parts/markdown, prompt input, loading shimmer, actions, and deterministic result-card presentation.
 - Use a single conversation for the current session only; add no thread list, history database, or browser persistence.
 - Opening state:
   - “Hey, I’m Lhana.”
@@ -43,9 +43,12 @@ The selected direction is **Ethereal character focus**, translated through the l
 - Keep the composer focused on entry, after send, after completion, and after returning to the chat.
 - Show the user message immediately and a Lhana thinking state before streamed output arrives.
 - Support text plus compact metric, comparison, budget, and transaction-explanation result cards inside assistant messages.
-- Add a server-streamed, authenticated AI endpoint using the AI SDK and Lovable AI Gateway. Send the full in-session transcript on every turn.
-- Give Lhana narrowly scoped **read-only** tools for monthly snapshot, spending/category comparison, budget health, and transaction explanation. She may analyze, calculate, explain, and recommend, but no tool may insert, update, delete, transfer, or create financial records.
-- Surface gateway errors clearly, retry only rate limits/transient server failures with bounded backoff, and keep an explicit user cancel control for streaming.
+- Reuse Clario’s existing server-side Gemini integration through a shared `src/lib/ai/gemini.server.ts` helper. Do not introduce Lovable AI Gateway, another provider, or a second AI infrastructure layer.
+- Refactor Insights and Briefing to use the shared helper without changing their current behavior.
+- For each user message, calculate the required financial context deterministically on the authenticated server using Supabase/RLS, sanitize it, and make exactly one Gemini generation call. Gemini must never access Supabase directly.
+- Send the complete in-session transcript plus only the required sanitized context to Gemini. Do not add model tool-calling, autonomous tool selection, agent loops, or multi-step model execution.
+- Keep Lhana strictly read-only: she may understand, analyze, explain, compare, calculate, and recommend, but no server path may create, update, delete, transfer, or modify financial records.
+- Surface Gemini/API errors clearly and keep an explicit user cancel control if the chosen Gemini request mode streams output; do not hide provider failures behind a generic assistant reply.
 
 ## 4. Add the floating Lhana launcher
 - Add one responsive launcher to the authenticated shell with the consistent avatar, a restrained lavender glow, and the label “Ask Lhana” on hover/focus or expanded mobile state.
@@ -77,7 +80,7 @@ The selected direction is **Ethereal character focus**, translated through the l
 - Refine desktop sidebar, mobile header, bottom navigation, active states, spacing, brand lockup, and month selector to match the new system.
 - Apply the shared tokens, typography, cards, controls, empty states, and motion language to Transactions, Budgets, Planner, and Settings without restructuring their workflows.
 - Keep high-value character appearances selective; remaining finance pages should primarily inherit the system rather than receive decorative Lhana illustrations.
-- Ensure all existing English/German/Spanish keys continue to resolve; add translated strings for new Lhana navigation, prompts, theme controls, and states.
+- Preserve all four existing languages exactly as they currently work: do not remove, rename, replace, reorder, or disable any language. First reconcile the language source/dictionary set if the checked-in files do not reflect the four-language product state, then add every new Lhana/navigation/theme string to all four existing dictionaries through the current i18n system.
 
 ## 8. Accessibility, metadata, and verification
 - Add unique route metadata for the new Ask Lhana page and complete any missing per-route social metadata while leaving existing route behavior intact.
@@ -88,9 +91,11 @@ The selected direction is **Ethereal character focus**, translated through the l
 
 ## Technical boundaries
 - Keep TanStack Start routing and the current authenticated shell.
+- Keep the existing server-side Gemini architecture; `src/lib/ai/gemini.server.ts` is the single shared helper for Gemini calls.
 - Keep Supabase RLS and authenticated server boundaries; no chat-history table is needed for the selected no-persistence model.
 - Do not alter the existing transaction, budget, planner, currency, language, or dashboard business rules.
 - Do not use direct client-side model calls or expose credentials.
+- Do not introduce Lovable AI Gateway, another AI provider, model tools, autonomous tool selection, agent loops, or multi-step generation for Lhana V1.
 - Do not make Lhana a write-capable agent in V1.
 - Do not embed the supplied concept board in the product or use generic icons as Lhana’s identity.
 
