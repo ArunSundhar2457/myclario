@@ -153,6 +153,19 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
             </button>
           );
         })}
+        <Link to="/lhana" className="mt-3 block">
+          <span
+            className={cn(
+              "flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all hover:shadow-elevated",
+              pathname === "/lhana"
+                ? "border-lhana/60 bg-lhana-soft text-foreground"
+                : "border-lhana/30 bg-gradient-to-r from-lhana-soft to-card text-foreground",
+            )}
+          >
+            <LhanaAvatar size={28} />
+            {t("nav.lhana")}
+          </span>
+        </Link>
       </nav>
       <div className="flex flex-col gap-1 border-t border-border pt-3">
         <button
@@ -246,6 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <BottomNav />
+      <LhanaFab />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
     </CurrencyProvider>
