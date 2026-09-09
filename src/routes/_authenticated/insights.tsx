@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -11,6 +11,21 @@ import { useAppStore } from "@/lib/app-store";
 import { useCurrency } from "@/components/currency-provider";
 import { generateInsights, quickTip, type Insights } from "@/lib/insights.functions";
 import { useLanguage } from "@/components/language-provider";
+import { LhanaAvatar } from "@/components/lhana";
+
+function WhyAskLhana({ question }: { question: string }) {
+  const { t } = useLanguage();
+  return (
+    <Link
+      to="/lhana"
+      search={{ q: question }}
+      className="mt-3 inline-flex items-center gap-2 rounded-full border border-lhana/30 bg-lhana-soft px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-lhana/60"
+    >
+      <LhanaAvatar size={20} />
+      {t("lhana.why")}
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/insights")({
   head: () => ({
