@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Currency } from "@/lib/currency";
 import { LANGUAGES, type Language } from "@/lib/i18n";
 import { useLanguage } from "@/components/language-provider";
+import { useTheme, type Theme } from "@/components/theme-provider";
 import {
   deleteAccount,
   exportUserData,
@@ -56,6 +57,7 @@ export function SettingsModal({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const getProfileFn = useServerFn(getProfile);
   const updateProfileFn = useServerFn(updateProfile);
