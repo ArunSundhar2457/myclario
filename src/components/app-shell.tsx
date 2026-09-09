@@ -7,6 +7,7 @@ import {
   Sparkles,
   LogOut,
   Settings as SettingsIcon,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
@@ -15,6 +16,7 @@ import { CurrencyProvider } from "@/components/currency-provider";
 import { LanguageProvider, useLanguage } from "@/components/language-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
+import { LhanaAvatar, LhanaLauncher } from "@/components/lhana";
 
 
 import {
