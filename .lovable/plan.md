@@ -3,7 +3,7 @@
 ## Goal
 Evolve the existing Clario application into a premium, character-driven finance product using the supplied Lhana concept as the visual north star, while preserving every existing route, data flow, currency/language feature, and financial action.
 
-The selected direction is **Ethereal character focus**, translated through the locked choices:
+The selected direction is **Financial mastery, guided by Lhana, interpreted through an ethereal, character-driven, premium personal-finance aesthetic**, translated through the locked choices:
 - **Palette:** Luminous Lavender — `#F7F5FF`, `#DDD7FF`, `#8B7CF6`, `#162044`, with restrained mint, blush, and warm attention accents
 - **Typography:** Urbanist for confident headings and financial figures; Epilogue for interface copy
 - **Layout:** responsive bento command center
@@ -19,7 +19,8 @@ The selected direction is **Ethereal character focus**, translated through the l
 
 ## 2. Create a consistent Lhana asset and component system
 - Use the uploaded concept only as a visual reference, not as an embedded screenshot.
-- Produce a controlled set of matching Lhana illustrations from one canonical identity: primary welcome pose, compact avatar, thoughtful/insight pose, supportive empty-state pose, and celebratory success pose.
+- Produce a controlled set of matching Lhana illustrations from ONE canonical identity: primary welcome pose, compact avatar, thoughtful/insight pose, supportive empty-state pose, and celebratory success pose. Create multiple poses and expressions of the SAME Lhana; never generate unrelated avatars for different screens.
+- If the asset-generation workflow cannot reliably produce consistent variants, use one approved canonical Lhana asset and build the reusable component architecture around it rather than introducing inconsistent character variants.
 - Keep fixed identity details across every asset: the same face, hairstyle, hair color, eyes, proportions, dark Clario clothing, subtle violet “C”, soft cinematic lighting, and restrained lavender backgrounds. Vary only pose and expression.
 - Store the approved outputs through the project asset flow and expose them through reusable components:
   - `LhanaAvatar`
@@ -45,9 +46,19 @@ The selected direction is **Ethereal character focus**, translated through the l
 - Support text plus compact metric, comparison, budget, and transaction-explanation result cards inside assistant messages.
 - Reuse Clario’s existing server-side Gemini integration through a shared `src/lib/ai/gemini.server.ts` helper. Do not introduce Lovable AI Gateway, another provider, or a second AI infrastructure layer.
 - Refactor Insights and Briefing to use the shared helper without changing their current behavior.
-- For each user message, calculate the required financial context deterministically on the authenticated server using Supabase/RLS, sanitize it, and make exactly one Gemini generation call. Gemini must never access Supabase directly.
-- Send the complete in-session transcript plus only the required sanitized context to Gemini. Do not add model tool-calling, autonomous tool selection, agent loops, or multi-step model execution.
-- Keep Lhana strictly read-only: she may understand, analyze, explain, compare, calculate, and recommend, but no server path may create, update, delete, transfer, or modify financial records.
+- For every Lhana user message, run exactly this server pipeline:
+  1. Authenticate the user on the server.
+  2. Query the user's financial data through the existing authenticated Supabase/RLS boundary.
+  3. Deterministically calculate the minimum financial context required for the current question.
+  4. Sanitize that context.
+  5. Send the in-session transcript plus only the minimum sanitized financial context required for the current question to Gemini.
+  6. Make exactly ONE Gemini generation call.
+  7. Validate the response before displaying it.
+- Implement deterministic server-side context/calculation functions (internal financial calculations, NOT AI tools) for: monthly snapshot, spending/category analysis, budget health, recent transactions, month comparison, and affordability.
+- The server is the source of truth for financial numbers; Gemini only explains and presents the supplied facts. Gemini must never access Supabase directly.
+- Make no additional model calls for tool selection, reasoning, follow-up generation, autonomous decisions, agent loops, or multi-step model execution. The response may be streamed to the client from that single Gemini generation request where supported; streaming must not introduce additional model calls.
+- Keep Lhana strictly read-only: she may understand, analyze, explain, compare, calculate, and recommend. She may NOT create, update, or delete expenses; modify budgets; create goals; transfer money; modify financial records; or execute financial actions. No server path created for Lhana V1 may perform financial mutations.
+- Transcript privacy: the conversation exists only for the current session. Do not persist the transcript; do not create chat-history tables, conversation-thread tables, browser/local-storage chat persistence, or persistent Lhana memory.
 - Surface Gemini/API errors clearly and keep an explicit user cancel control if the chosen Gemini request mode streams output; do not hide provider failures behind a generic assistant reply.
 
 ## 4. Add the floating Lhana launcher
@@ -86,7 +97,7 @@ The selected direction is **Ethereal character focus**, translated through the l
 - Add unique route metadata for the new Ask Lhana page and complete any missing per-route social metadata while leaving existing route behavior intact.
 - Verify contrast in light/dark themes, visible keyboard focus, semantic headings, descriptive image alt text, touch targets, reduced-motion behavior, and chart readability.
 - Validate desktop and mobile layouts, including launcher/FAB/bottom-nav coexistence and no text or card overflow.
-- Test Ask Lhana with real authenticated calls, including streaming, cancellation, read-only tool results, gateway failure messages, and no cross-session restoration.
+- Test Ask Lhana with real authenticated calls, including streaming, cancellation, deterministic financial context/results, Gemini/API failure messages, authentication/RLS isolation, and no cross-session restoration. Do not test or implement read-only model tools — Lhana V1 has no model tools.
 - Run the project’s typecheck, lint, tests if present, and production build; resolve all introduced errors.
 
 ## Technical boundaries
@@ -99,10 +110,19 @@ The selected direction is **Ethereal character focus**, translated through the l
 - Do not make Lhana a write-capable agent in V1.
 - Do not embed the supplied concept board in the product or use generic icons as Lhana’s identity.
 
+## Four-language i18n requirement
+Clario currently supports FOUR languages. Preserve all four exactly as they currently work — do not remove, rename, replace, reorder, or disable any language, and do not create a separate Lhana translation system. All new Lhana UI strings (navigation, Ask Lhana, suggested prompts, chat/loading/error/empty states, buttons, theme controls, "Why? Ask Lhana", accessibility labels, and metadata where applicable) must use the existing i18n architecture with translations in all four existing dictionaries. If checked-in dictionaries do not reflect the four-language product state, first reconcile them with the existing application language configuration rather than silently changing the supported-language architecture.
+
+## Preserve the existing application
+The visual transformation must not alter existing business rules or break: authentication, Supabase/RLS, transactions, budgets, planner, dashboard calculations, Insights, Briefing, currency conversion, month scoping, four-language support, existing routes, or existing financial actions. It improves the product without changing underlying financial behavior.
+
+## Design north star
+The supplied Lhana character sheet is the primary visual reference for the character system. The final Clario experience should feel premium, soft, cinematic, playful, intelligent, trustworthy, Gen-Z friendly, and character-driven. It must NOT look like a children's finance app, a generic SaaS dashboard, a ChatGPT clone, a banking admin panel, or a luxury wealth-management terminal. The character is part of Clario's product identity, not decorative artwork.
+
 ## Delivery order
 1. Tokens, typography, theme behavior, and shared surfaces
 2. Consistent Lhana asset set and reusable components
-3. Ask Lhana route, streaming, read-only tools, and launcher
+3. Ask Lhana route, streaming, deterministic financial context, response validation, and launcher
 4. Dashboard bento composition
 5. Insights integration
 6. Navigation and remaining-page visual normalization
