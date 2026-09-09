@@ -192,6 +192,22 @@ export function SettingsModal({
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>{t("theme.label")}</Label>
+              <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["light", "dark", "system"] as const).map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {t(`theme.${m}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex flex-col gap-2 border-t border-border pt-4">
               <Button
                 variant="secondary"
