@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Clario is a calm, AI-powered personal finance and daily planning app. Track income, expenses, budgets, and tasks in one place.",
       },
       { name: "author", content: "Clario" },
-      { name: "theme-color", content: "#0E7C66" },
+      { name: "theme-color", content: "#8B7CF6" },
       { property: "og:title", content: "Clario — Your money. Your day. Sorted." },
       {
         property: "og:description",
@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&family=Epilogue:wght@400;500;600;700&display=swap",
       },
     ],
   }),
