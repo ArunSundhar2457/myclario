@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { callGeminiJson } from "./ai/gemini.server";
 
 const inputSchema = z.object({
   monthLabel: z.string(),
