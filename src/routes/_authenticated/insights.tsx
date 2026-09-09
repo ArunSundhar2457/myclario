@@ -162,6 +162,7 @@ function InsightsPage() {
             >
 
               <p className="text-sm leading-relaxed">{insights.thisMonth}</p>
+              <WhyAskLhana question="Explain my month in simple words. What matters most?" />
             </InsightCard>
 
             <InsightCard icon={TrendingUp} title="Where your money went">
@@ -200,6 +201,7 @@ function InsightsPage() {
                   ))}
                 </ul>
               )}
+              <WhyAskLhana question="How is my budget health and what should I do about it?" />
             </InsightCard>
 
             <InsightCard icon={Lightbulb} title="Smart tips">
