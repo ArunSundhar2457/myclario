@@ -21,7 +21,7 @@ The selected direction is **Financial mastery, guided by Lhana, interpreted thro
 - Use the uploaded concept only as a visual reference, not as an embedded screenshot.
 - Produce a controlled set of matching Lhana illustrations from ONE canonical identity: primary welcome pose, compact avatar, thoughtful/insight pose, supportive empty-state pose, and celebratory success pose. Create multiple poses and expressions of the SAME Lhana; never generate unrelated avatars for different screens.
 - If the asset-generation workflow cannot reliably produce consistent variants, use one approved canonical Lhana asset and build the reusable component architecture around it rather than introducing inconsistent character variants.
-- Keep fixed identity details across every asset: the same face, hairstyle, hair color, eyes, proportions, dark Clario clothing, subtle violet “C”, soft cinematic lighting, and restrained lavender backgrounds. Vary only pose and expression.
+- Keep fixed identity details across every asset: the same face, hairstyle, hair color, eye style, skin tone, proportions, clothing, subtle violet Clario “C”, soft cinematic lighting language, consistent illustration/rendering style, and restrained lavender backgrounds. Vary only pose and expression.
 - Store the approved outputs through the project asset flow and expose them through reusable components:
   - `LhanaAvatar`
   - `LhanaLauncher`
