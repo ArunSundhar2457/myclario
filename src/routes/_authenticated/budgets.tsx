@@ -56,7 +56,11 @@ function BudgetsPage() {
   const { t } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency } = useCurrency();
-  const [editing, setEditing] = useState<{ id: string; category: string; monthly_limit: number } | null>(null);
+  const [editing, setEditing] = useState<{
+    id: string;
+    category: string;
+    monthly_limit: number;
+  } | null>(null);
   const listFn = useServerFn(listBudgets);
   const availFn = useServerFn(listAvailableCategories);
   const { data: budgets, isLoading } = useQuery({
@@ -84,7 +88,6 @@ function BudgetsPage() {
         selectedMonth={selectedMonth}
       />
 
-
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Loading…
@@ -102,7 +105,6 @@ function BudgetsPage() {
               spent={b.spent}
               currency={currency}
               selectedMonth={selectedMonth}
-
               onEdit={() =>
                 setEditing({ id: b.id, category: b.category, monthly_limit: b.monthly_limit })
               }
@@ -162,8 +164,7 @@ function CreateBudgetForm({
   });
 
   const update = useMutation({
-    mutationFn: (vars: { id: string; monthly_limit: number }) =>
-      updateFn({ data: vars }),
+    mutationFn: (vars: { id: string; monthly_limit: number }) => updateFn({ data: vars }),
     onSuccess: () => {
       toast.success("Budget updated");
       onCancelEdit();
@@ -189,7 +190,6 @@ function CreateBudgetForm({
     create.mutate({
       data: { category: category as never, monthly_limit: num, month: selectedMonth },
     });
-
   }
 
   const pending = create.isPending || update.isPending;
@@ -202,7 +202,9 @@ function CreateBudgetForm({
           <label className="mb-1 block text-xs text-muted-foreground">Category</label>
           <Select value={category} onValueChange={setCategory} disabled={isEdit}>
             <SelectTrigger>
-              <SelectValue placeholder={available.length ? "Choose…" : "All categories have budgets"} />
+              <SelectValue
+                placeholder={available.length ? "Choose…" : "All categories have budgets"}
+              />
             </SelectTrigger>
             <SelectContent>
               {isEdit && editing ? (
@@ -357,7 +359,8 @@ function BudgetCard({
           Spent <span className="font-semibold tabular-nums text-foreground">{fmt(spent)}</span>
         </span>
         <span className="text-muted-foreground">
-          Remaining <span className="font-semibold tabular-nums text-foreground">{fmt(remaining)}</span>
+          Remaining{" "}
+          <span className="font-semibold tabular-nums text-foreground">{fmt(remaining)}</span>
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">

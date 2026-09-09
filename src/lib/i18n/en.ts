@@ -84,6 +84,31 @@ export const en: Record<string, string> = {
   "common.save": "Save",
   "common.cancel": "Cancel",
   "common.saving": "Saving…",
+
+  // Lhana
+  "nav.lhana": "Ask Lhana",
+  "lhana.title": "Ask Lhana",
+  "lhana.greeting": "Hey, I'm Lhana ✨",
+  "lhana.intro":
+    "Your calm, no-judgment money guide. Ask me anything about your month and I'll explain what it means — and what to do next.",
+  "lhana.readonlyNote": "Lhana can explain and recommend — she never changes your records.",
+  "lhana.placeholder": "Ask about your money…",
+  "lhana.send": "Send",
+  "lhana.cancel": "Stop",
+  "lhana.thinking": "Lhana is thinking…",
+  "lhana.error": "Lhana couldn't answer right now — try again in a moment.",
+  "lhana.promptSpending": "Where did my money go this month?",
+  "lhana.promptAfford": "Can I afford a ₹5,000 purchase?",
+  "lhana.promptMonth": "How is my budget looking?",
+  "lhana.promptChange": "What's one thing I could improve?",
+  "lhana.why": "Why? Ask Lhana",
+  "lhana.askAbout": "Ask Lhana about this",
+
+  // Theme
+  "theme.label": "Appearance",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+  "theme.system": "System",
 };
 
 export default en;

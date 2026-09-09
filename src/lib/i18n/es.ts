@@ -47,8 +47,7 @@ export const es: Record<string, string> = {
 
   // Transacciones
   "transactions.title": "Transacciones",
-  "transactions.subtitle":
-    "Registra ingresos y gastos para tener una imagen honesta de tu dinero.",
+  "transactions.subtitle": "Registra ingresos y gastos para tener una imagen honesta de tu dinero.",
   "transactions.emptyIncome": "Aún sin ingresos",
   "transactions.emptyExpenses": "Aún sin gastos",
   "transactions.emptyHint": "Añade tu primer registro para empezar a ver tu dinero.",
@@ -84,6 +83,31 @@ export const es: Record<string, string> = {
   "common.save": "Guardar",
   "common.cancel": "Cancelar",
   "common.saving": "Guardando…",
+
+  // Lhana
+  "nav.lhana": "Pregunta a Lhana",
+  "lhana.title": "Pregunta a Lhana",
+  "lhana.greeting": "Hola, soy Lhana ✨",
+  "lhana.intro":
+    "Tu guía de dinero tranquila y sin juicios. Pregúntame lo que quieras sobre tu mes y te explicaré qué significa — y qué hacer después.",
+  "lhana.readonlyNote": "Lhana explica y recomienda — nunca modifica tus registros.",
+  "lhana.placeholder": "Pregunta sobre tu dinero…",
+  "lhana.send": "Enviar",
+  "lhana.cancel": "Detener",
+  "lhana.thinking": "Lhana está pensando…",
+  "lhana.error": "Lhana no puede responder ahora — inténtalo de nuevo en un momento.",
+  "lhana.promptSpending": "¿A dónde fue mi dinero este mes?",
+  "lhana.promptAfford": "¿Puedo permitirme una compra de ₹5.000?",
+  "lhana.promptMonth": "¿Cómo va mi presupuesto?",
+  "lhana.promptChange": "¿Qué podría mejorar?",
+  "lhana.why": "¿Por qué? Pregunta a Lhana",
+  "lhana.askAbout": "Pregunta a Lhana sobre esto",
+
+  // Apariencia
+  "theme.label": "Apariencia",
+  "theme.light": "Claro",
+  "theme.dark": "Oscuro",
+  "theme.system": "Sistema",
 };
 
 export default es;

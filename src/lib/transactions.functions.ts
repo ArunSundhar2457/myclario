@@ -61,8 +61,7 @@ export const createTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => {
     const parsed = createSchema.parse(d);
-    const allowed =
-      parsed.kind === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    const allowed = parsed.kind === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
     if (!(allowed as readonly string[]).includes(parsed.category)) {
       throw new Error("Invalid category");
     }
@@ -129,9 +128,7 @@ export const updateTransaction = createServerFn({ method: "POST" })
 
 export const deleteTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ kind: kindSchema, id: z.string().uuid() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ kind: kindSchema, id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const table = tableFor(data.kind);
     const { error } = await context.supabase.from(table).delete().eq("id", data.id);
@@ -172,7 +169,14 @@ export const exportTransactionsCsv = createServerFn({ method: "GET" })
     const lines = [header.join(",")];
     for (const r of rows ?? []) {
       lines.push(
-        [r.occurred_on, r.category, r.description ?? "", r.amount, r.is_recurring, r.recurrence ?? ""]
+        [
+          r.occurred_on,
+          r.category,
+          r.description ?? "",
+          r.amount,
+          r.is_recurring,
+          r.recurrence ?? "",
+        ]
           .map(esc)
           .join(","),
       );

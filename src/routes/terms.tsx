@@ -16,9 +16,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="space-y-2">
       <h2 className="font-display text-xl font-semibold text-foreground">{title}</h2>
-      <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-        {children}
-      </div>
+      <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">{children}</div>
     </section>
   );
 }
@@ -38,13 +36,17 @@ function TermsPage() {
         </header>
 
         <Section title="1. Acceptance of Terms">
-          <p>By using Clario, you agree to these terms. If you do not agree, please do not use the app.</p>
+          <p>
+            By using Clario, you agree to these terms. If you do not agree, please do not use the
+            app.
+          </p>
         </Section>
 
         <Section title="2. What Clario Is">
           <p>
-            Clario is a personal finance tracking and daily planning tool. It is provided for personal use only.
-            It is not a financial advisor. Any AI insights are informational only — not financial advice.
+            Clario is a personal finance tracking and daily planning tool. It is provided for
+            personal use only. It is not a financial advisor. Any AI insights are informational only
+            — not financial advice.
           </p>
         </Section>
 
@@ -77,8 +79,8 @@ function TermsPage() {
 
         <Section title="6. AI Insights Disclaimer">
           <p>
-            AI-generated insights are for informational purposes only. Clario is not a licensed financial
-            advisor. Always consult a professional for financial decisions.
+            AI-generated insights are for informational purposes only. Clario is not a licensed
+            financial advisor. Always consult a professional for financial decisions.
           </p>
         </Section>
 
@@ -92,21 +94,22 @@ function TermsPage() {
 
         <Section title="8. Limitation of Liability">
           <p>
-            Clario is provided "as is" without warranties. We are not liable for any financial decisions
-            made based on app data or AI insights.
+            Clario is provided "as is" without warranties. We are not liable for any financial
+            decisions made based on app data or AI insights.
           </p>
         </Section>
 
         <Section title="9. Termination">
           <p>
-            We reserve the right to suspend accounts that violate these terms. You can delete your account
-            anytime from Settings.
+            We reserve the right to suspend accounts that violate these terms. You can delete your
+            account anytime from Settings.
           </p>
         </Section>
 
         <Section title="10. Changes to Terms">
           <p>
-            We may update these terms. Continued use of Clario after changes means you accept the new terms.
+            We may update these terms. Continued use of Clario after changes means you accept the
+            new terms.
           </p>
         </Section>
 

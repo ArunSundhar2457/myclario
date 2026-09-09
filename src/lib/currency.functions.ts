@@ -15,8 +15,7 @@ export type LatestRates = {
 export const getLatestRates = createServerFn({ method: "GET" }).handler(
   async (): Promise<LatestRates> => {
     const url = process.env["SUPABASE_URL"];
-    const key =
-      process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"];
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"];
     if (!url || !key) return null;
 
     const supabase = createClient<Database>(url, key, {

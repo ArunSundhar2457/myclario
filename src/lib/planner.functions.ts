@@ -8,9 +8,10 @@ function monthBounds(year: number, month: number) {
   const first = new Date(year, month - 1, 1);
   const next = new Date(year, month, 1);
   const iso = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-      d.getDate(),
-    ).padStart(2, "0")}`;
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
+      2,
+      "0",
+    )}`;
   return { first: iso(first), nextFirst: iso(next) };
 }
 
@@ -126,4 +127,3 @@ export const deleteTodo = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
-

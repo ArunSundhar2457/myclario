@@ -15,7 +15,6 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -97,11 +96,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Clario — Your money. Your day. Sorted." },
-      { name: "description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
-      { property: "og:description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
-      { name: "twitter:description", content: "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d" },
+      {
+        name: "description",
+        content:
+          "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place.",
+      },
+      {
+        property: "og:description",
+        content:
+          "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "AI-powered finance tracker and daily planner. Track expenses, manage budgets, and plan your day — all in one place.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/36739f5f-6338-4688-8009-1fa7788c975d",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -122,7 +141,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -141,14 +159,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
           .then((registration) => {
-            console.log('Service worker registered:', registration);
+            console.log("Service worker registered:", registration);
           })
           .catch((error) => {
-            console.error('Service worker registration failed:', error);
+            console.error("Service worker registration failed:", error);
           });
       });
     }

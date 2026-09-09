@@ -3,7 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MONTH_REGEX, monthBounds } from "./month";
 
-
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 type Cur = z.infer<typeof currencySchema>;
 
@@ -42,7 +41,6 @@ function monthWindow(ym?: string) {
   return { first, nextFirst, monthFirst: monthDate };
 }
 
-
 import { callGeminiJson } from "./ai/gemini.server";
 
 export const generateInsights = createServerFn({ method: "POST" })
@@ -63,7 +61,6 @@ export const generateInsights = createServerFn({ method: "POST" })
     const fmt = (v: number) => format(v * rate, currency);
     const { first, nextFirst, monthFirst } = monthWindow(data.month);
 
-
     const [expRes, incRes, budRes] = await Promise.all([
       context.supabase
         .from("expenses")
@@ -75,10 +72,7 @@ export const generateInsights = createServerFn({ method: "POST" })
         .select("amount")
         .gte("occurred_on", first)
         .lt("occurred_on", nextFirst),
-      context.supabase
-        .from("budgets")
-        .select("category, monthly_limit")
-        .eq("month", monthFirst),
+      context.supabase.from("budgets").select("category, monthly_limit").eq("month", monthFirst),
     ]);
 
     if (expRes.error) throw expRes.error;
@@ -162,15 +156,17 @@ Data (amounts in ${currency}):
       const parsed = JSON.parse(text) as Partial<Insights>;
       return {
         thisMonth: parsed.thisMonth || fallback.thisMonth,
-        whereMoneyWent: Array.isArray(parsed.whereMoneyWent) && parsed.whereMoneyWent.length > 0
-          ? parsed.whereMoneyWent.slice(0, 3)
-          : fallback.whereMoneyWent,
+        whereMoneyWent:
+          Array.isArray(parsed.whereMoneyWent) && parsed.whereMoneyWent.length > 0
+            ? parsed.whereMoneyWent.slice(0, 3)
+            : fallback.whereMoneyWent,
         budgetHealth: Array.isArray(parsed.budgetHealth)
           ? parsed.budgetHealth
           : fallback.budgetHealth,
-        tips: Array.isArray(parsed.tips) && parsed.tips.length > 0
-          ? parsed.tips.slice(0, 3)
-          : fallback.tips,
+        tips:
+          Array.isArray(parsed.tips) && parsed.tips.length > 0
+            ? parsed.tips.slice(0, 3)
+            : fallback.tips,
       };
     } catch {
       return fallback;

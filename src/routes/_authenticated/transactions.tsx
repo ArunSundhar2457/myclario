@@ -43,11 +43,7 @@ import { useAppStore } from "@/lib/app-store";
 import { useCurrency } from "@/components/currency-provider";
 import type { Currency } from "@/lib/currency";
 import { monthDayRange } from "@/lib/month";
-import {
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES,
-  categoryIcon,
-} from "@/lib/categories";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, categoryIcon } from "@/lib/categories";
 import {
   listTransactions,
   createTransaction,
@@ -106,10 +102,7 @@ function TransactionsPage() {
     manualRangeRef.current = false;
     const { start, end } = monthDayRange(selectedMonth);
     navigate({ search: { ...search, from: start, to: end, page: 1 } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-
   }, [selectedMonth, navigate]);
-
 
   const filters = {
     kind: search.kind,
@@ -158,7 +151,6 @@ function TransactionsPage() {
           if ("from" in patch || "to" in patch) manualRangeRef.current = true;
           navigate({ search: { ...search, ...patch, page: 1 } });
         }}
-
       />
 
       <TransactionList
@@ -297,16 +289,8 @@ function FilterBar({
         )}
       </div>
       <div className={cn("mt-3 grid gap-3 md:grid-cols-4", !open && "hidden md:grid")}>
-        <DateField
-          label="From"
-          value={search.from}
-          onChange={(v) => onChange({ from: v })}
-        />
-        <DateField
-          label="To"
-          value={search.to}
-          onChange={(v) => onChange({ to: v })}
-        />
+        <DateField label="From" value={search.from} onChange={(v) => onChange({ from: v })} />
+        <DateField label="To" value={search.to} onChange={(v) => onChange({ to: v })} />
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">Category</label>
           <Select
@@ -370,9 +354,7 @@ function DateField({
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(d) =>
-              onChange(d ? format(d, "yyyy-MM-dd") : undefined)
-            }
+            onSelect={(d) => onChange(d ? format(d, "yyyy-MM-dd") : undefined)}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
           />
@@ -446,9 +428,7 @@ function TransactionList({
         <p className="font-display text-lg">
           {kind === "income" ? t("transactions.emptyIncome") : t("transactions.emptyExpenses")}
         </p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          {t("transactions.emptyHint")}
-        </p>
+        <p className="max-w-sm text-sm text-muted-foreground">{t("transactions.emptyHint")}</p>
         <Button onClick={onEmptyCta} className="mt-2">
           <Plus className="mr-1 h-4 w-4" />{" "}
           {kind === "income" ? t("transactions.addIncome") : t("transactions.addExpense")}
@@ -559,7 +539,13 @@ function ExportCsvButton({
     setBusy(true);
     try {
       const { csv } = await exportFn({
-        data: { kind, from: search.from, to: search.to, category: search.category, search: search.q },
+        data: {
+          kind,
+          from: search.from,
+          to: search.to,
+          category: search.category,
+          search: search.q,
+        },
       });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -687,7 +673,9 @@ function AddTransactionSheet({
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>{isEdit ? "Edit transaction" : "New transaction"}</SheetTitle>
-          <SheetDescription>{isEdit ? "Update this entry." : "Log money in or out."}</SheetDescription>
+          <SheetDescription>
+            {isEdit ? "Update this entry." : "Log money in or out."}
+          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-5 space-y-5">
@@ -824,12 +812,7 @@ function AddTransactionSheet({
             </div>
           )}
 
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={submit}
-            disabled={save.isPending}
-          >
+          <Button className="w-full" size="lg" onClick={submit} disabled={save.isPending}>
             {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Save"}
           </Button>
         </div>

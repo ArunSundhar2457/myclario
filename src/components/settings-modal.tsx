@@ -38,12 +38,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Currency } from "@/lib/currency";
 import { LANGUAGES, type Language } from "@/lib/i18n";
 import { useLanguage } from "@/components/language-provider";
-import {
-  deleteAccount,
-  exportUserData,
-  getProfile,
-  updateProfile,
-} from "@/lib/profile.functions";
+import { useTheme, type Theme } from "@/components/theme-provider";
+import { deleteAccount, exportUserData, getProfile, updateProfile } from "@/lib/profile.functions";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 
 export function SettingsModal({
@@ -56,6 +52,7 @@ export function SettingsModal({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const getProfileFn = useServerFn(getProfile);
   const updateProfileFn = useServerFn(updateProfile);
@@ -154,10 +151,7 @@ export function SettingsModal({
 
             <div className="space-y-2">
               <Label>{t("settings.currency")}</Label>
-              <Select
-                value={currency}
-                onValueChange={(v) => setLocalCurrency(v as Currency)}
-              >
+              <Select value={currency} onValueChange={(v) => setLocalCurrency(v as Currency)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -173,10 +167,7 @@ export function SettingsModal({
 
             <div className="space-y-2">
               <Label>{t("settings.language")}</Label>
-              <Select
-                value={language}
-                onValueChange={(v) => setLocalLanguage(v as Language)}
-              >
+              <Select value={language} onValueChange={(v) => setLocalLanguage(v as Language)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -184,6 +175,22 @@ export function SettingsModal({
                   {LANGUAGES.map((l) => (
                     <SelectItem key={l.code} value={l.code}>
                       {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("theme.label")}</Label>
+              <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["light", "dark", "system"] as const).map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {t(`theme.${m}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -215,10 +222,7 @@ export function SettingsModal({
 
             <p className="text-center text-xs text-muted-foreground">
               {t("settings.needHelp")}{" "}
-              <a
-                href="mailto:myclario.help@gmail.com"
-                className="text-primary hover:underline"
-              >
+              <a href="mailto:myclario.help@gmail.com" className="text-primary hover:underline">
                 myclario.help@gmail.com
               </a>
             </p>

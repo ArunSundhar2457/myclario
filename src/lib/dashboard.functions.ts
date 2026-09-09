@@ -30,9 +30,7 @@ export const getSnapshot = createServerFn({ method: "POST" })
 
 export const getSpendingTrend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
-  )
+  .inputValidator((d: unknown) => z.object({ month: monthSchema.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { start: startIso, end: endIso, days } = monthDayRange(data.month);
     const start = new Date(
@@ -96,16 +94,11 @@ export const getCategoryBreakdown = createServerFn({ method: "POST" })
 
 export const getBudgetAlerts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
-  )
+  .inputValidator((d: unknown) => z.object({ month: monthSchema.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { first, nextFirst } = monthBounds(data.month);
     const [budgets, exp] = await Promise.all([
-      context.supabase
-        .from("budgets")
-        .select("id, category, monthly_limit")
-        .eq("month", first),
+      context.supabase.from("budgets").select("id, category, monthly_limit").eq("month", first),
       context.supabase
         .from("expenses")
         .select("category, amount")
@@ -134,7 +127,6 @@ export const getBudgetAlerts = createServerFn({ method: "POST" })
       .filter((b) => b.percent_used >= 80)
       .sort((a, b) => b.percent_used - a.percent_used);
   });
-
 
 export const getTodayTodos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

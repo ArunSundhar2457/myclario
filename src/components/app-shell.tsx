@@ -7,6 +7,7 @@ import {
   Sparkles,
   LogOut,
   Settings as SettingsIcon,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
@@ -15,7 +16,7 @@ import { CurrencyProvider } from "@/components/currency-provider";
 import { LanguageProvider, useLanguage } from "@/components/language-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
-
+import { LhanaAvatar, LhanaLauncher } from "@/components/lhana";
 
 import {
   Select,
@@ -67,7 +68,6 @@ function GlobalControls() {
   );
 }
 
-
 function Brand() {
   const { t } = useLanguage();
   return (
@@ -84,17 +84,13 @@ function Brand() {
         >
           Clario
         </span>
-        <span
-          className="mt-1 text-muted-foreground"
-          style={{ fontSize: "10px" }}
-        >
+        <span className="mt-1 text-muted-foreground" style={{ fontSize: "10px" }}>
           {t("brand.tagline")}
         </span>
       </div>
     </Link>
   );
 }
-
 
 function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const { t } = useLanguage();
@@ -106,7 +102,6 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
     toast.success(t("nav.signedOut"));
     navigate({ to: "/auth", replace: true });
   }
-
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
@@ -151,6 +146,19 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
             </button>
           );
         })}
+        <Link to="/lhana" className="mt-3 block">
+          <span
+            className={cn(
+              "flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all hover:shadow-elevated",
+              pathname === "/lhana"
+                ? "border-lhana/60 bg-lhana-soft text-foreground"
+                : "border-lhana/30 bg-gradient-to-r from-lhana-soft to-card text-foreground",
+            )}
+          >
+            <LhanaAvatar size={28} />
+            {t("nav.lhana")}
+          </span>
+        </Link>
       </nav>
       <div className="flex flex-col gap-1 border-t border-border pt-3">
         <button
@@ -229,25 +237,32 @@ function BottomNav() {
   );
 }
 
+function LhanaFab() {
+  const { t } = useLanguage();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/lhana") return null;
+  return <LhanaLauncher label={t("nav.lhana")} />;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
     <LanguageProvider>
-    <CurrencyProvider>
-    <div className="flex min-h-screen w-full bg-background">
-      <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MobileHeader />
-        <DesktopHeader />
-        <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
-          <div className="mx-auto w-full max-w-[1200px]">{children}</div>
-        </main>
-      </div>
-      <BottomNav />
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </div>
-    </CurrencyProvider>
+      <CurrencyProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <MobileHeader />
+            <DesktopHeader />
+            <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
+              <div className="mx-auto w-full max-w-[1200px]">{children}</div>
+            </main>
+          </div>
+          <BottomNav />
+          <LhanaFab />
+          <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+        </div>
+      </CurrencyProvider>
     </LanguageProvider>
   );
 }
-

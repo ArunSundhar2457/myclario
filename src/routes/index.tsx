@@ -32,14 +32,12 @@ export const Route = createFileRoute("/")({
       { title: "Clario — Your money. Your day. Sorted." },
       {
         name: "description",
-        content:
-          "The AI-powered app that connects your finances and daily planning in one place.",
+        content: "The AI-powered app that connects your finances and daily planning in one place.",
       },
       { property: "og:title", content: "Clario — Your money. Your day. Sorted." },
       {
         property: "og:description",
-        content:
-          "The AI-powered app that connects your finances and daily planning in one place.",
+        content: "The AI-powered app that connects your finances and daily planning in one place.",
       },
     ],
   }),
@@ -117,7 +115,9 @@ function StickyNav() {
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/auth">
-            <Button variant="ghost" size="sm">Sign in</Button>
+            <Button variant="ghost" size="sm">
+              Sign in
+            </Button>
           </Link>
           <Link to="/auth">
             <Button size="sm">Start free</Button>
@@ -256,7 +256,11 @@ function MockDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <StatMock label="Saved this month" value={<CountUp value={45200} prefix="₹" />} tone="primary" />
+        <StatMock
+          label="Saved this month"
+          value={<CountUp value={45200} prefix="₹" />}
+          tone="primary"
+        />
         <StatMock label="Tasks completed" value={<CountUp value={12} suffix=" / 15" />} />
         <StatMock label="Budget health" value="On track" tone="primary" />
       </div>
@@ -266,7 +270,8 @@ function MockDashboard() {
           <Sparkles className="h-3.5 w-3.5" /> AI Daily Briefing
         </div>
         <p className="text-sm text-muted-foreground">
-          You're 18% under budget on dining this week. Keep it up — you'll hit your savings goal by the 24th.
+          You're 18% under budget on dining this week. Keep it up — you'll hit your savings goal by
+          the 24th.
         </p>
       </div>
 
@@ -291,15 +296,7 @@ function MockDashboard() {
   );
 }
 
-function StatMock({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: ReactNode;
-  tone?: "primary";
-}) {
+function StatMock({ label, value, tone }: { label: string; value: ReactNode; tone?: "primary" }) {
   return (
     <div className="rounded-xl border border-border bg-background p-3">
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -384,7 +381,9 @@ function TrustBar() {
             ) : (
               <span>{it}</span>
             )}
-            {i < items.length - 1 && <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />}
+            {i < items.length - 1 && (
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+            )}
           </motion.span>
         ))}
       </div>
@@ -414,10 +413,8 @@ function AudienceTicker() {
     <section
       className="relative overflow-hidden border-b border-border bg-background py-5"
       style={{
-        WebkitMaskImage:
-          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-        maskImage:
-          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -558,7 +555,11 @@ function HowItWorks() {
   const steps = [
     { n: 1, title: "Sign up in seconds", desc: "Free account. No credit card required." },
     { n: 2, title: "Log expenses and plan your day", desc: "Track money and tasks in one place." },
-    { n: 3, title: "Get AI insights that connect both", desc: "See how your habits shape your goals." },
+    {
+      n: 3,
+      title: "Get AI insights that connect both",
+      desc: "See how your habits shape your goals.",
+    },
   ];
 
   return (
@@ -583,7 +584,10 @@ function HowItWorks() {
             preserveAspectRatio="none"
           >
             <motion.line
-              x1="10" x2="90" y1="1" y2="1"
+              x1="10"
+              x2="90"
+              y1="1"
+              y2="1"
               stroke="currentColor"
               className="text-primary/30"
               strokeWidth="0.3"
@@ -750,9 +754,7 @@ function About() {
               <div className="font-display text-lg font-semibold text-foreground">
                 Arun Sundhar N
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                Founder & Creator of Clario
-              </div>
+              <div className="mt-1 text-sm text-muted-foreground">Founder & Creator of Clario</div>
               <a
                 href="https://linkedin.com/in/arun-sundhar-n-6aba50249"
                 target="_blank"
@@ -800,10 +802,7 @@ function FinalCTA() {
           </p>
           <div className="mt-8">
             <Link to="/auth">
-              <Button
-                size="lg"
-                className="bg-white text-[#1a3a2a] hover:bg-white/90"
-              >
+              <Button size="lg" className="bg-white text-[#1a3a2a] hover:bg-white/90">
                 Start for free <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -827,9 +826,13 @@ function Footer() {
           <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-          <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+          <Link to="/privacy" className="hover:text-foreground">
+            Privacy Policy
+          </Link>
           <span>·</span>
-          <Link to="/terms" className="hover:text-foreground">Terms</Link>
+          <Link to="/terms" className="hover:text-foreground">
+            Terms
+          </Link>
           <span>·</span>
           <a href="mailto:myclario.help@gmail.com" className="hover:text-foreground">
             myclario.help@gmail.com

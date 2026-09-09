@@ -87,7 +87,6 @@ function PlannerPage() {
     queryFn: () => dayFn({ data: { date: selectedIso } }),
   });
 
-
   const daysWithTodos = useMemo(() => {
     const set = new Set<string>();
     for (const t of monthQuery.data ?? []) {
@@ -103,10 +102,10 @@ function PlannerPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("planner.title")}</h1>
-          <p className="text-sm text-muted-foreground">
-            Plan your day, one task at a time.
-          </p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            {t("planner.title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">Plan your day, one task at a time.</p>
         </div>
         <Button
           variant="outline"
@@ -138,7 +137,6 @@ function PlannerPage() {
             className={cn("pointer-events-auto")}
           />
         </div>
-
 
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-card">
@@ -356,7 +354,6 @@ export function AddTaskSheet({
     }
   }, [open, editing]);
 
-
   const targetDate = editing?.due_date ?? date;
 
   const save = useMutation({
@@ -410,7 +407,9 @@ export function AddTaskSheet({
       <SheetContent side="bottom" className="rounded-t-2xl md:max-w-lg md:mx-auto">
         <SheetHeader>
           <SheetTitle>{isEdit ? "Edit task" : "New task"}</SheetTitle>
-          <SheetDescription>For {format(new Date(targetDate + "T00:00:00"), "MMM d, yyyy")}</SheetDescription>
+          <SheetDescription>
+            For {format(new Date(targetDate + "T00:00:00"), "MMM d, yyyy")}
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={submit} className="mt-4 space-y-4">
@@ -453,7 +452,9 @@ export function AddTaskSheet({
               <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Priority</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Priority
+              </label>
               <div className="inline-flex w-full rounded-md border border-input p-0.5">
                 {(["low", "medium", "high"] as const).map((p) => (
                   <button

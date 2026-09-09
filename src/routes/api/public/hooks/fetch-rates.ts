@@ -59,12 +59,15 @@ export const Route = createFileRoute("/api/public/hooks/fetch-rates")({
 
         const rateDate = payload.date ?? new Date().toISOString().slice(0, 10);
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { error } = await supabaseAdmin
-          .from("exchange_rates")
-          .upsert(
-            { base_currency: "INR", rate_date: rateDate, rates, fetched_at: new Date().toISOString() },
-            { onConflict: "base_currency,rate_date" },
-          );
+        const { error } = await supabaseAdmin.from("exchange_rates").upsert(
+          {
+            base_currency: "INR",
+            rate_date: rateDate,
+            rates,
+            fetched_at: new Date().toISOString(),
+          },
+          { onConflict: "base_currency,rate_date" },
+        );
         if (error) {
           console.error("[fetch-rates] upsert failed", error);
           return Response.json({ error: error.message, wrote: false }, { status: 500 });
