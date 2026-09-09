@@ -16,7 +16,11 @@ export const DEFAULT_LANGUAGE: Language = "en";
 
 export const DICTS: Record<Language, Record<string, string>> = { en, de, es, fr };
 
-export function translate(lang: Language, key: string, vars?: Record<string, string | number>): string {
+export function translate(
+  lang: Language,
+  key: string,
+  vars?: Record<string, string | number>,
+): string {
   let s = DICTS[lang]?.[key] ?? en[key] ?? key;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;

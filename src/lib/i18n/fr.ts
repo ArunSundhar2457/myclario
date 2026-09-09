@@ -12,8 +12,7 @@ export const fr: Record<string, string> = {
 
   // Paramètres
   "settings.title": "Paramètres",
-  "settings.description":
-    "Gère ton profil, ta devise, ta langue et les données de ton compte.",
+  "settings.description": "Gère ton profil, ta devise, ta langue et les données de ton compte.",
   "settings.displayName": "Nom affiché",
   "settings.displayNamePlaceholder": "Ton nom",
   "settings.currency": "Devise",

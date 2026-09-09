@@ -43,7 +43,6 @@ export function monthDayRange(ym?: string): { start: string; end: string; days: 
   const lastOfMonth = new Date(y, m, 0);
   const isCurrent = y === now.getFullYear() && m === now.getMonth() + 1;
   const end = isCurrent && now < lastOfMonth ? new Date(y, m - 1, now.getDate()) : lastOfMonth;
-  const days =
-    Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+  const days = Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
   return { start: isoDate(start), end: isoDate(end), days };
 }

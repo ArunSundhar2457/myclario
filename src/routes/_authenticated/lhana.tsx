@@ -6,12 +6,7 @@ import { askLhana } from "@/lib/lhana.functions";
 import { useCurrency } from "@/components/currency-provider";
 import { useLanguage } from "@/components/language-provider";
 import { useAppStore } from "@/lib/app-store";
-import {
-  LhanaMessage,
-  LhanaPromptChip,
-  LhanaThinking,
-  LhanaWelcome,
-} from "@/components/lhana";
+import { LhanaMessage, LhanaPromptChip, LhanaThinking, LhanaWelcome } from "@/components/lhana";
 import { Button } from "@/components/ui/button";
 
 type Msg = { role: "user" | "assistant"; text: string };
@@ -125,9 +120,7 @@ function LhanaPage() {
     <div className="mx-auto flex h-[calc(100dvh-11rem)] max-w-3xl flex-col md:h-[calc(100dvh-7rem)]">
       <div className="flex items-center justify-between pb-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">
-            {t("lhana.title")}
-          </h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">{t("lhana.title")}</h1>
           <p className="text-xs text-muted-foreground">{t("lhana.readonlyNote")}</p>
         </div>
       </div>

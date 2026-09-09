@@ -8,9 +8,7 @@ const monthSchema = z.string().regex(MONTH_REGEX);
 
 export const listBudgets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
-  )
+  .inputValidator((d: unknown) => z.object({ month: monthSchema.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { first, nextFirst, monthDate } = monthBounds(data.month);
     const { data: budgets, error } = await context.supabase
@@ -40,9 +38,7 @@ export const listBudgets = createServerFn({ method: "POST" })
 
 export const listAvailableCategories = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ month: monthSchema.optional() }).parse(d ?? {}),
-  )
+  .inputValidator((d: unknown) => z.object({ month: monthSchema.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { monthDate } = monthBounds(data.month);
     const { data: rows, error } = await context.supabase
@@ -80,7 +76,6 @@ export const createBudget = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ...row, monthly_limit: Number(row.monthly_limit), spent: 0 };
   });
-
 
 export const updateBudget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

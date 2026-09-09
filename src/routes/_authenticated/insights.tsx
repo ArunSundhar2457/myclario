@@ -68,13 +68,13 @@ function InsightsPage() {
 
   const insights = generate.data as Insights | undefined;
 
-
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("insights.title")}</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            {t("insights.title")}
+          </h1>
           <p className="text-sm text-muted-foreground">{t("insights.subtitle")}</p>
         </div>
       </div>
@@ -86,23 +86,19 @@ function InsightsPage() {
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("insights.quickTip")}</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {t("insights.quickTip")}
+              </p>
               {tip.isPending ? (
                 <Skeleton className="mt-2 h-4 w-64" />
               ) : (
                 <p className="mt-1 text-sm font-medium">
-                  {tip.data?.tip ??
-                    "Tap refresh for a quick, personalized nudge from Clario."}
+                  {tip.data?.tip ?? "Tap refresh for a quick, personalized nudge from Clario."}
                 </p>
               )}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => tip.mutate()}
-            disabled={tip.isPending}
-          >
+          <Button variant="outline" size="sm" onClick={() => tip.mutate()} disabled={tip.isPending}>
             <RefreshCcw className={cn("mr-1 h-3 w-3", tip.isPending && "animate-spin")} />
             {t("insights.refresh")}
           </Button>
@@ -113,9 +109,7 @@ function InsightsPage() {
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
           <p className="font-display text-lg">{t("insights.generateTitle")}</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            {t("insights.generateHint")}
-          </p>
+          <p className="max-w-md text-sm text-muted-foreground">{t("insights.generateHint")}</p>
           <Button
             onClick={() => (started ? generate.refetch() : setStarted(true))}
             className="mt-2"
@@ -132,12 +126,7 @@ function InsightsPage() {
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">
           <p className="font-medium text-destructive">Couldn't generate insights.</p>
           <p className="mt-1 text-muted-foreground">Give it another try in a moment.</p>
-          <Button
-            className="mt-3"
-            variant="outline"
-            size="sm"
-            onClick={() => generate.refetch()}
-          >
+          <Button className="mt-3" variant="outline" size="sm" onClick={() => generate.refetch()}>
             Try again
           </Button>
         </div>
@@ -160,7 +149,6 @@ function InsightsPage() {
                 1,
               ).toLocaleString(undefined, { month: "long", year: "numeric" })}
             >
-
               <p className="text-sm leading-relaxed">{insights.thisMonth}</p>
               <WhyAskLhana question="Explain my month in simple words. What matters most?" />
             </InsightCard>

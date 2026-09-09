@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SettingsModal } from "@/components/settings-modal";
 import { LhanaAvatar, LhanaLauncher } from "@/components/lhana";
 
-
 import {
   Select,
   SelectContent,
@@ -69,7 +68,6 @@ function GlobalControls() {
   );
 }
 
-
 function Brand() {
   const { t } = useLanguage();
   return (
@@ -86,17 +84,13 @@ function Brand() {
         >
           Clario
         </span>
-        <span
-          className="mt-1 text-muted-foreground"
-          style={{ fontSize: "10px" }}
-        >
+        <span className="mt-1 text-muted-foreground" style={{ fontSize: "10px" }}>
           {t("brand.tagline")}
         </span>
       </div>
     </Link>
   );
 }
-
 
 function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const { t } = useLanguage();
@@ -108,7 +102,6 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
     toast.success(t("nav.signedOut"));
     navigate({ to: "/auth", replace: true });
   }
-
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar px-3 py-5 md:flex">
@@ -255,22 +248,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
     <LanguageProvider>
-    <CurrencyProvider>
-    <div className="flex min-h-screen w-full bg-background">
-      <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MobileHeader />
-        <DesktopHeader />
-        <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
-          <div className="mx-auto w-full max-w-[1200px]">{children}</div>
-        </main>
-      </div>
-      <BottomNav />
-      <LhanaFab />
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </div>
-    </CurrencyProvider>
+      <CurrencyProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <MobileHeader />
+            <DesktopHeader />
+            <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
+              <div className="mx-auto w-full max-w-[1200px]">{children}</div>
+            </main>
+          </div>
+          <BottomNav />
+          <LhanaFab />
+          <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+        </div>
+      </CurrencyProvider>
     </LanguageProvider>
   );
 }
-

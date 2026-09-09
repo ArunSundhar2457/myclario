@@ -94,9 +94,7 @@ export function LhanaWelcome({
       />
       <div className="space-y-1.5">
         <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
-        <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-          {body}
-        </p>
+        <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">{body}</p>
       </div>
       {children}
     </div>
@@ -214,9 +212,7 @@ export function LhanaInsightCard({
     <section className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card">
       <div className="flex items-center gap-2.5">
         <LhanaAvatar size={30} />
-        <span className="text-xs font-semibold uppercase tracking-wide text-lhana">
-          {title}
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-lhana">{title}</span>
       </div>
       <div className="mt-3 text-sm leading-relaxed text-foreground">{children}</div>
       {footer && <div className="mt-4">{footer}</div>}

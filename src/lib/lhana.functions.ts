@@ -41,7 +41,11 @@ function normalizeCat(c: string): string {
 
 /** Strip control chars and cap length so free-text notes stay prompt-safe. */
 function sanitizeText(s: string, max = 60): string {
-  return s.replace(/[{}[\]<>\\`\n\r\t]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  return s
+    .replace(/[{}[\]<>\\`\n\r\t]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
 }
 
 const messageSchema = z.object({
@@ -85,11 +89,27 @@ export const askLhana = createServerFn({ method: "POST" })
     const prevBounds = monthBounds(prevYm);
 
     const [expRes, incRes, budRes, prevExpRes, prevIncRes, recentRes] = await Promise.all([
-      supabase.from("expenses").select("category, amount").gte("occurred_on", first).lt("occurred_on", nextFirst),
-      supabase.from("income").select("amount").gte("occurred_on", first).lt("occurred_on", nextFirst),
+      supabase
+        .from("expenses")
+        .select("category, amount")
+        .gte("occurred_on", first)
+        .lt("occurred_on", nextFirst),
+      supabase
+        .from("income")
+        .select("amount")
+        .gte("occurred_on", first)
+        .lt("occurred_on", nextFirst),
       supabase.from("budgets").select("category, monthly_limit").eq("month", monthDate),
-      supabase.from("expenses").select("amount").gte("occurred_on", prevBounds.first).lt("occurred_on", prevBounds.nextFirst),
-      supabase.from("income").select("amount").gte("occurred_on", prevBounds.first).lt("occurred_on", prevBounds.nextFirst),
+      supabase
+        .from("expenses")
+        .select("amount")
+        .gte("occurred_on", prevBounds.first)
+        .lt("occurred_on", prevBounds.nextFirst),
+      supabase
+        .from("income")
+        .select("amount")
+        .gte("occurred_on", prevBounds.first)
+        .lt("occurred_on", prevBounds.nextFirst),
       supabase
         .from("expenses")
         .select("category, amount, description, occurred_on")
@@ -142,7 +162,10 @@ export const askLhana = createServerFn({ method: "POST" })
       amount: fmt(Number(r.amount)),
     }));
 
-    const monthLabel = new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long", year: "numeric" });
+    const monthLabel = new Date(y, m - 1, 1).toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
 
     const contextBlock = [
       `Month: ${monthLabel}`,

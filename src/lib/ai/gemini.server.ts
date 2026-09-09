@@ -26,9 +26,7 @@ export async function callGemini(options: {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        ...(options.system
-          ? { systemInstruction: { parts: [{ text: options.system }] } }
-          : {}),
+        ...(options.system ? { systemInstruction: { parts: [{ text: options.system }] } } : {}),
         contents: options.messages.map((m) => ({
           role: m.role,
           parts: [{ text: m.text }],

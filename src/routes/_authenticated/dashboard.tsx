@@ -105,7 +105,6 @@ function Dashboard() {
       <div className="grid gap-5 lg:grid-cols-3">
         <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
         <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
-
       </div>
     </div>
   );
@@ -126,9 +125,7 @@ function Header() {
   return (
     <div>
       <p className="text-sm text-muted-foreground">{todayLabel()}</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
-        {greeting}
-      </h1>
+      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">{greeting}</h1>
     </div>
   );
 }
@@ -148,8 +145,7 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
     success: "bg-[color-mix(in_oklab,var(--success)_18%,var(--background))] text-success",
     destructive:
       "bg-[color-mix(in_oklab,var(--destructive)_15%,var(--background))] text-destructive",
-    accent:
-      "bg-[color-mix(in_oklab,var(--accent)_30%,var(--background))] text-accent-foreground",
+    accent: "bg-[color-mix(in_oklab,var(--accent)_30%,var(--background))] text-accent-foreground",
   };
   return (
     <motion.div
@@ -192,7 +188,6 @@ function SnapshotSection({
     queryKey: ["snapshot", range, selectedMonth],
     queryFn: () => snapshotFn({ data: { range, month: selectedMonth } }),
   });
-
 
   const income = data?.income ?? 0;
   const spent = data?.spent ?? 0;
@@ -268,9 +263,7 @@ function BudgetAlertStrip({
       >
         <div className="flex items-center gap-2 text-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span className="text-sm font-medium text-foreground">
-            You're on track this month.
-          </span>
+          <span className="text-sm font-medium text-foreground">You're on track this month.</span>
         </div>
       </motion.section>
     );
@@ -284,9 +277,7 @@ function BudgetAlertStrip({
     >
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
-        <span className="text-xs font-semibold uppercase tracking-wide">
-          Budget alerts
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-wide">Budget alerts</span>
       </div>
       <ul className="mt-3 flex flex-wrap gap-2">
         {alerts.map((b) => (
@@ -306,13 +297,7 @@ function BudgetAlertStrip({
   );
 }
 
-function BriefingCard({
-  monthLabelText,
-  currency,
-}: {
-  monthLabelText: string;
-  currency: string;
-}) {
+function BriefingCard({ monthLabelText, currency }: { monthLabelText: string; currency: string }) {
   const briefingFn = useServerFn(getDailyBriefing);
   const { data, isLoading } = useQuery({
     queryKey: ["daily-briefing", monthLabelText, currency],
@@ -341,9 +326,7 @@ function BriefingCard({
         </div>
       ) : (
         <div className="mt-3 space-y-2">
-          <p className="font-display text-xl font-semibold tracking-tight">
-            {data.greeting}
-          </p>
+          <p className="font-display text-xl font-semibold tracking-tight">{data.greeting}</p>
           <p className="text-sm leading-relaxed text-foreground/90">{data.insight}</p>
           <p className="text-sm font-medium text-primary">→ {data.nudge}</p>
           <div className="pt-1">
@@ -368,13 +351,13 @@ function TasksCard() {
   });
 
   const mutate = useMutation({
-    mutationFn: (vars: { id: string; is_completed: boolean }) =>
-      toggleFn({ data: vars }),
+    mutationFn: (vars: { id: string; is_completed: boolean }) => toggleFn({ data: vars }),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["today-todos"] });
-      const prev = queryClient.getQueryData<{ rows: Array<{ id: string; is_completed: boolean }>; total: number }>(
-        ["today-todos"],
-      );
+      const prev = queryClient.getQueryData<{
+        rows: Array<{ id: string; is_completed: boolean }>;
+        total: number;
+      }>(["today-todos"]);
       if (prev) {
         queryClient.setQueryData(["today-todos"], {
           ...prev,
@@ -432,9 +415,7 @@ function TasksCard() {
               <li key={t.id} className="flex items-center gap-3 py-2.5">
                 <Checkbox
                   checked={t.is_completed}
-                  onCheckedChange={(c) =>
-                    mutate.mutate({ id: t.id, is_completed: c === true })
-                  }
+                  onCheckedChange={(c) => mutate.mutate({ id: t.id, is_completed: c === true })}
                 />
                 <span
                   className={
@@ -623,7 +604,9 @@ function CategoryDonutCard({
       transition={{ duration: 0.4, delay: 0.3 }}
       className="rounded-2xl border border-border bg-card p-5 shadow-card"
     >
-      <h2 className="font-display text-lg font-semibold tracking-tight">{t("dashboard.byCategory")}</h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight">
+        {t("dashboard.byCategory")}
+      </h2>
       <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
       <div className="mt-4 h-56">
         {isLoading ? (
@@ -662,9 +645,7 @@ function CategoryDonutCard({
         )}
       </div>
       {!isLoading && !hasData && (
-        <p className="text-center text-xs text-muted-foreground">
-          {t("dashboard.noCategoryData")}
-        </p>
+        <p className="text-center text-xs text-muted-foreground">{t("dashboard.noCategoryData")}</p>
       )}
     </motion.section>
   );

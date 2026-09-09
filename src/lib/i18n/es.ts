@@ -47,8 +47,7 @@ export const es: Record<string, string> = {
 
   // Transacciones
   "transactions.title": "Transacciones",
-  "transactions.subtitle":
-    "Registra ingresos y gastos para tener una imagen honesta de tu dinero.",
+  "transactions.subtitle": "Registra ingresos y gastos para tener una imagen honesta de tu dinero.",
   "transactions.emptyIncome": "Aún sin ingresos",
   "transactions.emptyExpenses": "Aún sin gastos",
   "transactions.emptyHint": "Añade tu primer registro para empezar a ver tu dinero.",

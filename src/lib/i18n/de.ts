@@ -47,8 +47,7 @@ export const de: Record<string, string> = {
 
   // Transaktionen
   "transactions.title": "Transaktionen",
-  "transactions.subtitle":
-    "Erfasse Einnahmen und Ausgaben für ein ehrliches Bild deiner Finanzen.",
+  "transactions.subtitle": "Erfasse Einnahmen und Ausgaben für ein ehrliches Bild deiner Finanzen.",
   "transactions.emptyIncome": "Noch keine Einnahmen",
   "transactions.emptyExpenses": "Noch keine Ausgaben",
   "transactions.emptyHint": "Füge den ersten Eintrag hinzu, um dein Bild aufzubauen.",
