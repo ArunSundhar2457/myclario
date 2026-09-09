@@ -1,15 +1,29 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MONTH_REGEX, monthBounds } from "./month";
 import { callGemini } from "./ai/gemini.server";
+import { translate, type Language } from "./i18n";
+import {
+  buildCards,
+  buildContextBlock,
+  contextNeeds,
+  deterministicAnswer,
+  detectIntents,
+  parseModelResponse,
+  type CardLabels,
+  type Facts,
+  type LhanaCard,
+} from "./lhana.logic";
 
 /**
  * Ask Lhana — V1.
  * For every user message: authenticate, query through Supabase/RLS,
- * deterministically compute the minimum sanitized financial context,
- * and make exactly ONE Gemini generation call. Gemini never touches
- * Supabase and never sees raw tables — only the sanitized context below.
+ * deterministically compute the MINIMUM sanitized financial context the
+ * question needs, then make exactly ONE Gemini generation call. Gemini never
+ * touches Supabase, never sees raw tables, and never produces a figure that
+ * is rendered as a number — all cards are computed server-side.
  * Strictly read-only: this module performs no writes of any kind.
  */
 
@@ -39,7 +53,7 @@ function normalizeCat(c: string): string {
   return c === "Other" ? "Miscellaneous" : c;
 }
 
-/** Strip control chars and cap length so free-text notes stay prompt-safe. */
+/** Strip control chars and cap length so free text stays prompt-safe. */
 function sanitizeText(s: string, max = 60): string {
   return s
     .replace(/[{}[\]<>\\`\n\r\t]/g, " ")
@@ -69,7 +83,9 @@ const LANGUAGE_NAME: Record<string, string> = {
   fr: "French",
 };
 
-export type LhanaReply = { ok: true; reply: string } | { ok: false; error: "unavailable" };
+export type LhanaReply =
+  | { ok: true; reply: string; cards: LhanaCard[]; degraded: boolean }
+  | { ok: false; error: "unavailable" };
 
 export const askLhana = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -79,10 +95,14 @@ export const askLhana = createServerFn({ method: "POST" })
     const currency = data.currency;
     const rate = data.rate;
     const fmt = (v: number) => format(v * rate, currency);
+    const lang = data.language as Language;
+    const tr = (key: string) => translate(lang, key);
+
+    const intents = detectIntents(data.message);
+    const needs = contextNeeds(intents);
 
     // ---- Deterministic financial context (server is the source of truth) ----
     const { first, nextFirst, monthDate } = monthBounds(data.month);
-    // Previous month bounds, computed explicitly for month comparison.
     const [y, m] = [Number(monthDate.slice(0, 4)), Number(monthDate.slice(5, 7))];
     const prevDate = new Date(y, m - 2, 1);
     const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
@@ -99,24 +119,32 @@ export const askLhana = createServerFn({ method: "POST" })
         .select("amount")
         .gte("occurred_on", first)
         .lt("occurred_on", nextFirst),
-      supabase.from("budgets").select("category, monthly_limit").eq("month", monthDate),
-      supabase
-        .from("expenses")
-        .select("amount")
-        .gte("occurred_on", prevBounds.first)
-        .lt("occurred_on", prevBounds.nextFirst),
-      supabase
-        .from("income")
-        .select("amount")
-        .gte("occurred_on", prevBounds.first)
-        .lt("occurred_on", prevBounds.nextFirst),
-      supabase
-        .from("expenses")
-        .select("category, amount, description, occurred_on")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst)
-        .order("occurred_on", { ascending: false })
-        .limit(8),
+      needs.budgets
+        ? supabase.from("budgets").select("category, monthly_limit").eq("month", monthDate)
+        : Promise.resolve({ data: [], error: null } as const),
+      needs.previousMonth
+        ? supabase
+            .from("expenses")
+            .select("amount")
+            .gte("occurred_on", prevBounds.first)
+            .lt("occurred_on", prevBounds.nextFirst)
+        : Promise.resolve({ data: [], error: null } as const),
+      needs.previousMonth
+        ? supabase
+            .from("income")
+            .select("amount")
+            .gte("occurred_on", prevBounds.first)
+            .lt("occurred_on", prevBounds.nextFirst)
+        : Promise.resolve({ data: [], error: null } as const),
+      needs.recent
+        ? supabase
+            .from("expenses")
+            .select("category, amount, description, occurred_on")
+            .gte("occurred_on", first)
+            .lt("occurred_on", nextFirst)
+            .order("occurred_on", { ascending: false })
+            .limit(8)
+        : Promise.resolve({ data: [], error: null } as const),
     ]);
 
     if (expRes.error) throw expRes.error;
@@ -128,67 +156,96 @@ export const askLhana = createServerFn({ method: "POST" })
       const c = normalizeCat(e.category);
       spentByCat[c] = (spentByCat[c] ?? 0) + Number(e.amount);
     }
-    const totalExpenses = Object.values(spentByCat).reduce((a, b) => a + b, 0);
-    const totalIncome = (incRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
-    const net = totalIncome - totalExpenses;
-    const prevExpenses = (prevExpRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
-    const prevIncome = (prevIncRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
-
-    const budgets = (budRes.data ?? []).map((b) => {
-      const limit = Number(b.monthly_limit);
-      const spent = spentByCat[normalizeCat(b.category)] ?? 0;
-      return {
-        category: normalizeCat(b.category),
-        limit: fmt(limit),
-        spent: fmt(spent),
-        percentUsed: limit > 0 ? Math.round((spent / limit) * 100) : 0,
-        remaining: fmt(Math.max(0, limit - spent)),
-      };
-    });
-
-    const topCategories = Object.entries(spentByCat)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([category, amt]) => ({
-        category,
-        amount: fmt(amt),
-        share: totalExpenses > 0 ? Math.round((amt / totalExpenses) * 100) : 0,
-      }));
-
-    const recent = (recentRes.data ?? []).map((r) => ({
-      date: r.occurred_on,
-      category: normalizeCat(r.category),
-      note: r.description ? sanitizeText(r.description) : null,
-      amount: fmt(Number(r.amount)),
-    }));
+    const spent = Object.values(spentByCat).reduce((a, b) => a + b, 0);
+    const income = (incRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
 
     const monthLabel = new Date(y, m - 1, 1).toLocaleString("en-US", {
       month: "long",
       year: "numeric",
     });
+    const prevLabel = new Date(prevDate).toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
 
-    const contextBlock = [
-      `Month: ${monthLabel}`,
-      `Income: ${fmt(totalIncome)} | Spent: ${fmt(totalExpenses)} | Net: ${fmt(net)}`,
-      `Previous month — Income: ${fmt(prevIncome)} | Spent: ${fmt(prevExpenses)}`,
-      `Top categories: ${topCategories.length ? JSON.stringify(topCategories) : "none"}`,
-      `Budgets: ${budgets.length ? JSON.stringify(budgets) : "none set"}`,
-      `Recent expenses: ${recent.length ? JSON.stringify(recent) : "none"}`,
-    ].join("\n");
+    const facts: Facts = {
+      monthLabel,
+      income,
+      spent,
+      net: income - spent,
+      spentByCat,
+      budgets: (budRes.data ?? []).map((b) => ({
+        category: normalizeCat(b.category),
+        limit: Number(b.monthly_limit),
+        spent: spentByCat[normalizeCat(b.category)] ?? 0,
+      })),
+      ...(needs.previousMonth
+        ? {
+            prev: {
+              label: prevLabel,
+              income: (prevIncRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0),
+              spent: (prevExpRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0),
+            },
+          }
+        : {}),
+      ...(needs.recent
+        ? {
+            recent: (recentRes.data ?? []).map((r) => ({
+              date: r.occurred_on,
+              category: normalizeCat(r.category),
+              note: r.description ? sanitizeText(r.description) : null,
+              amount: Number(r.amount),
+            })),
+          }
+        : {}),
+    };
+
+    const cardLabels: CardLabels = {
+      income: tr("lhana.card.income"),
+      spent: tr("lhana.card.spent"),
+      netLeft: tr("lhana.card.netLeft"),
+      vsPrevious: tr("lhana.card.vsPrevious"),
+      thisMonth: tr("lhana.card.thisMonth"),
+      previousMonth: tr("lhana.card.previousMonth"),
+      recentActivity: tr("lhana.card.recentActivity"),
+      purchase: tr("lhana.card.purchase"),
+      leftAfter: tr("lhana.card.leftAfter"),
+    };
+
+    const cards = buildCards(facts, intents, fmt, data.message, cardLabels);
+    const fallbackAnswer = deterministicAnswer(facts, fmt, {
+      noData: tr("lhana.fallbackNoData"),
+      summary: tr("lhana.fallbackSummary"),
+      unavailable: tr("lhana.error"),
+    });
+    const contextBlock = buildContextBlock(facts, intents, fmt, data.message);
 
     // ---- Exactly one Gemini generation call ----
     const system = `You are Lhana, Clario's warm, smart, encouraging AI financial companion.
 Personality: calm, plain-spoken, Gen-Z friendly, never judgmental. Celebrate wins.
 Rules:
-- The FINANCIAL CONTEXT below is authoritative. Never invent or estimate numbers; only use figures given there. If the context lacks data to answer, say what you can see and suggest what to track.
-- You are read-only: you can analyze, explain, compare, calculate, and recommend, but you can never create, edit, or delete records or move money. If asked to change something, explain how the user can do it in Clario instead.
+- The FINANCIAL CONTEXT is authoritative. Never invent, estimate, or extrapolate numbers; use only figures given there. If it lacks the data, say what you can see and suggest what to track.
+- Never invent a payday, salary date, or future income — Clario does not track them.
+- Affordability is judged against money left this month and overall spending, never against a single category budget.
+- You are read-only: analyze, explain, compare, calculate, and recommend, but you can never create, edit, or delete records or move money. If asked to change something, explain how the user can do it in Clario instead.
 - Reply in ${LANGUAGE_NAME[data.language] ?? "English"}.
-- Keep answers under 120 words. Short paragraphs or tight bullet points. No headers, no tables.
-- Format monetary amounts exactly as they appear in the context (already ${currency}-formatted).`;
+- Keep the answer under 120 words. Short paragraphs or tight bullets. No headers, no tables, no markdown fences.
+- Format monetary amounts exactly as they appear in the context (already ${currency}-formatted).
+Return ONLY a JSON object of the form {"answer": "..."} and nothing else.`;
+
+    const signal = (() => {
+      try {
+        return getRequest()?.signal;
+      } catch {
+        return undefined;
+      }
+    })();
 
     const text = await callGemini({
       system,
       temperature: 0.6,
+      json: true,
+      ...(signal ? { signal } : {}),
       messages: [
         ...data.history.map((h) => ({
           role: (h.role === "assistant" ? "model" : "user") as "user" | "model",
@@ -201,8 +258,11 @@ Rules:
       ],
     });
 
-    // ---- Validate before display ----
-    const reply = text?.trim();
-    if (!reply || reply.length < 2) return { ok: false, error: "unavailable" };
-    return { ok: true, reply: reply.slice(0, 1500) };
+    // ---- Strict validation before display, with deterministic fallback ----
+    const parsed = parseModelResponse(text);
+    if (!parsed) {
+      if (!fallbackAnswer) return { ok: false, error: "unavailable" };
+      return { ok: true, reply: fallbackAnswer, cards, degraded: true };
+    }
+    return { ok: true, reply: parsed.answer.slice(0, 1500), cards, degraded: false };
   });

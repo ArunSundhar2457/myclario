@@ -18,12 +18,15 @@ export async function callGemini(options: {
   messages: GeminiMessage[];
   json?: boolean;
   temperature?: number;
+  /** Caller-owned cancellation (user pressed Stop / client disconnected). */
+  signal?: AbortSignal;
 }): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
   try {
     const res = await fetch(`${ENDPOINT}?key=${key}`, {
       method: "POST",
+      ...(options.signal ? { signal: options.signal } : {}),
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         ...(options.system ? { systemInstruction: { parts: [{ text: options.system }] } } : {}),

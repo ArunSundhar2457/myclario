@@ -220,6 +220,123 @@ export function LhanaInsightCard({
   );
 }
 
+export function LhanaComparisonCard({
+  label,
+  currentLabel,
+  currentValue,
+  previousLabel,
+  previousValue,
+  deltaText,
+  tone = "default",
+}: {
+  label: string;
+  currentLabel: string;
+  currentValue: string;
+  previousLabel: string;
+  previousValue: string;
+  deltaText: string;
+  tone?: "default" | "good" | "warn";
+}) {
+  const toneClass = {
+    default: "text-muted-foreground",
+    good: "text-success",
+    warn: "text-destructive",
+  } as const;
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] text-muted-foreground">{currentLabel}</p>
+          <p className="font-display text-xl font-bold tabular-nums">{currentValue}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] text-muted-foreground">{previousLabel}</p>
+          <p className="font-display text-base font-semibold tabular-nums text-muted-foreground">
+            {previousValue}
+          </p>
+        </div>
+      </div>
+      <p className={cn("mt-2 text-xs font-semibold tabular-nums", toneClass[tone])}>{deltaText}</p>
+    </div>
+  );
+}
+
+export function LhanaBudgetCard({
+  category,
+  spent,
+  limit,
+  percentUsed,
+  usedLabel,
+  tone = "default",
+}: {
+  category: string;
+  spent: string;
+  limit: string;
+  percentUsed: number;
+  usedLabel: string;
+  tone?: "default" | "good" | "warn";
+}) {
+  const bar = {
+    default: "bg-lhana",
+    good: "bg-success",
+    warn: "bg-destructive",
+  } as const;
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-sm font-semibold">{category}</p>
+        <p className="text-xs tabular-nums text-muted-foreground">
+          {percentUsed}% {usedLabel}
+        </p>
+      </div>
+      <div
+        className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"
+        role="progressbar"
+        aria-valuenow={Math.min(percentUsed, 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={category}
+      >
+        <span
+          className={cn("block h-full rounded-full", bar[tone])}
+          style={{ width: `${Math.min(percentUsed, 100)}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs tabular-nums text-muted-foreground">
+        {spent} / {limit}
+      </p>
+    </div>
+  );
+}
+
+export function LhanaTransactionsCard({
+  title,
+  items,
+}: {
+  title: string;
+  items: { date: string; label: string; amount: string }[];
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card sm:col-span-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <ul className="mt-2 divide-y divide-border">
+        {items.map((it, i) => (
+          <li key={`${it.date}-${i}`} className="flex items-center justify-between gap-3 py-2">
+            <span className="min-w-0 flex-1 truncate text-sm">{it.label}</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground">{it.date}</span>
+            <span className="shrink-0 text-sm font-semibold tabular-nums">{it.amount}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function LhanaEmptyState({
   title,
   body,
