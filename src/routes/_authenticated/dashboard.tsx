@@ -312,9 +312,9 @@ function BriefingCard({
       transition={{ duration: 0.4, delay: 0.15 }}
       className="rounded-2xl border border-border bg-gradient-to-br from-primary-soft to-card p-5 shadow-card"
     >
-      <div className="flex items-center gap-2 text-primary">
-        <Sparkles className="h-4 w-4" />
-        <span className="text-xs font-semibold uppercase tracking-wide">
+      <div className="flex items-center gap-2.5">
+        <LhanaAvatar size={32} />
+        <span className="text-xs font-semibold uppercase tracking-wide text-lhana">
           AI Daily Briefing
         </span>
       </div>
@@ -331,6 +331,9 @@ function BriefingCard({
           </p>
           <p className="text-sm leading-relaxed text-foreground/90">{data.insight}</p>
           <p className="text-sm font-medium text-primary">→ {data.nudge}</p>
+          <div className="pt-1">
+            <WhyAskLhana />
+          </div>
         </div>
       )}
     </motion.section>
