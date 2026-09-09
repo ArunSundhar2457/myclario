@@ -78,15 +78,11 @@ export const askLhana = createServerFn({ method: "POST" })
 
     // ---- Deterministic financial context (server is the source of truth) ----
     const { first, nextFirst, monthDate } = monthBounds(data.month);
-    const prev = monthBounds(
-      `${Number(monthDate.slice(0, 4))}-${String(Number(monthDate.slice(5, 7)) - 1 || 12).padStart(2, "0")}`,
-    );
-    // monthBounds with a "00" month is invalid; compute previous month explicitly.
+    // Previous month bounds, computed explicitly for month comparison.
     const [y, m] = [Number(monthDate.slice(0, 4)), Number(monthDate.slice(5, 7))];
     const prevDate = new Date(y, m - 2, 1);
     const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
     const prevBounds = monthBounds(prevYm);
-    void prev;
 
     const [expRes, incRes, budRes, prevExpRes, prevIncRes, recentRes] = await Promise.all([
       supabase.from("expenses").select("category, amount").gte("occurred_on", first).lt("occurred_on", nextFirst),
