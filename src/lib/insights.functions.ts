@@ -43,34 +43,7 @@ function monthWindow(ym?: string) {
 }
 
 
-async function callGemini(prompt: string): Promise<string | null> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, responseMimeType: "application/json" },
-        }),
-      },
-    );
-    if (!res.ok) {
-      console.error("Gemini error", res.status, await res.text());
-      return null;
-    }
-    const json = (await res.json()) as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
-    };
-    return json.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
-  } catch (err) {
-    console.error("Gemini call failed", err);
-    return null;
-  }
-}
+import { callGeminiJson } from "./ai/gemini.server";
 
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -183,7 +156,7 @@ Data (amounts in ${currency}):
 - Spending by category: ${JSON.stringify(spentByCatNorm)}
 - Budgets: ${JSON.stringify(budgetsNorm)}`;
 
-    const text = await callGemini(prompt);
+    const text = await callGeminiJson(prompt);
     if (!text) return fallback;
     try {
       const parsed = JSON.parse(text) as Partial<Insights>;
@@ -210,7 +183,7 @@ export const quickTip = createServerFn({ method: "POST" })
     const fallback = {
       tip: "Small daily wins compound — log one expense and check off one task today.",
     };
-    const text = await callGemini(
+    const text = await callGeminiJson(
       `You are Clario, a calm finance + planning coach. Return ONLY JSON: {"tip": string} where tip is 1-2 encouraging sentences (<= 28 words) with one concrete action. No markdown.`,
     );
     if (!text) return fallback;
