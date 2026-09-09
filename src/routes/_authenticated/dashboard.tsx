@@ -50,6 +50,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { LhanaAvatar } from "@/components/lhana";
+
+function WhyAskLhana() {
+  const { t } = useLanguage();
+  return (
+    <Link
+      to="/lhana"
+      search={{ q: "What does my daily briefing mean for me today?" }}
+      className="inline-flex items-center gap-2 rounded-full border border-lhana/30 bg-lhana-soft px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-lhana/60"
+    >
+      <LhanaAvatar size={20} />
+      {t("lhana.why")}
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Clario" }] }),
