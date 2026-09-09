@@ -102,6 +102,22 @@ export const de: Record<string, string> = {
   "lhana.promptChange": "Was könnte ich verbessern?",
   "lhana.why": "Warum? Frag Lhana",
   "lhana.askAbout": "Frag Lhana dazu",
+  "lhana.stopped": "Gestoppt – Lhanas Antwort wurde abgebrochen.",
+  "lhana.degraded": "Ich zeige dir gerade nur deine Zahlen, ohne Lhanas Kommentar.",
+  "lhana.fallbackNoData":
+    "Für diesen Monat sehe ich noch keine Einnahmen, Ausgaben oder Budgets. Trag ein paar Einträge ein, dann erkenne ich Muster für dich.",
+  "lhana.fallbackSummary":
+    "Im {month} hast du {income} eingenommen und {spent} ausgegeben – es bleiben {net}. Frag mich nach einer Kategorie oder deinen Budgets für mehr Details.",
+  "lhana.card.income": "Einnahmen",
+  "lhana.card.spent": "Ausgegeben",
+  "lhana.card.netLeft": "Diesen Monat übrig",
+  "lhana.card.vsPrevious": "Ausgaben vs. Vormonat",
+  "lhana.card.thisMonth": "Dieser Monat",
+  "lhana.card.previousMonth": "Vormonat",
+  "lhana.card.recentActivity": "Letzte Bewegungen",
+  "lhana.card.purchase": "Kauf",
+  "lhana.card.leftAfter": "Danach übrig:",
+  "lhana.card.used": "genutzt",
 
   // Erscheinungsbild
   "theme.label": "Erscheinungsbild",
