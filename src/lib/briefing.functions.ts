@@ -44,9 +44,6 @@ export const getDailyBriefing = createServerFn({ method: "POST" })
           : "Add today's first task to set the tone for the day.",
     };
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) return fallback;
-
     const prompt = `You are Clario, a calm, smart, encouraging personal finance + planning coach.
 Return ONLY a compact JSON object with keys: greeting, insight, nudge.
 - greeting: 4-7 friendly words, no name.
@@ -58,38 +55,16 @@ Context:
 - This is an early session; financial data may be sparse.
 No markdown, no preface, just JSON.`;
 
+    const text = await callGeminiJson(prompt);
+    if (!text) return fallback;
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.7,
-              responseMimeType: "application/json",
-            },
-          }),
-        },
-      );
-
-      if (!res.ok) {
-        console.error("Gemini error", res.status, await res.text());
-        return fallback;
-      }
-      const json = (await res.json()) as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      };
-      const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       const parsed = JSON.parse(text) as Partial<Briefing>;
       return {
         greeting: parsed.greeting?.trim() || fallback.greeting,
         insight: parsed.insight?.trim() || fallback.insight,
         nudge: parsed.nudge?.trim() || fallback.nudge,
       } satisfies Briefing;
-    } catch (err) {
-      console.error("Gemini call failed", err);
+    } catch {
       return fallback;
     }
   });
