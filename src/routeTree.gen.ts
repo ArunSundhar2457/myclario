@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
+import { Route as AuthenticatedLhanaRouteImport } from './routes/_authenticated/lhana'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated/budgets'
@@ -62,6 +63,11 @@ const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
   path: '/planner',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLhanaRoute = AuthenticatedLhanaRouteImport.update({
+  id: '/lhana',
+  path: '/lhana',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/insights': typeof AuthenticatedInsightsRoute
+  '/lhana': typeof AuthenticatedLhanaRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/insights': typeof AuthenticatedInsightsRoute
+  '/lhana': typeof AuthenticatedLhanaRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
+  '/_authenticated/lhana': typeof AuthenticatedLhanaRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/api/public/hooks/fetch-rates': typeof ApiPublicHooksFetchRatesRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/dashboard'
     | '/insights'
+    | '/lhana'
     | '/planner'
     | '/transactions'
     | '/api/public/hooks/fetch-rates'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/dashboard'
     | '/insights'
+    | '/lhana'
     | '/planner'
     | '/transactions'
     | '/api/public/hooks/fetch-rates'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/budgets'
     | '/_authenticated/dashboard'
     | '/_authenticated/insights'
+    | '/_authenticated/lhana'
     | '/_authenticated/planner'
     | '/_authenticated/transactions'
     | '/api/public/hooks/fetch-rates'
@@ -236,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlannerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/lhana': {
+      id: '/_authenticated/lhana'
+      path: '/lhana'
+      fullPath: '/lhana'
+      preLoaderRoute: typeof AuthenticatedLhanaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/insights': {
       id: '/_authenticated/insights'
       path: '/insights'
@@ -271,6 +290,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
+  AuthenticatedLhanaRoute: typeof AuthenticatedLhanaRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
@@ -279,6 +299,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
+  AuthenticatedLhanaRoute: AuthenticatedLhanaRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }

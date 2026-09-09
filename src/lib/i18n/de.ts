@@ -84,6 +84,31 @@ export const de: Record<string, string> = {
   "common.save": "Speichern",
   "common.cancel": "Abbrechen",
   "common.saving": "Speichern…",
+
+  // Lhana
+  "nav.lhana": "Frag Lhana",
+  "lhana.title": "Frag Lhana",
+  "lhana.greeting": "Hey, ich bin Lhana ✨",
+  "lhana.intro":
+    "Deine ruhige Geld-Begleiterin ohne Urteil. Frag mich alles zu deinem Monat – ich erkläre dir, was es bedeutet und was als Nächstes ansteht.",
+  "lhana.readonlyNote": "Lhana erklärt und empfiehlt – sie verändert nie deine Einträge.",
+  "lhana.placeholder": "Frag etwas zu deinem Geld…",
+  "lhana.send": "Senden",
+  "lhana.cancel": "Stoppen",
+  "lhana.thinking": "Lhana denkt nach…",
+  "lhana.error": "Lhana kann gerade nicht antworten – versuch es gleich nochmal.",
+  "lhana.promptSpending": "Wohin ist mein Geld diesen Monat geflossen?",
+  "lhana.promptAfford": "Kann ich mir einen Kauf über ₹5.000 leisten?",
+  "lhana.promptMonth": "Wie steht es um mein Budget?",
+  "lhana.promptChange": "Was könnte ich verbessern?",
+  "lhana.why": "Warum? Frag Lhana",
+  "lhana.askAbout": "Frag Lhana dazu",
+
+  // Erscheinungsbild
+  "theme.label": "Erscheinungsbild",
+  "theme.light": "Hell",
+  "theme.dark": "Dunkel",
+  "theme.system": "System",
 };
 
 export default de;
