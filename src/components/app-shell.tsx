@@ -244,6 +244,13 @@ function BottomNav() {
   );
 }
 
+function LhanaFab() {
+  const { t } = useLanguage();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/lhana") return null;
+  return <LhanaLauncher label={t("nav.lhana")} />;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   return (
