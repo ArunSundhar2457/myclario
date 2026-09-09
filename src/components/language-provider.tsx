@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { getProfile } from "@/lib/profile.functions";
-import { dictionaries, type Language } from "@/lib/i18n";
+import { DICTS, translate, type Language } from "@/lib/i18n";
 
 type LanguageContextValue = {
   language: Language;
-  t: (key: string) => string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 };
 
-const fallback = (key: string) => dictionaries.en[key] ?? key;
+const fallback = (key: string) => translate("en", key);
 
 const LanguageContext = createContext<LanguageContextValue>({
   language: "en",
@@ -30,15 +30,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const profileLanguage = (profile as { language?: string } | undefined)?.language;
+
   const value = useMemo<LanguageContextValue>(() => {
-    const language = ((profile as { language?: string } | undefined)?.language ??
-      "en") as Language;
-    const dict = dictionaries[language] ?? dictionaries.en;
+    const language = (profileLanguage ?? "en") as Language;
+    const dict = DICTS[language] ?? DICTS.en;
     return {
       language,
-      t: (key: string) => dict[key] ?? fallback(key),
+      t: (key, vars) => {
+        let s = dict[key] ?? translate("en", key);
+        if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
+        return s;
+      },
     };
-  }, [(profile as { language?: string } | undefined)?.language]);
+  }, [profileLanguage]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
