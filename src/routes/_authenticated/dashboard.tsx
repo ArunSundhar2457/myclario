@@ -15,7 +15,6 @@ import {
   Cell,
 } from "recharts";
 import {
-  Wallet,
   TrendingUp,
   TrendingDown,
   Sparkles,
