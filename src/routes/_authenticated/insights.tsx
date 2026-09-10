@@ -79,12 +79,10 @@ function InsightsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-primary-soft to-card p-5 shadow-card">
+      <div className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Sparkles className="h-5 w-5" />
-            </span>
+            <LhanaAvatar size={40} />
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 {t("insights.quickTip")}
