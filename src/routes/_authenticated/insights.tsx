@@ -104,8 +104,8 @@ function InsightsPage() {
       </div>
 
       {!insights && !generate.isFetching && !generate.isError && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-          <Sparkles className="h-8 w-8 text-primary" />
+        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-lhana/30 bg-lhana-soft/40 p-10 text-center">
+          <LhanaAvatar size={72} pose="welcome" />
           <p className="font-display text-lg">{t("insights.generateTitle")}</p>
           <p className="max-w-md text-sm text-muted-foreground">{t("insights.generateHint")}</p>
           <Button
