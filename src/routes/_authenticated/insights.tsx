@@ -219,7 +219,7 @@ function InsightCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex items-center gap-2">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary">
           <Icon className="h-4 w-4" />
@@ -254,7 +254,7 @@ function InsightsSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div key={i} className="rounded-3xl border border-border bg-card p-5 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-4 w-32" />

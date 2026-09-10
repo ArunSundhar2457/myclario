@@ -163,7 +163,7 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay }}
-      className="rounded-2xl border border-border bg-card p-4 shadow-card"
+      className="rounded-3xl border border-border bg-card p-4 shadow-card"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

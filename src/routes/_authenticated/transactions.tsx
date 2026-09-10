@@ -265,7 +265,7 @@ function FilterBar({
     !!search.from || !!search.to || (search.category && search.category !== "all") || !!search.q;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 shadow-card">
+    <div className="rounded-3xl border border-border bg-card p-3 shadow-card">
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -416,7 +416,7 @@ function TransactionList({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+      <div className="rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
         Loading…
       </div>
     );
@@ -438,7 +438,7 @@ function TransactionList({
   }
 
   return (
-    <ul className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <ul className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
       <AnimatePresence initial={false}>
         {rows.map((r) => (
           <TransactionRow
@@ -784,7 +784,7 @@ function AddTransactionSheet({
             </Popover>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
             <div>
               <p className="text-sm font-medium">Recurring</p>
               <p className="text-xs text-muted-foreground">Repeat this transaction.</p>

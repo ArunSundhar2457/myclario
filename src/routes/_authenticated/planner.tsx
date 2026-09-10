@@ -120,7 +120,7 @@ function PlannerPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[auto_1fr]">
-        <div className="rounded-2xl border border-border bg-card p-3 shadow-card">
+        <div className="rounded-3xl border border-border bg-card p-3 shadow-card">
           <Calendar
             mode="single"
             selected={selected}
@@ -139,7 +139,7 @@ function PlannerPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-card">
+          <div className="flex items-center justify-between rounded-3xl border border-border bg-card px-4 py-3 shadow-card">
             <div>
               <p className="font-display text-lg font-semibold">
                 {format(selected, "EEEE, MMM d")}
@@ -151,7 +151,7 @@ function PlannerPage() {
           </div>
 
           {dayQuery.isLoading ? (
-            <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+            <div className="rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
               Loading…
             </div>
           ) : dayRows.length === 0 ? (
@@ -165,7 +165,7 @@ function PlannerPage() {
               </Button>
             </div>
           ) : (
-            <ul className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <ul className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
               {dayRows.map((t) => (
                 <TaskRow
                   key={t.id}
