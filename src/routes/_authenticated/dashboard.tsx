@@ -185,13 +185,8 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
   );
 }
 
-function SnapshotSection({
-  currency,
-  selectedMonth,
-}: {
-  currency: Currency;
-  selectedMonth: string;
-}) {
+/** Dominant bento tile: the month's headline figures, balance first. */
+function MoneyPulse({ selectedMonth }: { currency: Currency; selectedMonth: string }) {
   const [range, setRange] = useState<Range>("month");
   const { fmt } = useCurrency();
   const { t } = useLanguage();
@@ -204,13 +199,23 @@ function SnapshotSection({
   const income = data?.income ?? 0;
   const spent = data?.spent ?? 0;
   const balance = data?.balance ?? 0;
-  const balanceTone: SnapshotCardProps["tone"] = balance >= 0 ? "success" : "destructive";
 
   return (
-    <section className="space-y-3">
-      <div className="flex justify-end">
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-3xl border border-border bg-gradient-to-br from-lhana-soft via-card to-card p-5 shadow-card md:p-6"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("dashboard.balance")}
+          </p>
+          <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
+        </div>
         <Select value={range} onValueChange={(v) => setRange(v as Range)}>
-          <SelectTrigger className="h-8 w-[130px] border-border/60 bg-transparent text-xs text-muted-foreground">
+          <SelectTrigger className="h-8 w-[130px] rounded-full border-border/60 bg-card/70 text-xs text-muted-foreground">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -219,13 +224,26 @@ function SnapshotSection({
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+
+      {isLoading ? (
+        <Skeleton className="mt-4 h-14 w-56" />
+      ) : (
+        <p
+          className={`mt-3 font-display text-4xl font-bold tabular-nums tracking-tight md:text-5xl ${
+            balance >= 0 ? "text-foreground" : "text-destructive"
+          }`}
+        >
+          {fmt(balance)}
+        </p>
+      )}
+
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <SnapshotCard
           label={t("dashboard.income")}
           value={fmt(income)}
           icon={TrendingUp}
           tone="success"
-          delay={0}
+          delay={0.05}
           loading={isLoading}
         />
         <SnapshotCard
@@ -233,19 +251,11 @@ function SnapshotSection({
           value={fmt(spent)}
           icon={TrendingDown}
           tone="destructive"
-          delay={0.05}
-          loading={isLoading}
-        />
-        <SnapshotCard
-          label={t("dashboard.balance")}
-          value={fmt(balance)}
-          icon={Wallet}
-          tone={balanceTone}
           delay={0.1}
           loading={isLoading}
         />
       </div>
-    </section>
+    </motion.section>
   );
 }
 
