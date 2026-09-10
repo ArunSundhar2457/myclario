@@ -167,7 +167,7 @@ describe("deterministic result cards", () => {
 
   it("respects the currency formatter it is given", () => {
     const eur = (v: number) => `€${v}`;
-    const cards = buildCards(facts, ["spending"], fmt === eur ? ["spending"] : ["spending"], eur, labels);
+    const cards = buildCards(facts, ["spending"], eur, "spend?", labels);
     expect(cards[0]).toMatchObject({ value: "€30000" });
   });
 });
