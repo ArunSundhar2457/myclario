@@ -93,18 +93,30 @@ function Dashboard() {
   const { selectedMonth } = useAppStore();
   const { currency } = useCurrency();
 
+  // Bento command center: deliberate visual weights, single-column on mobile.
+  const cell = "[&>section]:h-full";
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Header />
-      <SnapshotSection currency={currency} selectedMonth={selectedMonth} />
-      <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
-      <div className="grid gap-5 lg:grid-cols-2">
-        <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
-        <TasksCard />
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
-        <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+      <div className="grid auto-rows-min gap-4 lg:grid-cols-6">
+        <div className={`lg:col-span-4 ${cell}`}>
+          <MoneyPulse currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-2 ${cell}`}>
+          <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
+        </div>
+        <div className={`lg:col-span-4 ${cell}`}>
+          <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-2 ${cell}`}>
+          <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+        </div>
+        <div className={`lg:col-span-3 ${cell}`}>
+          <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-3 ${cell}`}>
+          <TasksCard />
+        </div>
       </div>
     </div>
   );
