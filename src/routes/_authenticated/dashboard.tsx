@@ -281,7 +281,7 @@ function BudgetAlertStrip({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl border border-border bg-card p-5 shadow-card"
+        className="rounded-3xl border border-border bg-card p-5 shadow-card"
       >
         <div className="flex items-center gap-2 text-success">
           <CheckCircle2 className="h-4 w-4" />
@@ -295,7 +295,7 @@ function BudgetAlertStrip({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
@@ -332,7 +332,7 @@ function BriefingCard({ monthLabelText, currency }: { monthLabelText: string; cu
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
-      className="rounded-2xl border border-border bg-gradient-to-br from-primary-soft to-card p-5 shadow-card"
+      className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2.5">
         <LhanaAvatar size={32} />
@@ -409,7 +409,7 @@ function TasksCard() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold tracking-tight">
@@ -514,7 +514,7 @@ function SpendingTrendCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.25 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card lg:col-span-2"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -624,7 +624,7 @@ function CategoryDonutCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <h2 className="font-display text-lg font-semibold tracking-tight">
         {t("dashboard.byCategory")}
