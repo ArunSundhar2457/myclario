@@ -15,7 +15,6 @@ import {
   Cell,
 } from "recharts";
 import {
-  Wallet,
   TrendingUp,
   TrendingDown,
   Sparkles,
@@ -93,18 +92,30 @@ function Dashboard() {
   const { selectedMonth } = useAppStore();
   const { currency } = useCurrency();
 
+  // Bento command center: deliberate visual weights, single-column on mobile.
+  const cell = "[&>section]:h-full";
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Header />
-      <SnapshotSection currency={currency} selectedMonth={selectedMonth} />
-      <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
-      <div className="grid gap-5 lg:grid-cols-2">
-        <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
-        <TasksCard />
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
-        <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+      <div className="grid auto-rows-min gap-4 lg:grid-cols-6">
+        <div className={`lg:col-span-4 ${cell}`}>
+          <MoneyPulse currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-2 ${cell}`}>
+          <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
+        </div>
+        <div className={`lg:col-span-4 ${cell}`}>
+          <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-2 ${cell}`}>
+          <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
+        </div>
+        <div className={`lg:col-span-3 ${cell}`}>
+          <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
+        </div>
+        <div className={`lg:col-span-3 ${cell}`}>
+          <TasksCard />
+        </div>
       </div>
     </div>
   );
@@ -152,7 +163,7 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay }}
-      className="rounded-2xl border border-border bg-card p-4 shadow-card"
+      className="rounded-3xl border border-border bg-card p-4 shadow-card"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -173,13 +184,8 @@ function SnapshotCard({ label, value, icon: Icon, tone, delay, loading }: Snapsh
   );
 }
 
-function SnapshotSection({
-  currency,
-  selectedMonth,
-}: {
-  currency: Currency;
-  selectedMonth: string;
-}) {
+/** Dominant bento tile: the month's headline figures, balance first. */
+function MoneyPulse({ selectedMonth }: { currency: Currency; selectedMonth: string }) {
   const [range, setRange] = useState<Range>("month");
   const { fmt } = useCurrency();
   const { t } = useLanguage();
@@ -192,13 +198,23 @@ function SnapshotSection({
   const income = data?.income ?? 0;
   const spent = data?.spent ?? 0;
   const balance = data?.balance ?? 0;
-  const balanceTone: SnapshotCardProps["tone"] = balance >= 0 ? "success" : "destructive";
 
   return (
-    <section className="space-y-3">
-      <div className="flex justify-end">
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-3xl border border-border bg-gradient-to-br from-lhana-soft via-card to-card p-5 shadow-card md:p-6"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("dashboard.balance")}
+          </p>
+          <p className="text-xs text-muted-foreground">{monthLabel(selectedMonth)}</p>
+        </div>
         <Select value={range} onValueChange={(v) => setRange(v as Range)}>
-          <SelectTrigger className="h-8 w-[130px] border-border/60 bg-transparent text-xs text-muted-foreground">
+          <SelectTrigger className="h-8 w-[130px] rounded-full border-border/60 bg-card/70 text-xs text-muted-foreground">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -207,13 +223,26 @@ function SnapshotSection({
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+
+      {isLoading ? (
+        <Skeleton className="mt-4 h-14 w-56" />
+      ) : (
+        <p
+          className={`mt-3 font-display text-4xl font-bold tabular-nums tracking-tight md:text-5xl ${
+            balance >= 0 ? "text-foreground" : "text-destructive"
+          }`}
+        >
+          {fmt(balance)}
+        </p>
+      )}
+
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <SnapshotCard
           label={t("dashboard.income")}
           value={fmt(income)}
           icon={TrendingUp}
           tone="success"
-          delay={0}
+          delay={0.05}
           loading={isLoading}
         />
         <SnapshotCard
@@ -221,19 +250,11 @@ function SnapshotSection({
           value={fmt(spent)}
           icon={TrendingDown}
           tone="destructive"
-          delay={0.05}
-          loading={isLoading}
-        />
-        <SnapshotCard
-          label={t("dashboard.balance")}
-          value={fmt(balance)}
-          icon={Wallet}
-          tone={balanceTone}
           delay={0.1}
           loading={isLoading}
         />
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -259,7 +280,7 @@ function BudgetAlertStrip({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl border border-border bg-card p-5 shadow-card"
+        className="rounded-3xl border border-border bg-card p-5 shadow-card"
       >
         <div className="flex items-center gap-2 text-success">
           <CheckCircle2 className="h-4 w-4" />
@@ -273,7 +294,7 @@ function BudgetAlertStrip({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
@@ -310,7 +331,7 @@ function BriefingCard({ monthLabelText, currency }: { monthLabelText: string; cu
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
-      className="rounded-2xl border border-border bg-gradient-to-br from-primary-soft to-card p-5 shadow-card"
+      className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card"
     >
       <div className="flex items-center gap-2.5">
         <LhanaAvatar size={32} />
@@ -387,7 +408,7 @@ function TasksCard() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold tracking-tight">
@@ -492,7 +513,7 @@ function SpendingTrendCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.25 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card lg:col-span-2"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -602,7 +623,7 @@ function CategoryDonutCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <h2 className="font-display text-lg font-semibold tracking-tight">
         {t("dashboard.byCategory")}

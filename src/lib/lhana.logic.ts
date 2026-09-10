@@ -87,8 +87,12 @@ export function parseModelResponse(raw: string | null | undefined): LhanaModelRe
       /* try next candidate */
     }
   }
+  // Anything that looks like a JSON payload but failed validation is rejected
+  // outright — never salvaged as prose — so a malformed reply falls back.
+  const stripped = text.replace(/```(?:json)?/g, "").trim();
+  if (stripped.startsWith("{") || stripped.startsWith("[")) return null;
   // Plain prose (no JSON at all) is still acceptable content, once validated.
-  const asProse = lhanaModelResponseSchema.safeParse({ answer: text.replace(/```/g, "").trim() });
+  const asProse = lhanaModelResponseSchema.safeParse({ answer: stripped });
   return asProse.success ? asProse.data : null;
 }
 

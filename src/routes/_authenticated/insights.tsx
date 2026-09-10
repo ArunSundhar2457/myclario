@@ -79,12 +79,10 @@ function InsightsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-primary-soft to-card p-5 shadow-card">
+      <div className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Sparkles className="h-5 w-5" />
-            </span>
+            <LhanaAvatar size={40} />
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 {t("insights.quickTip")}
@@ -106,8 +104,8 @@ function InsightsPage() {
       </div>
 
       {!insights && !generate.isFetching && !generate.isError && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-          <Sparkles className="h-8 w-8 text-primary" />
+        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-lhana/30 bg-lhana-soft/40 p-10 text-center">
+          <LhanaAvatar size={72} pose="welcome" />
           <p className="font-display text-lg">{t("insights.generateTitle")}</p>
           <p className="max-w-md text-sm text-muted-foreground">{t("insights.generateHint")}</p>
           <Button
@@ -219,7 +217,7 @@ function InsightCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-card">
       <div className="mb-3 flex items-center gap-2">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary">
           <Icon className="h-4 w-4" />
@@ -254,7 +252,7 @@ function InsightsSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div key={i} className="rounded-3xl border border-border bg-card p-5 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-4 w-32" />

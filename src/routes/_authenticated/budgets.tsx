@@ -89,7 +89,7 @@ function BudgetsPage() {
       />
 
       {isLoading ? (
-        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+        <div className="rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Loading…
         </div>
       ) : !budgets || budgets.length === 0 ? (
@@ -196,7 +196,7 @@ function CreateBudgetForm({
   const noneAvailable = !isEdit && Array.isArray(available) && available.length === 0;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+    <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
       <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">Category</label>
@@ -330,7 +330,7 @@ function BudgetCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-3xl border border-border bg-card p-5 shadow-card"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
