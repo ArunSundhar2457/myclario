@@ -82,7 +82,7 @@ function InsightsPage() {
       <div className="rounded-3xl border border-lhana/25 bg-gradient-to-br from-lhana-soft to-card p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <LhanaAvatar size={40} />
+            <LhanaAvatar size={40} pose="insight" />
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 {t("insights.quickTip")}
