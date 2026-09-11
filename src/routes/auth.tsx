@@ -150,6 +150,31 @@ function AuthPage() {
   );
 }
 
+function ClarioMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 72 72" className={className} aria-hidden="true">
+      <path
+        d="M 40 6 A 26 26 0 1 0 40 58"
+        transform="translate(6, 4)"
+        fill="none"
+        stroke="var(--color-primary)"
+        strokeWidth="6.5"
+        strokeLinecap="round"
+      />
+      <polyline
+        points="18,48 28,34 38,41 50,20"
+        transform="translate(6, 4)"
+        fill="none"
+        stroke="var(--color-primary)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="56" cy="24" r="4.5" fill="var(--color-primary)" />
+    </svg>
+  );
+}
+
 function StatCard({
   value,
   label,
