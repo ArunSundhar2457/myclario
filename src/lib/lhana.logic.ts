@@ -32,7 +32,13 @@ export type Fmt = (v: number) => string;
 /* ------------------------------ result cards ------------------------------ */
 
 export type LhanaCard =
-  | { type: "metric"; label: string; value: string; hint?: string; tone?: "default" | "good" | "warn" }
+  | {
+      type: "metric";
+      label: string;
+      value: string;
+      hint?: string;
+      tone?: "default" | "good" | "warn";
+    }
   | {
       type: "comparison";
       label: string;
@@ -238,7 +244,9 @@ export function buildContextBlock(
     const amount = extractAmount(message);
     lines.push(
       [
-        amount !== null ? `Affordability target: ${fmt(amount)}` : "Affordability target: not stated",
+        amount !== null
+          ? `Affordability target: ${fmt(amount)}`
+          : "Affordability target: not stated",
         `Judge affordability against money left this month (${fmt(facts.net)}) and overall spending — NEVER against a single category budget.`,
         "PAYDAY: Clario does not track payday or upcoming income. Never invent or assume a payday, salary date, or future income. Say it isn't tracked if it matters.",
         amount !== null
