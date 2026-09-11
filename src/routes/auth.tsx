@@ -46,7 +46,7 @@ function AuthPage() {
         </header>
 
         <div className="flex flex-1 items-center justify-center px-6 py-16 md:px-12 md:py-12 lg:px-20">
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm animate-fade-up">
             <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
               {mode === "signup"
                 ? "Create your account"
@@ -138,10 +138,10 @@ function AuthPage() {
         </div>
 
         <div className="absolute inset-0 flex flex-col justify-end p-12 lg:p-16">
-          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
+          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-navy-foreground lg:text-5xl">
             Take control of your finances
           </h2>
-          <p className="mt-4 max-w-md text-base text-white/70 lg:text-lg">
+          <p className="mt-4 max-w-md text-base text-navy-foreground/70 lg:text-lg">
             Track expenses, plan your day, and hit your goals.
           </p>
         </div>
@@ -187,12 +187,12 @@ function StatCard({
   return (
     <div
       className={
-        "rounded-xl border border-white/20 bg-white/10 px-5 py-4 text-white shadow-xl backdrop-blur-md ring-1 ring-white/5 " +
+        "rounded-xl border border-white/15 bg-navy/40 px-5 py-4 shadow-lhana backdrop-blur-md ring-1 ring-white/5 " +
         (className ?? "")
       }
     >
-      <div className="text-2xl font-semibold tracking-tight">{value}</div>
-      <div className="mt-1 text-xs text-white/70">{label}</div>
+      <div className="text-2xl font-semibold tracking-tight text-navy-foreground">{value}</div>
+      <div className="mt-1 text-xs text-navy-foreground/60">{label}</div>
     </div>
   );
 }
