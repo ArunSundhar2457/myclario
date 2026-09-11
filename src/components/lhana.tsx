@@ -15,6 +15,8 @@ export const LHANA_POSES = {
   avatar: lhanaAvatar,
   welcome: lhanaWelcome,
   thinking: lhanaThinking,
+  insight: lhanaInsight,
+  celebrate: lhanaCelebrate,
 } as const;
 
 export type LhanaPose = keyof typeof LHANA_POSES;
