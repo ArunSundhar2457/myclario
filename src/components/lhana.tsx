@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import lhanaAvatar from "@/assets/lhana-avatar.png";
 import lhanaWelcome from "@/assets/lhana-welcome.png";
 import lhanaThinking from "@/assets/lhana-thinking.png";
+import lhanaInsight from "@/assets/lhana-insight.png";
+import lhanaCelebrate from "@/assets/lhana-celebrate.png";
 
 /**
  * Canonical Lhana component system. One consistent character identity
@@ -13,6 +15,8 @@ export const LHANA_POSES = {
   avatar: lhanaAvatar,
   welcome: lhanaWelcome,
   thinking: lhanaThinking,
+  insight: lhanaInsight,
+  celebrate: lhanaCelebrate,
 } as const;
 
 export type LhanaPose = keyof typeof LHANA_POSES;
