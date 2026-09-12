@@ -68,7 +68,7 @@ function LandingPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-background text-foreground scroll-smooth"
+      className="min-h-screen overflow-x-hidden bg-background text-foreground scroll-smooth"
     >
       <motion.div
         style={{ scaleX: scrollYProgress }}
@@ -111,7 +111,7 @@ function StickyNav() {
     >
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 md:px-6">
         <Link to="/" className="flex items-center">
-          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
+          <ClarioBrand />
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/auth">
@@ -190,7 +190,7 @@ function Hero() {
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
+        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-lhana-soft/70 blur-3xl dark:bg-primary/15" />
         <HeroParticles />
       </div>
 
@@ -198,7 +198,7 @@ function Hero() {
         <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-7xl">
           <AnimatedLine text="Your money." delay={0} />
           <AnimatedLine text="Your day." delay={0.35} />
-          <span className="block bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+          <span className="block bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
             <AnimatedLine text="Sorted." delay={0.7} />
           </span>
         </h1>
@@ -669,7 +669,7 @@ function Features() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(14,124,102,0.35)]"
+                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-lhana"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-5 w-5" />
@@ -782,32 +782,36 @@ function FinalCTA() {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6 }}
-        className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl px-8 py-16 text-center md:py-20"
-        style={{ backgroundColor: "#1a3a2a" }}
+        className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-navy px-8 py-16 text-center shadow-elevated md:py-20"
       >
+        <div className="pointer-events-none absolute -left-20 -top-28 h-72 w-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-lhana-soft/10 blur-3xl" />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              "linear-gradient(to right, var(--navy-foreground) 1px, transparent 1px), linear-gradient(to bottom, var(--navy-foreground) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
         <div className="relative">
-          <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
+          <h2 className="font-display text-3xl font-bold text-navy-foreground md:text-5xl">
             Take control of your money and your day.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-white/75">
+          <p className="mx-auto mt-4 max-w-xl text-base text-navy-foreground/75">
             Join thousands organizing their money and time with Clario.
           </p>
           <div className="mt-8">
             <Link to="/auth">
-              <Button size="lg" className="bg-white text-[#1a3a2a] hover:bg-white/90">
+              <Button
+                size="lg"
+                className="bg-navy-foreground text-navy hover:bg-navy-foreground/90"
+              >
                 Start for free <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-white/60">
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-navy-foreground/60">
             <CheckCircle2 className="h-3.5 w-3.5" /> Free forever · No credit card
           </div>
         </div>
@@ -823,7 +827,7 @@ function Footer() {
     <footer className="border-t border-border px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex items-center gap-3">
-          <img src="/clario-logo.svg" alt="Clario" className="h-12 w-auto" />
+          <ClarioBrand />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <Link to="/privacy" className="hover:text-foreground">
@@ -841,5 +845,40 @@ function Footer() {
         <div className="text-xs text-muted-foreground">© 2026 Clario. All rights reserved.</div>
       </div>
     </footer>
+  );
+}
+
+function ClarioBrand() {
+  return (
+    <span className="flex items-center gap-2.5" aria-label="Clario">
+      <svg viewBox="0 0 72 72" className="h-10 w-10 shrink-0" aria-hidden="true">
+        <path
+          d="M 40 6 A 26 26 0 1 0 40 58"
+          transform="translate(6, 4)"
+          fill="none"
+          stroke="var(--color-primary)"
+          strokeWidth="6.5"
+          strokeLinecap="round"
+        />
+        <polyline
+          points="18,48 28,34 38,41 50,20"
+          transform="translate(6, 4)"
+          fill="none"
+          stroke="var(--color-primary)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="56" cy="24" r="4.5" fill="var(--color-primary)" />
+      </svg>
+      <span>
+        <span className="block font-display text-xl font-semibold leading-none text-foreground">
+          Clario
+        </span>
+        <span className="mt-1 block text-[9px] leading-none text-muted-foreground">
+          Your money. Your day. Sorted.
+        </span>
+      </span>
+    </span>
   );
 }
