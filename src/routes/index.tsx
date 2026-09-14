@@ -1,29 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  animate,
-  motion,
-  useInView,
-  useMotionValue,
-  useMotionValueEvent,
-  useScroll,
-  useTransform,
-  type Variants,
-} from "framer-motion";
-import {
-  ArrowRight,
-  Wallet,
-  PiggyBank,
-  CalendarCheck,
-  Sparkles,
-  CheckCircle2,
-  XCircle,
-  Linkedin,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LandingPageContent } from "@/components/landing/landing-page";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -37,6 +15,13 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Clario — Your money. Your day. Sorted." },
       {
         property: "og:description",
+        content: "The AI-powered app that connects your finances and daily planning in one place.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Clario — Your money. Your day. Sorted." },
+      {
+        name: "twitter:description",
         content: "The AI-powered app that connects your finances and daily planning in one place.",
       },
     ],
@@ -63,185 +48,7 @@ function LandingPage() {
 
   if (!ready) return null;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen overflow-x-hidden bg-background text-foreground scroll-smooth"
-    >
-      <motion.div
-        style={{ scaleX: scrollYProgress }}
-        className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary"
-      />
-      <StickyNav />
-      <Hero />
-      <TrustBar />
-      <AudienceTicker />
-      <Comparison />
-      <HowItWorks />
-      <Features />
-      <About />
-      <FinalCTA />
-      <Footer />
-    </motion.div>
-  );
-}
-
-/* ---------------- Sticky Nav ---------------- */
-
-function StickyNav() {
-  const { scrollY } = useScroll();
-  const [hidden, setHidden] = useState(false);
-  const [blurred, setBlurred] = useState(false);
-
-  useMotionValueEvent(scrollY, "change", (y) => {
-    const prev = scrollY.getPrevious() ?? 0;
-    setHidden(y > 120 && y > prev);
-    setBlurred(y > 20);
-  });
-
-  return (
-    <motion.header
-      animate={{ y: hidden ? -80 : 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className={`fixed inset-x-0 top-0 z-50 transition-colors ${
-        blurred ? "border-b border-border/60 bg-background/80 backdrop-blur-md" : "bg-transparent"
-      }`}
-    >
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 md:px-6">
-        <Link to="/" className="flex items-center">
-          <ClarioBrand />
-        </Link>
-        <div className="flex items-center gap-2">
-          <Link to="/auth">
-            <Button variant="ghost" size="sm">
-              Sign in
-            </Button>
-          </Link>
-          <Link to="/auth">
-            <Button size="sm">Start free</Button>
-          </Link>
-        </div>
-      </div>
-    </motion.header>
-  );
-}
-
-/* ---------------- Hero ---------------- */
-
-const wordVariants: Variants = {
-  hidden: { y: "110%", opacity: 0 },
-  show: { y: "0%", opacity: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-};
-
-function AnimatedLine({ text, delay = 0 }: { text: string; delay?: number }) {
-  const words = text.split(" ");
-  return (
-    <span className="block overflow-hidden">
-      <motion.span
-        initial="hidden"
-        animate="show"
-        transition={{ staggerChildren: 0.08, delayChildren: delay }}
-        className="inline-block"
-      >
-        {words.map((w, i) => (
-          <span key={i} className="inline-block overflow-hidden pr-[0.25em]">
-            <motion.span variants={wordVariants} className="inline-block">
-              {w}
-            </motion.span>
-          </span>
-        ))}
-      </motion.span>
-    </span>
-  );
-}
-
-function HeroParticles() {
-  // Deterministic pseudo-random positions
-  const particles = Array.from({ length: 14 }).map((_, i) => {
-    const left = (i * 37) % 100;
-    const top = (i * 53) % 100;
-    const dur = 8 + (i % 6);
-    const dx = ((i % 4) - 2) * 15;
-    const dy = -20 - (i % 5) * 8;
-    return { left, top, dur, dx, dy, i };
-  });
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {particles.map((p) => (
-        <motion.span
-          key={p.i}
-          className="absolute h-1 w-1 rounded-full bg-primary/30"
-          style={{ left: `${p.left}%`, top: `${p.top}%` }}
-          animate={{ y: [0, p.dy, 0], x: [0, p.dx, 0], opacity: [0.2, 0.6, 0.2] }}
-          transition={{ duration: p.dur, repeat: Infinity, ease: "easeInOut", delay: p.i * 0.3 }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function Hero() {
-  const { scrollY } = useScroll();
-  const mockupY = useTransform(scrollY, [0, 600], [0, -80]);
-
-  return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-24">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-lhana-soft/70 blur-3xl dark:bg-primary/15" />
-        <HeroParticles />
-      </div>
-
-      <div className="mx-auto max-w-4xl text-center">
-        <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-7xl">
-          <AnimatedLine text="Your money." delay={0} />
-          <AnimatedLine text="Your day." delay={0.35} />
-          <span className="block bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
-            <AnimatedLine text="Sorted." delay={0.7} />
-          </span>
-        </h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.6 }}
-          className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg"
-        >
-          The AI-powered app that connects your finances and daily planning in one place.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.35, duration: 0.5 }}
-          className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
-        >
-          <Link to="/auth">
-            <Button size="lg" className="min-w-[180px]">
-              Start for free <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-          <a href="#how-it-works">
-            <Button size="lg" variant="ghost" className="min-w-[180px]">
-              See how it works
-            </Button>
-          </a>
-        </motion.div>
-      </div>
-
-      <motion.div
-        style={{ y: mockupY }}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
-        className="mt-16 w-full max-w-4xl px-2"
-      >
-        <MockDashboard />
-      </motion.div>
-    </section>
-  );
+  return <LandingPageContent />;
 }
 
 function MockDashboard() {
