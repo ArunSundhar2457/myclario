@@ -36,8 +36,9 @@ function TrustStrip() {
 }
 
 function AudienceStrip() {
+  const reduce = useReducedMotion();
   const loop = [...audiences, ...audiences];
-  return <section id="story" className="overflow-hidden border-b border-border bg-background py-5" aria-label="Who Clario is for"><motion.div className="flex w-max whitespace-nowrap motion-reduce:translate-x-0" animate={{ x: ["0%", "-50%"] }} transition={{ duration: 55, repeat: Infinity, ease: "linear" }}>{loop.map((word, i) => <span key={`${word}-${i}`} className="mx-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{word}<span className="ml-6 text-primary/50">·</span></span>)}</motion.div></section>;
+  return <section id="story" className="overflow-hidden border-b border-border bg-background py-5" aria-label="Who Clario is for"><motion.div className="flex w-max whitespace-nowrap motion-reduce:translate-x-0" animate={reduce ? undefined : { x: ["0%", "-50%"] }} transition={{ duration: 55, repeat: Infinity, ease: "linear" }}>{loop.map((word, i) => <span key={`${word}-${i}`} className="mx-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{word}<span className="ml-6 text-primary/50">·</span></span>)}</motion.div></section>;
 }
 
 const features = [
