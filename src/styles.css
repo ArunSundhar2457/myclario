@@ -76,10 +76,12 @@
   --color-mint-foreground: var(--mint-foreground);
   --color-blush: var(--blush);
   --color-blush-foreground: var(--blush-foreground);
+  --color-landing-surface: var(--landing-surface);
 
   --shadow-card: 0 1px 2px oklch(0.45 0.08 290 / 0.05), 0 6px 20px -10px oklch(0.55 0.12 290 / 0.14);
   --shadow-elevated: 0 2px 6px oklch(0.45 0.08 290 / 0.07), 0 16px 40px -14px oklch(0.55 0.12 290 / 0.22);
   --shadow-lhana: 0 4px 24px -8px oklch(0.62 0.19 295 / 0.45);
+  --shadow-cinematic: 0 32px 90px -34px oklch(0.08 0.04 282 / 0.88), 0 0 50px -24px oklch(0.62 0.19 295 / 0.55);
 }
 
 :root {
@@ -146,6 +148,7 @@
   --mint-foreground: oklch(0.35 0.08 170);
   --blush: oklch(0.93 0.035 350);
   --blush-foreground: oklch(0.42 0.10 350);
+  --landing-surface: oklch(0.205 0.04 282);
 }
 
 .dark {
@@ -209,6 +212,7 @@
   --mint-foreground: oklch(0.90 0.06 170);
   --blush: oklch(0.32 0.06 350);
   --blush-foreground: oklch(0.90 0.04 350);
+  --landing-surface: oklch(0.19 0.038 282);
 
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.25), 0 8px 24px -12px oklch(0 0 0 / 0.45);
   --shadow-elevated: 0 2px 8px oklch(0 0 0 / 0.3), 0 20px 48px -16px oklch(0 0 0 / 0.55);

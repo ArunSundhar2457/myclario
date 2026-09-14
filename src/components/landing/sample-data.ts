@@ -20,12 +20,12 @@ export const sampleTransactions = [
 
 export const spendingTrend = [
   { x: 0, y: 82, label: "1 Jul" },
-  { x: 14, y: 70 },
-  { x: 28, y: 76 },
+  { x: 14, y: 70, label: undefined },
+  { x: 28, y: 76, label: undefined },
   { x: 42, y: 47, label: "8 Jul" },
-  { x: 58, y: 55 },
-  { x: 72, y: 31 },
-  { x: 86, y: 38 },
+  { x: 58, y: 55, label: undefined },
+  { x: 72, y: 31, label: undefined },
+  { x: 86, y: 38, label: undefined },
   { x: 100, y: 18, label: "15 Jul" },
 ] as const;
 
