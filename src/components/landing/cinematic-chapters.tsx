@@ -21,7 +21,7 @@ function ChapterFrame({
 }) {
   return (
     <section className={dark ? "bg-navy text-navy-foreground" : "bg-background text-foreground"}>
-      <div className="mx-auto grid min-h-[760px] max-w-6xl items-center gap-12 px-5 py-24 lg:min-h-[150vh] lg:grid-cols-[.72fr_1.28fr] lg:py-0">
+      <div className="mx-auto grid min-h-[760px] max-w-6xl items-center gap-12 px-5 py-24 lg:min-h-[105vh] lg:grid-cols-[.72fr_1.28fr] lg:py-16">
         <div className="lg:sticky lg:top-32">
           <div className={dark ? "text-primary" : "text-primary"}>
             <span className="font-display text-xs font-bold tracking-widest">{number}</span>
