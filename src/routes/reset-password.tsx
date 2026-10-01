@@ -48,7 +48,7 @@ function ResetPassword() {
         <h1 className="font-display text-xl font-semibold tracking-tight">Set a new password</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {ready
-            ? "Pick a fresh password — at least 6 characters."
+            ? "Pick a fresh password: 8+ characters with uppercase, lowercase, a number and a symbol."
             : "Open this page from your reset email to continue."}
         </p>
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
@@ -58,7 +58,7 @@ function ResetPassword() {
               id="np"
               type="password"
               autoComplete="new-password"
-              minLength={6}
+              minLength={8}
               required
               disabled={!ready}
               value={password}
