@@ -35,11 +35,18 @@ function LandingPage() {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return;
-      if (data.user) navigate({ to: "/dashboard", replace: true });
-      else setReady(true);
-    });
+    // getSession() reads the saved session locally (no network round trip), so the
+    // page appears immediately. The dashboard route still verifies the user properly.
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        if (data.session) navigate({ to: "/dashboard", replace: true });
+        else setReady(true);
+      })
+      .catch(() => {
+        if (mounted) setReady(true);
+      });
     return () => {
       mounted = false;
     };

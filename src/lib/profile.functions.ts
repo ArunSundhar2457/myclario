@@ -64,19 +64,10 @@ export const exportUserData = createServerFn({ method: "GET" })
 export const deleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const uid = context.userId;
-    // Delete user rows (RLS-scoped) first
-    await Promise.all([
-      context.supabase.from("todos").delete().eq("user_id", uid),
-      context.supabase.from("budgets").delete().eq("user_id", uid),
-      context.supabase.from("expenses").delete().eq("user_id", uid),
-      context.supabase.from("income").delete().eq("user_id", uid),
-    ]);
-    await context.supabase.from("profiles").delete().eq("id", uid);
-
-    // Delete auth user via admin
+    // Deleting the login removes everything else too: profiles, todos,
+    // expenses, income and budgets are all set to cascade in the database.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(uid);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
     if (error) throw error;
     return { ok: true };
   });

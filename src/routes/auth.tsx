@@ -357,9 +357,10 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
   const [loading, setLoading] = useState(false);
 
   const rules = [
-    { label: "At least 6 characters", met: password.length >= 6 },
+    { label: "At least 8 characters", met: password.length >= 8 },
+    { label: "At least 1 lowercase letter", met: /[a-z]/.test(password) },
+    { label: "At least 1 uppercase letter", met: /[A-Z]/.test(password) },
     { label: "At least 1 number", met: /[0-9]/.test(password) },
-    { label: "At least 1 letter", met: /[a-zA-Z]/.test(password) },
     {
       label: "At least 1 special character (e.g. !@#$%^&*)",
       met: /[^a-zA-Z0-9]/.test(password),
