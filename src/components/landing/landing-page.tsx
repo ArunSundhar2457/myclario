@@ -316,11 +316,14 @@ function HeroStage({ progress }: { progress: MotionValue<number> }) {
             aria-hidden="true"
             className="absolute top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-35"
           />
-          <motion.div style={{ y: phoneY }} className="relative will-change-transform">
+          <motion.div
+            style={{ y: phoneY, scale: phoneScale, rotate: phoneRotate }}
+            className="relative will-change-transform"
+          >
             <PhoneFrame className="w-[250px] sm:w-[290px]">
               <DashboardScreen />
             </PhoneFrame>
-            <FloatingChip className="-left-36 top-20" delay={0}>
+            <FloatingChip className="-left-36 top-20" delay={0} progress={progress} dockX={120}>
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/15 text-success">
                 <ArrowDownLeft className="h-4 w-4" />
               </span>
@@ -329,7 +332,12 @@ function HeroStage({ progress }: { progress: MotionValue<number> }) {
                 <span className="block text-[11px] text-navy-foreground/60">Salary · 12 Jul</span>
               </span>
             </FloatingChip>
-            <FloatingChip className="-right-32 top-1/2" delay={1.2}>
+            <FloatingChip
+              className="-right-32 top-1/2"
+              delay={1.2}
+              progress={progress}
+              dockX={-110}
+            >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary">
                 <Sparkles className="h-4 w-4" />
               </span>
@@ -340,7 +348,12 @@ function HeroStage({ progress }: { progress: MotionValue<number> }) {
                 </span>
               </span>
             </FloatingChip>
-            <FloatingChip className="-left-28 bottom-16" delay={2.4}>
+            <FloatingChip
+              className="-left-28 bottom-16"
+              delay={2.4}
+              progress={progress}
+              dockX={100}
+            >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary">
                 <CalendarCheck className="h-4 w-4" />
               </span>
@@ -355,7 +368,7 @@ function HeroStage({ progress }: { progress: MotionValue<number> }) {
           </p>
         </motion.div>
       </div>
-    </section>
+    </div>
   );
 }
 
