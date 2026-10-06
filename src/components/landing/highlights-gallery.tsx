@@ -146,7 +146,7 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
           role="tablist"
           aria-label="Clario highlights"
           onKeyDown={onKeyDown}
-          className="-mx-4 mt-10 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0"
+          className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0"
         >
           {TABS.map((t, i) => {
             const selected = i === active;
@@ -174,7 +174,7 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
                 {selected && !reduce && (
                   <motion.span
                     aria-hidden="true"
-                    style={{ scaleX: progress }}
+                    style={{ scaleX: tabProgress }}
                     className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
                   />
                 )}
@@ -194,7 +194,7 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
             aria-hidden="true"
             className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-30"
           />
-          <div className="relative grid items-center gap-10 px-6 py-12 sm:px-12 lg:grid-cols-[1fr_auto] lg:gap-16 lg:py-16">
+          <div className="relative grid items-center gap-10 px-6 py-12 sm:px-12 lg:grid-cols-[1fr_auto] lg:gap-16 lg:py-8">
             <div className="min-h-[170px]">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -217,7 +217,7 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
               </AnimatePresence>
             </div>
             <div className="flex justify-center">
-              <PhoneFrame className="w-[250px] sm:w-[280px]">
+              <PhoneFrame className="w-[230px] sm:w-[260px] lg:w-[230px] xl:w-[250px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={tab.id}
@@ -238,6 +238,6 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
