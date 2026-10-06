@@ -6,6 +6,7 @@ import {
   useReducedMotion,
   useScroll,
   useTransform,
+  type MotionValue,
 } from "framer-motion";
 import {
   ArrowDownLeft,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ClarioBrand } from "./clario-brand";
@@ -25,6 +26,7 @@ import { HighlightsGallery } from "./highlights-gallery";
 import { LhanaSection } from "./lhana-section";
 import { DashboardScreen, PhoneFrame } from "./mockups";
 import { ScatteredToSorted } from "./scattered-to-sorted";
+import { ScrollStage } from "./scroll-stage";
 import { TrendChapter } from "./trend-chapter";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -171,46 +173,67 @@ const HEADLINE = [
 function FloatingChip({
   className,
   delay,
+  progress,
+  dockX,
   children,
 }: {
   className: string;
   delay: number;
+  progress: MotionValue<number>;
+  /** Horizontal distance the chip travels to dock into the phone. */
+  dockX: number;
   children: ReactNode;
 }) {
   const reduce = useReducedMotion();
+  // Scroll-linked: chips slide into the phone and fade as the hero is scrolled.
+  const x = useTransform(progress, [0.15, 0.6], [0, dockX]);
+  const opacity = useTransform(progress, [0.3, 0.6], [1, 0]);
+  const scale = useTransform(progress, [0.15, 0.6], [1, 0.8]);
   return (
     <motion.div
       aria-hidden="true"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.9 + delay, ease: EASE }}
+      style={{ x, opacity, scale }}
       className={cn("absolute z-20 hidden sm:block", className)}
     >
       <motion.div
-        animate={reduce ? undefined : { y: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay }}
-        className="flex items-center gap-3 rounded-2xl border will-change-transform border-navy-foreground/15 bg-[oklch(0.27_0.045_282/0.96)] px-4 py-3 text-navy-foreground shadow-cinematic"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.9 + delay, ease: EASE }}
       >
-        {children}
+        <motion.div
+          animate={reduce ? undefined : { y: [0, -8, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay }}
+          className="flex items-center gap-3 rounded-2xl border will-change-transform border-navy-foreground/15 bg-[oklch(0.27_0.045_282/0.96)] px-4 py-3 text-navy-foreground shadow-cinematic"
+        >
+          {children}
+        </motion.div>
       </motion.div>
     </motion.div>
   );
 }
 
 function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const phoneY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -90]);
-  const textY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 70]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.75], reduce ? [1, 1] : [1, 0]);
+  return (
+    <ScrollStage
+      labelledBy="hero-heading"
+      className="bg-navy text-navy-foreground"
+      track="lg:h-[170vh]"
+      mobileOffset={["start start", "end start"]}
+    >
+      {(progress) => <HeroStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function HeroStage({ progress }: { progress: MotionValue<number> }) {
+  const phoneY = useTransform(progress, [0, 1], [0, -60]);
+  const phoneScale = useTransform(progress, [0, 0.7], [1, 1.12]);
+  const phoneRotate = useTransform(progress, [0, 0.7], [0, -4]);
+  const textY = useTransform(progress, [0, 0.8], [0, -70]);
+  const textOpacity = useTransform(progress, [0.1, 0.65], [1, 0]);
 
   return (
-    <section
-      ref={ref}
-      aria-labelledby="hero-heading"
-      className="relative overflow-hidden bg-navy text-navy-foreground"
-    >
+    <div className="relative">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-25" />
         <div className="absolute -right-32 top-1/3 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(closest-side,var(--lhana),transparent)] opacity-15" />
@@ -295,11 +318,14 @@ function Hero() {
             aria-hidden="true"
             className="absolute top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-35"
           />
-          <motion.div style={{ y: phoneY }} className="relative will-change-transform">
+          <motion.div
+            style={{ y: phoneY, scale: phoneScale, rotate: phoneRotate }}
+            className="relative will-change-transform"
+          >
             <PhoneFrame className="w-[250px] sm:w-[290px]">
               <DashboardScreen />
             </PhoneFrame>
-            <FloatingChip className="-left-36 top-20" delay={0}>
+            <FloatingChip className="-left-36 top-20" delay={0} progress={progress} dockX={120}>
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/15 text-success">
                 <ArrowDownLeft className="h-4 w-4" />
               </span>
@@ -308,7 +334,12 @@ function Hero() {
                 <span className="block text-[11px] text-navy-foreground/60">Salary · 12 Jul</span>
               </span>
             </FloatingChip>
-            <FloatingChip className="-right-32 top-1/2" delay={1.2}>
+            <FloatingChip
+              className="-right-32 top-1/2"
+              delay={1.2}
+              progress={progress}
+              dockX={-110}
+            >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary">
                 <Sparkles className="h-4 w-4" />
               </span>
@@ -319,7 +350,12 @@ function Hero() {
                 </span>
               </span>
             </FloatingChip>
-            <FloatingChip className="-left-28 bottom-16" delay={2.4}>
+            <FloatingChip
+              className="-left-28 bottom-16"
+              delay={2.4}
+              progress={progress}
+              dockX={100}
+            >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary">
                 <CalendarCheck className="h-4 w-4" />
               </span>
@@ -334,7 +370,7 @@ function Hero() {
           </p>
         </motion.div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -349,42 +385,57 @@ const FACTS = [
   { value: "0", label: "Records Lhana can change", note: "Read-only by design" },
 ];
 
+function FactCard({
+  f,
+  i,
+  progress,
+}: {
+  f: (typeof FACTS)[number];
+  i: number;
+  progress: MotionValue<number>;
+}) {
+  // Each fact lights up in turn as the user scrolls through the chapter.
+  const start = 0.1 + i * 0.17;
+  const opacity = useTransform(progress, [start, start + 0.15], [0.15, 1]);
+  const y = useTransform(progress, [start, start + 0.15], [32, 0]);
+  return (
+    <motion.div style={{ opacity, y }} className="flex flex-col bg-navy p-8 will-change-transform">
+      <dt className="order-2 mt-4 font-medium">{f.label}</dt>
+      <dd className="order-1 font-display text-[clamp(4.5rem,9vw,7rem)] font-bold leading-none text-primary">
+        {f.value}
+      </dd>
+      <dd className="order-3 mt-2 text-sm leading-6 text-navy-foreground/60">{f.note}</dd>
+    </motion.div>
+  );
+}
+
 function Numbers() {
   return (
-    <section
-      aria-labelledby="numbers-heading"
-      className="bg-navy px-5 py-24 text-navy-foreground sm:py-32"
+    <ScrollStage
+      labelledBy="numbers-heading"
+      className="bg-navy text-navy-foreground"
+      track="lg:h-[200vh]"
+      stageClassName="px-5 py-24 sm:py-32 lg:py-0"
     >
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-          05 · By the numbers
-        </p>
-        <h2
-          id="numbers-heading"
-          className="mt-4 max-w-2xl font-display text-4xl font-bold leading-tight sm:text-6xl"
-        >
-          Small numbers. Big difference.
-        </h2>
-        <dl className="mt-16 grid gap-px overflow-hidden rounded-[2rem] border border-navy-foreground/10 bg-navy-foreground/10 sm:grid-cols-2 lg:grid-cols-4">
-          {FACTS.map((f, i) => (
-            <motion.div
-              key={f.label}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.5 }}
-              transition={{ duration: 0.7, delay: i * 0.08, ease: EASE }}
-              className="flex flex-col bg-navy p-8"
-            >
-              <dt className="order-2 mt-4 font-medium">{f.label}</dt>
-              <dd className="order-1 font-display text-[clamp(4.5rem,9vw,7rem)] font-bold leading-none text-primary">
-                {f.value}
-              </dd>
-              <dd className="order-3 mt-2 text-sm leading-6 text-navy-foreground/60">{f.note}</dd>
-            </motion.div>
-          ))}
-        </dl>
-      </div>
-    </section>
+      {(progress) => (
+        <div className="mx-auto w-full max-w-6xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            05 · By the numbers
+          </p>
+          <h2
+            id="numbers-heading"
+            className="mt-4 max-w-2xl font-display text-4xl font-bold leading-tight sm:text-6xl"
+          >
+            Small numbers. Big difference.
+          </h2>
+          <dl className="mt-16 grid gap-px overflow-hidden rounded-[2rem] border border-navy-foreground/10 bg-navy-foreground/10 sm:grid-cols-2 lg:grid-cols-4">
+            {FACTS.map((f, i) => (
+              <FactCard key={f.label} f={f} i={i} progress={progress} />
+            ))}
+          </dl>
+        </div>
+      )}
+    </ScrollStage>
   );
 }
 
@@ -411,54 +462,67 @@ const PRIVACY = [
   },
 ];
 
+function PrivacyItem({
+  p,
+  i,
+  progress,
+}: {
+  p: (typeof PRIVACY)[number];
+  i: number;
+  progress: MotionValue<number>;
+}) {
+  const start = 0.08 + i * 0.2;
+  const opacity = useTransform(progress, [start, start + 0.14], [0.2, 1]);
+  const x = useTransform(progress, [start, start + 0.14], [28, 0]);
+  return (
+    <motion.li
+      style={{ opacity, x }}
+      className="grid grid-cols-[3rem_1fr] gap-4 border-b border-border py-6 will-change-transform xl:py-8"
+    >
+      <span className="font-mono text-sm text-primary">{String(i + 1).padStart(2, "0")}</span>
+      <span>
+        <span className="block font-display text-xl font-semibold sm:text-2xl">{p.title}</span>
+        <span className="mt-2 block text-sm leading-6 text-muted-foreground sm:text-base">
+          {p.copy}
+        </span>
+      </span>
+    </motion.li>
+  );
+}
+
 function Privacy() {
   return (
-    <section
+    <ScrollStage
       id="privacy"
-      aria-labelledby="privacy-heading"
-      className="bg-background px-5 py-24 text-foreground sm:py-32"
+      labelledBy="privacy-heading"
+      className="bg-background text-foreground"
+      track="lg:h-[230vh]"
+      stageClassName="px-5 py-24 sm:py-32 lg:py-0"
     >
-      <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[.9fr_1.1fr]">
-        <div className="lg:sticky lg:top-32 lg:self-start">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-            06 · Privacy first
-          </p>
-          <h2
-            id="privacy-heading"
-            className="mt-4 font-display text-4xl font-bold leading-tight sm:text-6xl"
-          >
-            Calm by design. Private by default.
-          </h2>
-          <p className="mt-6 max-w-md text-base leading-7 text-muted-foreground">
-            A money app has to earn your trust. Here's how Clario handles yours. Made in India 🇮🇳
-          </p>
-        </div>
-        <ol className="border-t border-border">
-          {PRIVACY.map((p, i) => (
-            <motion.li
-              key={p.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.6 }}
-              transition={{ duration: 0.6, ease: EASE }}
-              className="grid grid-cols-[3rem_1fr] gap-4 border-b border-border py-8"
+      {(progress) => (
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[.9fr_1.1fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              06 · Privacy first
+            </p>
+            <h2
+              id="privacy-heading"
+              className="mt-4 font-display text-4xl font-bold leading-tight sm:text-6xl"
             >
-              <span className="font-mono text-sm text-primary">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span>
-                <span className="block font-display text-xl font-semibold sm:text-2xl">
-                  {p.title}
-                </span>
-                <span className="mt-2 block text-sm leading-6 text-muted-foreground sm:text-base">
-                  {p.copy}
-                </span>
-              </span>
-            </motion.li>
-          ))}
-        </ol>
-      </div>
-    </section>
+              Calm by design. Private by default.
+            </h2>
+            <p className="mt-6 max-w-md text-base leading-7 text-muted-foreground">
+              A money app has to earn your trust. Here's how Clario handles yours. Made in India 🇮🇳
+            </p>
+          </div>
+          <ol className="border-t border-border">
+            {PRIVACY.map((p, i) => (
+              <PrivacyItem key={p.title} p={p} i={i} progress={progress} />
+            ))}
+          </ol>
+        </div>
+      )}
+    </ScrollStage>
   );
 }
 
@@ -468,111 +532,133 @@ function Privacy() {
 
 function FounderStory() {
   return (
-    <section
-      aria-labelledby="founder-heading"
-      className="border-t border-border bg-background px-5 py-24 sm:py-32"
+    <ScrollStage
+      labelledBy="founder-heading"
+      className="border-t border-border bg-background"
+      track="lg:h-[170vh]"
+      stageClassName="px-5 py-24 sm:py-32 lg:py-0"
     >
-      <div className="mx-auto grid max-w-5xl items-center gap-12 md:grid-cols-[1fr_.7fr]">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-            Why Clario exists
-          </p>
-          <h2
-            id="founder-heading"
-            className="mt-4 font-display text-4xl font-bold leading-tight sm:text-5xl"
-          >
-            Built to make the everyday feel clear.
-          </h2>
-          <blockquote className="mt-6 text-lg leading-8 text-muted-foreground">
-            “I got tired of switching between to-do apps and banking tools just to keep my finances
-            and my day straight. So I built Clario — one app that connects your money and your
-            tasks, with AI that ties it all together.”
-          </blockquote>
-        </div>
-        <motion.figure
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.5 }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="border-l-2 border-primary pl-6"
+      {(progress) => <FounderStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function FounderStage({ progress }: { progress: MotionValue<number> }) {
+  const quoteOpacity = useTransform(progress, [0.05, 0.4], [0.15, 1]);
+  const quoteY = useTransform(progress, [0.05, 0.4], [40, 0]);
+  const figOpacity = useTransform(progress, [0.35, 0.7], [0, 1]);
+  const figY = useTransform(progress, [0.35, 0.7], [40, 0]);
+  return (
+    <div className="mx-auto grid w-full max-w-5xl items-center gap-12 md:grid-cols-[1fr_.7fr]">
+      <motion.div style={{ opacity: quoteOpacity, y: quoteY }} className="will-change-transform">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+          Why Clario exists
+        </p>
+        <h2
+          id="founder-heading"
+          className="mt-4 font-display text-4xl font-bold leading-tight sm:text-5xl"
         >
-          <img
-            src="/arun.webp"
-            alt="Arun Sundhar N"
-            width={192}
-            height={256}
-            loading="lazy"
-            className="h-56 w-44 rounded-2xl object-cover shadow-elevated"
-          />
-          <figcaption>
-            <span className="mt-5 block font-display text-xl font-semibold">Arun Sundhar N</span>
-            <span className="mt-1 block text-sm text-muted-foreground">
-              Founder & Creator of Clario
-            </span>
-          </figcaption>
-          <a
-            href="https://linkedin.com/in/arun-sundhar-n-6aba50249"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-md text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <Linkedin className="h-4 w-4" /> Connect on LinkedIn
-          </a>
-        </motion.figure>
-      </div>
-    </section>
+          Built to make the everyday feel clear.
+        </h2>
+        <blockquote className="mt-6 text-lg leading-8 text-muted-foreground">
+          “I got tired of switching between to-do apps and banking tools just to keep my finances
+          and my day straight. So I built Clario — one app that connects your money and your tasks,
+          with AI that ties it all together.”
+        </blockquote>
+      </motion.div>
+      <motion.figure
+        style={{ opacity: figOpacity, y: figY }}
+        className="border-l-2 border-primary pl-6 will-change-transform"
+      >
+        <img
+          src="/arun.webp"
+          alt="Arun Sundhar N"
+          width={192}
+          height={256}
+          loading="lazy"
+          className="h-56 w-44 rounded-2xl object-cover shadow-elevated"
+        />
+        <figcaption>
+          <span className="mt-5 block font-display text-xl font-semibold">Arun Sundhar N</span>
+          <span className="mt-1 block text-sm text-muted-foreground">
+            Founder & Creator of Clario
+          </span>
+        </figcaption>
+        <a
+          href="https://linkedin.com/in/arun-sundhar-n-6aba50249"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-2 rounded-md text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Linkedin className="h-4 w-4" /> Connect on LinkedIn
+        </a>
+      </motion.figure>
+    </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Final CTA — the phone rises into the panel as you arrive            */
+/* Final CTA — the panel grows and the phone rises in as you scroll    */
 /* ------------------------------------------------------------------ */
 
 function FinalCallToAction() {
-  const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
-  const phoneY = useTransform(scrollYProgress, [0.2, 1], reduce ? [0, 0] : [160, 0]);
-  const phoneScale = useTransform(scrollYProgress, [0.2, 1], reduce ? [1, 1] : [0.9, 1]);
-
   return (
-    <section ref={ref} aria-labelledby="cta-heading" className="bg-background px-4 pb-24">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-navy px-6 pt-20 text-center text-navy-foreground shadow-cinematic sm:px-10">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-0 h-96 w-[40rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-30"
-        />
-        <div className="relative">
-          <h2
-            id="cta-heading"
-            className="mx-auto max-w-3xl font-display text-4xl font-bold leading-tight sm:text-6xl"
-          >
-            Take control of your money and your day.
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-navy-foreground/65">
-            Set up in a minute. Start with one expense and one task — Clario does the rest.
-          </p>
-          <Button asChild size="lg" className="group mt-8 shadow-lhana">
-            <Link to="/auth">
-              Start for free
-              <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </Button>
-          <p className="mt-5 flex items-center justify-center gap-2 text-xs text-navy-foreground/55">
-            <CheckCircle2 className="h-4 w-4 text-primary" /> Free to start · No credit card
-          </p>
-        </div>
-        {/* Phone peeks up from the bottom edge */}
-        <motion.div
-          style={{ y: phoneY, scale: phoneScale }}
-          className="relative mx-auto mt-14 h-[300px] w-fit origin-bottom will-change-transform sm:h-[340px]"
+    <ScrollStage
+      labelledBy="cta-heading"
+      className="bg-background"
+      track="lg:h-[170vh]"
+      stageClassName="px-4 pb-24 lg:pb-0"
+      mobileOffset={["start end", "end end"]}
+    >
+      {(progress) => <CtaStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function CtaStage({ progress }: { progress: MotionValue<number> }) {
+  const panelScale = useTransform(progress, [0, 0.45], [0.9, 1]);
+  const panelOpacity = useTransform(progress, [0, 0.3], [0.4, 1]);
+  const phoneY = useTransform(progress, [0.3, 0.9], [180, 0]);
+  const phoneScale = useTransform(progress, [0.3, 0.9], [0.88, 1]);
+  return (
+    <motion.div
+      style={{ scale: panelScale, opacity: panelOpacity }}
+      className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[2.5rem] bg-navy px-6 pt-16 text-center text-navy-foreground shadow-cinematic will-change-transform sm:px-10 lg:max-h-[92vh]"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-96 w-[40rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-30"
+      />
+      <div className="relative">
+        <h2
+          id="cta-heading"
+          className="mx-auto max-w-3xl font-display text-4xl font-bold leading-tight sm:text-6xl"
         >
-          <PhoneFrame className="w-[250px] sm:w-[280px]">
-            <DashboardScreen />
-          </PhoneFrame>
-        </motion.div>
+          Take control of your money and your day.
+        </h2>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-navy-foreground/65">
+          Set up in a minute. Start with one expense and one task — Clario does the rest.
+        </p>
+        <Button asChild size="lg" className="group mt-8 shadow-lhana">
+          <Link to="/auth">
+            Start for free
+            <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </Button>
+        <p className="mt-5 flex items-center justify-center gap-2 text-xs text-navy-foreground/55">
+          <CheckCircle2 className="h-4 w-4 text-primary" /> Free to start · No credit card
+        </p>
       </div>
-    </section>
+      {/* Phone peeks up from the bottom edge */}
+      <motion.div
+        style={{ y: phoneY, scale: phoneScale }}
+        className="relative mx-auto mt-12 h-[280px] w-fit origin-bottom will-change-transform sm:h-[300px]"
+      >
+        <PhoneFrame className="w-[250px] sm:w-[280px]">
+          <DashboardScreen />
+        </PhoneFrame>
+      </motion.div>
+    </motion.div>
   );
 }
 

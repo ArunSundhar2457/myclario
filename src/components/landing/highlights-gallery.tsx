@@ -1,10 +1,10 @@
 import {
   AnimatePresence,
   motion,
-  useAnimationFrame,
-  useInView,
-  useMotionValue,
+  useMotionValueEvent,
   useReducedMotion,
+  useTransform,
+  type MotionValue,
 } from "framer-motion";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
@@ -16,14 +16,14 @@ import {
   PlannerScreen,
   TransactionsScreen,
 } from "./mockups";
+import { ScrollStage } from "./scroll-stage";
 
 /**
- * Apple-style "Get the highlights" gallery: pill tabs that auto-advance with a
- * progress bar, pausing on hover, keyboard focus, when off-screen, and for
- * reduced-motion users. Each tab swaps the phone screen with a staggered reveal.
+ * "Get the highlights": pinned on desktop while the user's scroll steps through
+ * the five tabs (scrolling up rewinds). Tabs remain clickable and keyboard
+ * accessible; clicking jumps the scroll to that tab's position.
  */
 
-const SLIDE_MS = 6500;
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const TABS = [
@@ -65,37 +65,47 @@ const TABS = [
 ] as const;
 
 export function HighlightsGallery() {
+  return (
+    <ScrollStage
+      id="highlights"
+      labelledBy="highlights-heading"
+      className="bg-background text-foreground"
+      track="lg:h-[340vh]"
+      stageClassName="px-4 py-24 sm:px-6 sm:py-32 lg:py-0"
+    >
+      {(progress) => <Gallery progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function Gallery({ progress }: { progress: MotionValue<number> }) {
   const reduce = useReducedMotion();
-  const sectionRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const inView = useInView(sectionRef, { amount: 0.35 });
   const [active, setActive] = useState(0);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const progress = useMotionValue(0);
+  const n = TABS.length;
 
-  const paused = !!reduce || hovered || focused || !inView;
-
-  useAnimationFrame((_, delta) => {
-    if (paused) return;
-    // Clamp delta so returning to a background tab doesn't skip slides.
-    const next = progress.get() + Math.min(delta, 100) / SLIDE_MS;
-    if (next >= 1) {
-      progress.set(0);
-      setActive((a) => (a + 1) % TABS.length);
-    } else {
-      progress.set(next);
-    }
+  // Scroll position picks the active tab.
+  useMotionValueEvent(progress, "change", (v) => {
+    if (reduce) return;
+    const next = Math.min(n - 1, Math.max(0, Math.floor(v * n)));
+    setActive((a) => (a === next ? a : next));
   });
+  // Progress within the current tab, for the pill's underline.
+  const tabProgress = useTransform(progress, (v) => Math.min(1, Math.max(0, v * n - active)));
 
   function select(index: number, focus = false) {
-    progress.set(0);
     setActive(index);
     if (focus) tabRefs.current[index]?.focus();
+    const section = rootRef.current?.closest("section");
+    if (!section || reduce || !window.matchMedia("(min-width: 1024px)").matches) return;
+    const top = section.getBoundingClientRect().top + window.scrollY;
+    const travel = section.offsetHeight - window.innerHeight;
+    window.scrollTo({ top: top + ((index + 0.15) / n) * travel });
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const last = TABS.length - 1;
+    const last = n - 1;
     const map: Record<string, number> = {
       ArrowRight: active === last ? 0 : active + 1,
       ArrowLeft: active === 0 ? last : active - 1,
@@ -112,18 +122,7 @@ export function HighlightsGallery() {
   const ActiveScreen = tab.Screen;
 
   return (
-    <section
-      id="highlights"
-      ref={sectionRef}
-      aria-labelledby="highlights-heading"
-      className="bg-background px-4 py-24 text-foreground sm:px-6 sm:py-32"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
-      }}
-    >
+    <div ref={rootRef} className="w-full">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -147,7 +146,7 @@ export function HighlightsGallery() {
           role="tablist"
           aria-label="Clario highlights"
           onKeyDown={onKeyDown}
-          className="-mx-4 mt-10 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0"
+          className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0"
         >
           {TABS.map((t, i) => {
             const selected = i === active;
@@ -175,7 +174,7 @@ export function HighlightsGallery() {
                 {selected && !reduce && (
                   <motion.span
                     aria-hidden="true"
-                    style={{ scaleX: progress }}
+                    style={{ scaleX: tabProgress }}
                     className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
                   />
                 )}
@@ -195,7 +194,7 @@ export function HighlightsGallery() {
             aria-hidden="true"
             className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-30"
           />
-          <div className="relative grid items-center gap-10 px-6 py-12 sm:px-12 lg:grid-cols-[1fr_auto] lg:gap-16 lg:py-16">
+          <div className="relative grid items-center gap-10 px-6 py-12 sm:px-12 lg:grid-cols-[1fr_auto] lg:gap-16 lg:py-8">
             <div className="min-h-[170px]">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -218,7 +217,7 @@ export function HighlightsGallery() {
               </AnimatePresence>
             </div>
             <div className="flex justify-center">
-              <PhoneFrame className="w-[250px] sm:w-[280px]">
+              <PhoneFrame className="w-[230px] sm:w-[260px] lg:w-[230px] xl:w-[250px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={tab.id}
@@ -239,6 +238,6 @@ export function HighlightsGallery() {
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
