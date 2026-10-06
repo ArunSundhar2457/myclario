@@ -1,11 +1,19 @@
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  type MotionValue,
+} from "framer-motion";
 import { Database, Lock, ShieldCheck } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import lhanaImage from "@/assets/lhana-insight.webp";
+import { ScrollStage } from "./scroll-stage";
 
 /**
- * Introduces Lhana with a short scripted chat that plays when the chat scrolls
- * into view and resets when it leaves, so it replays in both scroll directions.
+ * Introduces Lhana with a short sample chat. Each beat of the conversation is
+ * tied to scroll position, so it plays forward when scrolling down and rewinds
+ * when scrolling up. On desktop the section pins while the chat plays.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -28,33 +36,34 @@ const FACTS = [
   },
 ];
 
-// Step timings in ms after the chat enters view.
-const SCRIPT = [400, 1300, 2700, 3400];
+// Scroll progress (0–1) at which each chat beat appears.
+const BEATS = [0.1, 0.3, 0.5, 0.7];
 
 export function LhanaSection() {
+  return (
+    <ScrollStage
+      id="lhana"
+      labelledBy="lhana-heading"
+      className="bg-navy text-navy-foreground"
+      track="lg:h-[260vh]"
+      stageClassName="px-5 py-24 sm:py-32 lg:py-0"
+    >
+      {(progress) => <LhanaStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function LhanaStage({ progress }: { progress: MotionValue<number> }) {
   const reduce = useReducedMotion();
-  const chatRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(chatRef, { amount: 0.5 });
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (reduce) return;
-    if (!inView) {
-      const reset = setTimeout(() => setStep(0), 0);
-      return () => clearTimeout(reset);
-    }
-    const timers = SCRIPT.map((ms, i) => setTimeout(() => setStep(i + 1), ms));
-    return () => timers.forEach(clearTimeout);
-  }, [inView, reduce]);
-
-  const shown = reduce ? SCRIPT.length : step;
+  useMotionValueEvent(progress, "change", (v) => {
+    const next = BEATS.filter((b) => v >= b).length;
+    setStep((s) => (s === next ? s : next));
+  });
+  const shown = reduce ? BEATS.length : step;
 
   return (
-    <section
-      id="lhana"
-      aria-labelledby="lhana-heading"
-      className="relative overflow-hidden bg-navy px-5 py-24 text-navy-foreground sm:py-32"
-    >
+    <div className="relative w-full">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-40 top-1/3 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-25"
