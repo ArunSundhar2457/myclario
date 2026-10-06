@@ -6,6 +6,7 @@ import {
   useReducedMotion,
   useScroll,
   useTransform,
+  type MotionValue,
 } from "framer-motion";
 import {
   ArrowDownLeft,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ClarioBrand } from "./clario-brand";
@@ -25,6 +26,7 @@ import { HighlightsGallery } from "./highlights-gallery";
 import { LhanaSection } from "./lhana-section";
 import { DashboardScreen, PhoneFrame } from "./mockups";
 import { ScatteredToSorted } from "./scattered-to-sorted";
+import { ScrollStage } from "./scroll-stage";
 import { TrendChapter } from "./trend-chapter";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
