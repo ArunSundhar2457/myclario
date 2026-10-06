@@ -171,46 +171,67 @@ const HEADLINE = [
 function FloatingChip({
   className,
   delay,
+  progress,
+  dockX,
   children,
 }: {
   className: string;
   delay: number;
+  progress: MotionValue<number>;
+  /** Horizontal distance the chip travels to dock into the phone. */
+  dockX: number;
   children: ReactNode;
 }) {
   const reduce = useReducedMotion();
+  // Scroll-linked: chips slide into the phone and fade as the hero is scrolled.
+  const x = useTransform(progress, [0.15, 0.6], [0, dockX]);
+  const opacity = useTransform(progress, [0.3, 0.6], [1, 0]);
+  const scale = useTransform(progress, [0.15, 0.6], [1, 0.8]);
   return (
     <motion.div
       aria-hidden="true"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.9 + delay, ease: EASE }}
+      style={{ x, opacity, scale }}
       className={cn("absolute z-20 hidden sm:block", className)}
     >
       <motion.div
-        animate={reduce ? undefined : { y: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay }}
-        className="flex items-center gap-3 rounded-2xl border will-change-transform border-navy-foreground/15 bg-[oklch(0.27_0.045_282/0.96)] px-4 py-3 text-navy-foreground shadow-cinematic"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.9 + delay, ease: EASE }}
       >
-        {children}
+        <motion.div
+          animate={reduce ? undefined : { y: [0, -8, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay }}
+          className="flex items-center gap-3 rounded-2xl border will-change-transform border-navy-foreground/15 bg-[oklch(0.27_0.045_282/0.96)] px-4 py-3 text-navy-foreground shadow-cinematic"
+        >
+          {children}
+        </motion.div>
       </motion.div>
     </motion.div>
   );
 }
 
 function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const phoneY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -90]);
-  const textY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 70]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.75], reduce ? [1, 1] : [1, 0]);
+  return (
+    <ScrollStage
+      labelledBy="hero-heading"
+      className="bg-navy text-navy-foreground"
+      track="lg:h-[170vh]"
+      mobileOffset={["start start", "end start"]}
+    >
+      {(progress) => <HeroStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function HeroStage({ progress }: { progress: MotionValue<number> }) {
+  const phoneY = useTransform(progress, [0, 1], [0, -60]);
+  const phoneScale = useTransform(progress, [0, 0.7], [1, 1.12]);
+  const phoneRotate = useTransform(progress, [0, 0.7], [0, -4]);
+  const textY = useTransform(progress, [0, 0.8], [0, -70]);
+  const textOpacity = useTransform(progress, [0.1, 0.65], [1, 0]);
 
   return (
-    <section
-      ref={ref}
-      aria-labelledby="hero-heading"
-      className="relative overflow-hidden bg-navy text-navy-foreground"
-    >
+    <div className="relative">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(closest-side,var(--primary),transparent)] opacity-25" />
         <div className="absolute -right-32 top-1/3 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(closest-side,var(--lhana),transparent)] opacity-15" />
