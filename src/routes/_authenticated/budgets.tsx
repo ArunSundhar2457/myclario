@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/budgets")({
   component: BudgetsPage,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-sm text-destructive">
-      {error.message}
+      {error instanceof Error ? error.message : String(error)}
     </div>
   ),
   notFoundComponent: () => <div className="p-6 text-sm">Not found.</div>,
