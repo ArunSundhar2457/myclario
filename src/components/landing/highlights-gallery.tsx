@@ -217,7 +217,7 @@ function Gallery({ progress }: { progress: MotionValue<number> }) {
               </AnimatePresence>
             </div>
             <div className="flex justify-center">
-              <PhoneFrame className="w-[230px] sm:w-[260px] lg:w-[230px] xl:w-[250px]">
+              <PhoneFrame className="w-[230px] sm:w-[260px] lg:w-[clamp(150px,calc((100svh_-_420px)*0.44),230px)]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={tab.id}
