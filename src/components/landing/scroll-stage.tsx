@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** True on desktop-sized screens (where sections pin to the screen). */
-export function useIsDesktop() {
+function useIsDesktop() {
   const [desktop, setDesktop] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -18,9 +18,9 @@ export function useIsDesktop() {
 type Offset = NonNullable<Parameters<typeof useScroll>[0]>["offset"];
 
 /**
- * A landing-page chapter that pins to the screen on desktop while the user's
- * scroll scrubs its animation (progress 0 → 1, fully reversible). On phones the
- * section scrolls normally, but its animation is still driven by scroll position.
+ * A landing-page chapter pins while its content fits the viewport and the user's
+ * scroll scrubs its animation (progress 0 → 1, fully reversible). Taller content
+ * flows normally so smaller screens never clip readable content.
  * With reduced motion nothing pins and progress is fixed at 1 (final state).
  */
 export function ScrollStage({
