@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** True on desktop-sized screens (where sections pin to the screen). */
-export function useIsDesktop() {
+function useIsDesktop() {
   const [desktop, setDesktop] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -18,9 +18,9 @@ export function useIsDesktop() {
 type Offset = NonNullable<Parameters<typeof useScroll>[0]>["offset"];
 
 /**
- * A landing-page chapter that pins to the screen on desktop while the user's
- * scroll scrubs its animation (progress 0 → 1, fully reversible). On phones the
- * section scrolls normally, but its animation is still driven by scroll position.
+ * A landing-page chapter pins while its content fits the viewport and the user's
+ * scroll scrubs its animation (progress 0 → 1, fully reversible). Taller content
+ * flows normally so smaller screens never clip readable content.
  * With reduced motion nothing pins and progress is fixed at 1 (final state).
  */
 export function ScrollStage({
@@ -42,13 +42,29 @@ export function ScrollStage({
   children: (progress: MotionValue<number>) => ReactNode;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const desktop = useIsDesktop();
+  const [fits, setFits] = useState(false);
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    const update = () => setFits(content.scrollHeight <= window.innerHeight - 90);
+    const observer = new ResizeObserver(update);
+    observer.observe(content);
+    window.addEventListener("resize", update);
+    update();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  const hold = !reduce && fits;
   const pinned = useScroll({ target: ref, offset: ["start start", "end end"] });
   const flowing = useScroll({ target: ref, offset: mobileOffset });
   const progress = useTransform(
     [pinned.scrollYProgress, flowing.scrollYProgress],
-    ([p, f]: number[]) => (reduce ? 1 : desktop ? p : f),
+    ([p, f]: number[]) => (reduce ? 1 : hold ? p : f),
   );
 
   return (
@@ -56,16 +72,21 @@ export function ScrollStage({
       id={id}
       ref={ref}
       aria-labelledby={labelledBy}
-      className={cn("relative overflow-x-clip", className, !reduce && track)}
+      className={cn(
+        "relative overflow-x-clip",
+        className,
+        hold && (desktop ? track : "h-[180svh]"),
+      )}
     >
       <div
         className={cn(
-          !reduce &&
-            "lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-[640px] lg:flex-col lg:justify-center lg:overflow-hidden",
           stageClassName,
+          hold && "sticky top-0 flex h-[100svh] flex-col justify-center !py-0",
         )}
       >
-        {children(progress)}
+        <div ref={contentRef} className="w-full">
+          {children(progress)}
+        </div>
       </div>
     </section>
   );
