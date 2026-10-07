@@ -61,30 +61,22 @@ export const generateInsights = createServerFn({ method: "POST" })
     const fmt = (v: number) => format(v * rate, currency);
     const { first, nextFirst, monthFirst } = monthWindow(data.month);
 
-    const [expRes, incRes, budRes] = await Promise.all([
-      context.supabase
-        .from("expenses")
-        .select("category, amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
-      context.supabase
-        .from("income")
-        .select("amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
+    const [catRes, totalsRes, budRes] = await Promise.all([
+      context.supabase.rpc("get_expense_category_totals", { p_from: first, p_to: nextFirst }),
+      context.supabase.rpc("get_totals", { p_from: first, p_to: nextFirst }),
       context.supabase.from("budgets").select("category, monthly_limit").eq("month", monthFirst),
     ]);
 
-    if (expRes.error) throw expRes.error;
-    if (incRes.error) throw incRes.error;
+    if (catRes.error) throw catRes.error;
+    if (totalsRes.error) throw totalsRes.error;
     if (budRes.error) throw budRes.error;
 
     const spentByCat: Record<string, number> = {};
-    for (const e of expRes.data ?? []) {
-      spentByCat[e.category] = (spentByCat[e.category] ?? 0) + Number(e.amount);
+    for (const e of catRes.data ?? []) {
+      spentByCat[e.category] = Number(e.total);
     }
-    const totalExpenses = Object.values(spentByCat).reduce((a, b) => a + b, 0);
-    const totalIncome = (incRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
+    const totalExpenses = Number(totalsRes.data?.[0]?.spent ?? 0);
+    const totalIncome = Number(totalsRes.data?.[0]?.income ?? 0);
     const net = totalIncome - totalExpenses;
 
     const budgets = (budRes.data ?? []).map((b) => ({

@@ -12,19 +12,17 @@ export const getSnapshot = createServerFn({ method: "POST" })
     z.object({ range: z.enum(["month", "all"]), month: monthSchema.optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const q = (table: "income" | "expenses") => {
-      let qb = context.supabase.from(table).select("amount");
-      if (data.range === "month") {
-        const { first, nextFirst } = monthBounds(data.month);
-        qb = qb.gte("occurred_on", first).lt("occurred_on", nextFirst);
-      }
-      return qb;
-    };
-    const [inc, exp] = await Promise.all([q("income"), q("expenses")]);
-    if (inc.error) throw inc.error;
-    if (exp.error) throw exp.error;
-    const income = (inc.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
-    const spent = (exp.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
+    const args =
+      data.range === "month"
+        ? (() => {
+            const { first, nextFirst } = monthBounds(data.month);
+            return { p_from: first, p_to: nextFirst };
+          })()
+        : {};
+    const { data: rows, error } = await context.supabase.rpc("get_totals", args);
+    if (error) throw error;
+    const income = Number(rows?.[0]?.income ?? 0);
+    const spent = Number(rows?.[0]?.spent ?? 0);
     return { income, spent, balance: income - spent };
   });
 
@@ -39,20 +37,17 @@ export const getSpendingTrend = createServerFn({ method: "POST" })
       Number(startIso.slice(8, 10)),
     );
 
-    const [inc, exp] = await Promise.all([
-      context.supabase
-        .from("income")
-        .select("amount, occurred_on")
-        .gte("occurred_on", startIso)
-        .lte("occurred_on", endIso),
-      context.supabase
-        .from("expenses")
-        .select("amount, occurred_on")
-        .gte("occurred_on", startIso)
-        .lte("occurred_on", endIso),
-    ]);
-    if (inc.error) throw inc.error;
-    if (exp.error) throw exp.error;
+    // End is inclusive in monthDayRange; the DB function wants an exclusive upper bound.
+    const endExclusive = new Date(
+      Number(endIso.slice(0, 4)),
+      Number(endIso.slice(5, 7)) - 1,
+      Number(endIso.slice(8, 10)) + 1,
+    );
+    const { data: dayRows, error } = await context.supabase.rpc("get_daily_totals", {
+      p_from: startIso,
+      p_to: iso(endExclusive),
+    });
+    if (error) throw error;
 
     const byDay: Record<string, { income: number; spent: number }> = {};
     for (let i = 0; i < days; i++) {
@@ -60,13 +55,12 @@ export const getSpendingTrend = createServerFn({ method: "POST" })
       d.setDate(start.getDate() + i);
       byDay[iso(d)] = { income: 0, spent: 0 };
     }
-    for (const r of inc.data ?? []) {
-      const k = r.occurred_on;
-      if (byDay[k]) byDay[k].income += Number(r.amount);
-    }
-    for (const r of exp.data ?? []) {
-      const k = r.occurred_on;
-      if (byDay[k]) byDay[k].spent += Number(r.amount);
+    for (const r of dayRows ?? []) {
+      const slot = byDay[r.day];
+      if (slot) {
+        slot.income += Number(r.income);
+        slot.spent += Number(r.spent);
+      }
     }
     return Object.entries(byDay).map(([date, v]) => ({ date, ...v }));
   });
@@ -76,15 +70,14 @@ export const getCategoryBreakdown = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ month: monthSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const { first, nextFirst } = monthBounds(data.month);
-    const { data: rows, error } = await context.supabase
-      .from("expenses")
-      .select("amount, category")
-      .gte("occurred_on", first)
-      .lt("occurred_on", nextFirst);
+    const { data: rows, error } = await context.supabase.rpc("get_expense_category_totals", {
+      p_from: first,
+      p_to: nextFirst,
+    });
     if (error) throw error;
     const totals: Record<string, number> = {};
     for (const r of rows ?? []) {
-      totals[r.category] = (totals[r.category] ?? 0) + Number(r.amount);
+      totals[r.category] = Number(r.total);
     }
     return Object.entries(totals)
       .filter(([, v]) => v > 0)
@@ -99,17 +92,13 @@ export const getBudgetAlerts = createServerFn({ method: "POST" })
     const { first, nextFirst } = monthBounds(data.month);
     const [budgets, exp] = await Promise.all([
       context.supabase.from("budgets").select("id, category, monthly_limit").eq("month", first),
-      context.supabase
-        .from("expenses")
-        .select("category, amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
+      context.supabase.rpc("get_expense_category_totals", { p_from: first, p_to: nextFirst }),
     ]);
     if (budgets.error) throw budgets.error;
     if (exp.error) throw exp.error;
     const spentByCat: Record<string, number> = {};
     for (const r of exp.data ?? []) {
-      spentByCat[r.category] = (spentByCat[r.category] ?? 0) + Number(r.amount);
+      spentByCat[r.category] = Number(r.total);
     }
     return (budgets.data ?? [])
       .map((b) => {

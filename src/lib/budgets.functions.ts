@@ -17,15 +17,14 @@ export const listBudgets = createServerFn({ method: "POST" })
       .eq("month", monthDate)
       .order("created_at", { ascending: true });
     if (error) throw error;
-    const { data: exp, error: expErr } = await context.supabase
-      .from("expenses")
-      .select("category, amount")
-      .gte("occurred_on", first)
-      .lt("occurred_on", nextFirst);
+    const { data: exp, error: expErr } = await context.supabase.rpc("get_expense_category_totals", {
+      p_from: first,
+      p_to: nextFirst,
+    });
     if (expErr) throw expErr;
     const spentByCat: Record<string, number> = {};
     for (const e of exp ?? []) {
-      spentByCat[e.category] = (spentByCat[e.category] ?? 0) + Number(e.amount);
+      spentByCat[e.category] = Number(e.total);
     }
     return (budgets ?? []).map((b) => ({
       id: b.id,

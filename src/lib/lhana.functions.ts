@@ -108,33 +108,14 @@ export const askLhana = createServerFn({ method: "POST" })
     const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
     const prevBounds = monthBounds(prevYm);
 
-    const [expRes, incRes, budRes, prevExpRes, prevIncRes, recentRes] = await Promise.all([
-      supabase
-        .from("expenses")
-        .select("category, amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
-      supabase
-        .from("income")
-        .select("amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
+    const [catRes, totalsRes, budRes, prevTotalsRes, recentRes] = await Promise.all([
+      supabase.rpc("get_expense_category_totals", { p_from: first, p_to: nextFirst }),
+      supabase.rpc("get_totals", { p_from: first, p_to: nextFirst }),
       needs.budgets
         ? supabase.from("budgets").select("category, monthly_limit").eq("month", monthDate)
         : Promise.resolve({ data: [], error: null } as const),
       needs.previousMonth
-        ? supabase
-            .from("expenses")
-            .select("amount")
-            .gte("occurred_on", prevBounds.first)
-            .lt("occurred_on", prevBounds.nextFirst)
-        : Promise.resolve({ data: [], error: null } as const),
-      needs.previousMonth
-        ? supabase
-            .from("income")
-            .select("amount")
-            .gte("occurred_on", prevBounds.first)
-            .lt("occurred_on", prevBounds.nextFirst)
+        ? supabase.rpc("get_totals", { p_from: prevBounds.first, p_to: prevBounds.nextFirst })
         : Promise.resolve({ data: [], error: null } as const),
       needs.recent
         ? supabase
@@ -147,17 +128,17 @@ export const askLhana = createServerFn({ method: "POST" })
         : Promise.resolve({ data: [], error: null } as const),
     ]);
 
-    if (expRes.error) throw expRes.error;
-    if (incRes.error) throw incRes.error;
+    if (catRes.error) throw catRes.error;
+    if (totalsRes.error) throw totalsRes.error;
     if (budRes.error) throw budRes.error;
 
     const spentByCat: Record<string, number> = {};
-    for (const e of expRes.data ?? []) {
+    for (const e of catRes.data ?? []) {
       const c = normalizeCat(e.category);
-      spentByCat[c] = (spentByCat[c] ?? 0) + Number(e.amount);
+      spentByCat[c] = (spentByCat[c] ?? 0) + Number(e.total);
     }
-    const spent = Object.values(spentByCat).reduce((a, b) => a + b, 0);
-    const income = (incRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
+    const spent = Number(totalsRes.data?.[0]?.spent ?? 0);
+    const income = Number(totalsRes.data?.[0]?.income ?? 0);
 
     const monthLabel = new Date(y, m - 1, 1).toLocaleString("en-US", {
       month: "long",
@@ -183,8 +164,8 @@ export const askLhana = createServerFn({ method: "POST" })
         ? {
             prev: {
               label: prevLabel,
-              income: (prevIncRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0),
-              spent: (prevExpRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0),
+              income: Number(prevTotalsRes.data?.[0]?.income ?? 0),
+              spent: Number(prevTotalsRes.data?.[0]?.spent ?? 0),
             },
           }
         : {}),
