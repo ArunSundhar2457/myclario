@@ -21,6 +21,7 @@ import "lenis/dist/lenis.css";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import founderPortrait from "@/assets/arun-founder-portrait.webp.asset.json";
 import { ClarioBrand } from "./clario-brand";
 import { HighlightsGallery } from "./highlights-gallery";
 import { LhanaSection } from "./lhana-section";
@@ -572,7 +573,7 @@ function FounderStage({ progress }: { progress: MotionValue<number> }) {
         className="border-l-2 border-primary pl-6 will-change-transform"
       >
         <img
-          src="/arun.webp"
+          src={founderPortrait.url}
           alt="Arun Sundhar N"
           width={192}
           height={256}
