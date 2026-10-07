@@ -226,11 +226,12 @@ function Hero() {
 }
 
 function HeroStage({ progress }: { progress: MotionValue<number> }) {
-  const phoneY = useTransform(progress, [0, 1], [0, -60]);
-  const phoneScale = useTransform(progress, [0, 0.7], [1, 1.12]);
-  const phoneRotate = useTransform(progress, [0, 0.7], [0, -4]);
-  const textY = useTransform(progress, [0, 0.8], [0, -70]);
-  const textOpacity = useTransform(progress, [0.1, 0.65], [1, 0]);
+  const reduce = useReducedMotion();
+  const phoneY = useTransform(progress, [0, 1], reduce ? [0, 0] : [0, -60]);
+  const phoneScale = useTransform(progress, [0, 0.7], reduce ? [1, 1] : [1, 1.12]);
+  const phoneRotate = useTransform(progress, [0, 0.7], reduce ? [0, 0] : [0, -4]);
+  const textY = useTransform(progress, [0, 0.8], reduce ? [0, 0] : [0, -70]);
+  const textOpacity = useTransform(progress, [0.1, 0.65], reduce ? [1, 1] : [1, 0.25]);
 
   return (
     <div className="relative">
@@ -242,7 +243,7 @@ function HeroStage({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       {/* min-h (not h) so content can never be clipped on short screens */}
-      <div className="relative mx-auto grid min-h-[100svh] max-w-6xl items-center gap-14 px-5 pb-20 pt-28 sm:pt-32 lg:grid-cols-[1.1fr_.9fr] lg:gap-8">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-12 pt-28 sm:pt-32 lg:grid-cols-[1.1fr_.9fr] lg:gap-8">
         <motion.div style={{ y: textY, opacity: textOpacity }} className="will-change-transform">
           <motion.p
             initial={{ opacity: 0, y: 12 }}

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { motion, useTransform, type MotionValue } from "framer-motion";
 import { ScrollStage } from "./scroll-stage";
 
 /**
