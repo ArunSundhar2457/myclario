@@ -111,7 +111,6 @@ function LhanaStage({ progress }: { progress: MotionValue<number> }) {
         </div>
 
         <div
-          ref={chatRef}
           aria-label="Sample conversation with Lhana"
           className="relative rounded-[2rem] border border-navy-foreground/10 bg-navy-foreground/[0.04] p-5 shadow-cinematic sm:p-8"
         >
@@ -202,6 +201,6 @@ function LhanaStage({ progress }: { progress: MotionValue<number> }) {
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

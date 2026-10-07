@@ -1,5 +1,5 @@
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef } from "react";
+import { ScrollStage } from "./scroll-stage";
 
 /**
  * Cumulative spending vs. a "usual pace" line. The chart is revealed through a
@@ -52,22 +52,22 @@ function Callout({
 }
 
 export function TrendChapter() {
-  const reduce = useReducedMotion();
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start 75%", "center 50%"],
-  });
-  // How much of the chart is visible, in SVG units (0–100).
-  const reveal = useTransform(scrollYProgress, [0, 1], reduce ? [100, 100] : [0, 100]);
-
   return (
-    <section
-      ref={sectionRef}
-      aria-labelledby="trend-heading"
-      className="bg-background px-5 py-24 text-foreground sm:py-32"
+    <ScrollStage
+      labelledBy="trend-heading"
+      className="bg-background text-foreground"
+      track="lg:h-[200vh]"
+      stageClassName="px-5 py-24 sm:py-32 lg:py-0"
     >
-      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[.8fr_1.2fr]">
+      {(progress) => <TrendStage progress={progress} />}
+    </ScrollStage>
+  );
+}
+
+function TrendStage({ progress }: { progress: MotionValue<number> }) {
+  const reveal = useTransform(progress, [0.08, 0.85], [0, 103]);
+  return (
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[.8fr_1.2fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
             04 · The shape of your month
@@ -178,6 +178,5 @@ export function TrendChapter() {
           </div>
         </div>
       </div>
-    </section>
   );
 }
