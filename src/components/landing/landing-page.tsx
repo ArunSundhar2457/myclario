@@ -71,7 +71,7 @@ export function LandingPageContent() {
       <div className="min-h-screen overflow-x-clip bg-background text-foreground">
         <ScrollProgress />
         <LandingNav />
-        <main>
+        <main className="space-y-16 sm:space-y-24">
           <Hero />
           <ScatteredToSorted />
           <HighlightsGallery />
