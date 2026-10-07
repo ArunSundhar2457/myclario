@@ -226,7 +226,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_totals: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: { income: number; spent: number }[]
+      }
+      get_expense_category_totals: {
+        Args: { p_from: string; p_to: string }
+        Returns: { category: string; total: number }[]
+      }
+      get_daily_totals: {
+        Args: { p_from: string; p_to: string }
+        Returns: { day: string; income: number; spent: number }[]
+      }
     }
     Enums: {
       [_ in never]: never
