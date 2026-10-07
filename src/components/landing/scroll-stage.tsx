@@ -72,7 +72,11 @@ export function ScrollStage({
       id={id}
       ref={ref}
       aria-labelledby={labelledBy}
-      className={cn("relative overflow-x-clip", className, hold && (desktop ? track : "h-[180svh]"))}
+      className={cn(
+        "relative overflow-x-clip",
+        className,
+        hold && (desktop ? track : "h-[180svh]"),
+      )}
     >
       <div
         className={cn(
@@ -80,7 +84,9 @@ export function ScrollStage({
           hold && "sticky top-0 flex h-[100svh] flex-col justify-center !py-0",
         )}
       >
-        <div ref={contentRef} className="w-full">{children(progress)}</div>
+        <div ref={contentRef} className="w-full">
+          {children(progress)}
+        </div>
       </div>
     </section>
   );
