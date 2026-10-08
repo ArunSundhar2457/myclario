@@ -81,7 +81,7 @@ export function ScrollStage({
       <div
         className={cn(
           stageClassName,
-          hold && "sticky top-0 flex h-[100svh] flex-col justify-center !py-0",
+          hold && "sticky top-20 flex h-[calc(100svh-80px)] flex-col justify-center !py-0",
         )}
       >
         <div ref={contentRef} className="w-full">
