@@ -526,7 +526,11 @@ function PrivacyPage() {
           <Link to="/" className="text-sm text-primary hover:underline">
             ← {copy.back}
           </Link>
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={copy.languageLabel}>
+          <div
+            className="flex flex-wrap items-center gap-2"
+            role="group"
+            aria-label={copy.languageLabel}
+          >
             <span className="mr-1 text-sm text-muted-foreground">{copy.languageLabel}:</span>
             {LANGUAGES.map(({ code, label }) => (
               <button
@@ -554,9 +558,7 @@ function PrivacyPage() {
 
         {copy.sections.map((section) => (
           <section key={section.title} className="space-y-2">
-            <h2 className="font-display text-xl font-semibold text-foreground">
-              {section.title}
-            </h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">{section.title}</h2>
             <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
               {section.paragraphs?.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
