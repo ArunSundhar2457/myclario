@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fetchAllRows } from "./paginate";
 
 export const getProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -45,34 +44,20 @@ export const updateProfile = createServerFn({ method: "POST" })
 export const exportUserData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    // Read every row (Supabase caps one request at 1,000) and fail loudly rather
-    // than hand the user an export that silently leaves data out.
-    const all = (table: "expenses" | "income" | "budgets" | "todos") =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from(table)
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: true })
-          .order("id", { ascending: true })
-          .range(from, to),
-      );
     const [profile, expenses, income, budgets, todos] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      all("expenses"),
-      all("income"),
-      all("budgets"),
-      all("todos"),
+      context.supabase.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
+      context.supabase.from("expenses").select("*").eq("user_id", context.userId),
+      context.supabase.from("income").select("*").eq("user_id", context.userId),
+      context.supabase.from("budgets").select("*").eq("user_id", context.userId),
+      context.supabase.from("todos").select("*").eq("user_id", context.userId),
     ]);
-    if (profile.error) throw profile.error;
     return {
       exported_at: new Date().toISOString(),
       profile: profile.data ?? null,
-      expenses,
-      income,
-      budgets,
-      todos,
+      expenses: expenses.data ?? [],
+      income: income.data ?? [],
+      budgets: budgets.data ?? [],
+      todos: todos.data ?? [],
     };
   });
 

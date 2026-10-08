@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { fetchAllRows } from "./paginate";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "./categories";
 
 const kindSchema = z.enum(["income", "expense"]);
@@ -152,27 +151,23 @@ export const exportTransactionsCsv = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const table = tableFor(data.kind);
-    // Supabase caps a single request at 1,000 rows, so read the export in pages.
-    // The id tie-break keeps the order stable between pages.
-    const rows = await fetchAllRows((from, to) => {
-      let q = context.supabase
-        .from(table)
-        .select("occurred_on, category, description, amount, is_recurring, recurrence")
-        .order("occurred_on", { ascending: false })
-        .order("id", { ascending: true });
-      if (data.from) q = q.gte("occurred_on", data.from);
-      if (data.to) q = q.lte("occurred_on", data.to);
-      if (data.category && data.category !== "all") q = q.eq("category", data.category);
-      if (data.search) q = q.ilike("description", `%${data.search}%`);
-      return q.range(from, to);
-    });
+    let q = context.supabase
+      .from(table)
+      .select("occurred_on, category, description, amount, is_recurring, recurrence")
+      .order("occurred_on", { ascending: false });
+    if (data.from) q = q.gte("occurred_on", data.from);
+    if (data.to) q = q.lte("occurred_on", data.to);
+    if (data.category && data.category !== "all") q = q.eq("category", data.category);
+    if (data.search) q = q.ilike("description", `%${data.search}%`);
+    const { data: rows, error } = await q;
+    if (error) throw error;
     const esc = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const header = ["Date", "Category", "Description", "Amount", "Recurring", "Recurrence"];
     const lines = [header.join(",")];
-    for (const r of rows) {
+    for (const r of rows ?? []) {
       lines.push(
         [
           r.occurred_on,
