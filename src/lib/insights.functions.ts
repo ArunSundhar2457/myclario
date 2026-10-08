@@ -65,10 +65,13 @@ const quickTipSchema = z.object({
   tip: z.string().trim().min(1).max(240),
 });
 
-const INSIGHTS_FALLBACKS: Record<BriefingLanguage, {
-  thisMonth: (income: string, expenses: string, net: string, hasActivity: boolean) => string;
-  tips: [string, string, string];
-}> = {
+const INSIGHTS_FALLBACKS: Record<
+  BriefingLanguage,
+  {
+    thisMonth: (income: string, expenses: string, net: string, hasActivity: boolean) => string;
+    tips: [string, string, string];
+  }
+> = {
   en: {
     thisMonth: (income, expenses, net, hasActivity) =>
       hasActivity
@@ -127,7 +130,6 @@ function monthWindow(ym?: string) {
   return { first, nextFirst, monthFirst: monthDate };
 }
 
-
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -174,8 +176,18 @@ export const generateInsights = createServerFn({ method: "POST" })
     const fallback: Insights = {
       thisMonth:
         totalIncome === 0 && totalExpenses === 0
-          ? INSIGHTS_FALLBACKS[data.language].thisMonth(fmt(totalIncome), fmt(totalExpenses), fmt(net), false)
-          : INSIGHTS_FALLBACKS[data.language].thisMonth(fmt(totalIncome), fmt(totalExpenses), fmt(net), true),
+          ? INSIGHTS_FALLBACKS[data.language].thisMonth(
+              fmt(totalIncome),
+              fmt(totalExpenses),
+              fmt(net),
+              false,
+            )
+          : INSIGHTS_FALLBACKS[data.language].thisMonth(
+              fmt(totalIncome),
+              fmt(totalExpenses),
+              fmt(net),
+              true,
+            ),
       whereMoneyWent: Object.entries(spentByCat)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
