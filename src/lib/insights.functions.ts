@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MONTH_REGEX, monthBounds } from "./month";
+import { callGeminiJson } from "./ai/gemini.server";
+import { LANGUAGE_NAME, type BriefingLanguage } from "./briefing.logic";
 
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 type Cur = z.infer<typeof currencySchema>;
@@ -36,12 +38,95 @@ export type Insights = {
   tips: string[];
 };
 
+const insightsModelSchema = z.object({
+  thisMonth: z.string().trim().min(1).max(500),
+  whereMoneyWent: z
+    .array(
+      z.object({
+        category: z.string().trim().min(1).max(80),
+        pct: z.number().finite().min(0).max(100),
+        note: z.string().trim().min(1).max(240),
+      }),
+    )
+    .max(3),
+  budgetHealth: z
+    .array(
+      z.object({
+        category: z.string().trim().min(1).max(80),
+        status: z.enum(["on_track", "warning", "over"]),
+        note: z.string().trim().min(1).max(240),
+      }),
+    )
+    .max(50),
+  tips: z.array(z.string().trim().min(1).max(240)).max(3),
+});
+
+const quickTipSchema = z.object({
+  tip: z.string().trim().min(1).max(240),
+});
+
+const INSIGHTS_FALLBACKS: Record<BriefingLanguage, {
+  thisMonth: (income: string, expenses: string, net: string, hasActivity: boolean) => string;
+  tips: [string, string, string];
+}> = {
+  en: {
+    thisMonth: (income, expenses, net, hasActivity) =>
+      hasActivity
+        ? `You earned ${income} and spent ${expenses} so far. Net ${net}.`
+        : "No activity yet this month — add a few transactions and Clario will get to work.",
+    tips: [
+      "Log every expense — even small ones add up over the month.",
+      "Set a budget for your top spending category to stay in control.",
+      "Review your budgets weekly to catch drift early.",
+    ],
+  },
+  de: {
+    thisMonth: (income, expenses, net, hasActivity) =>
+      hasActivity
+        ? `Du hast bisher ${income} verdient und ${expenses} ausgegeben. Dein Saldo beträgt ${net}.`
+        : "Diesen Monat gibt es noch keine Aktivität — füge ein paar Transaktionen hinzu, damit Clario loslegen kann.",
+    tips: [
+      "Erfasse jede Ausgabe — auch kleine Beträge summieren sich über den Monat.",
+      "Setze ein Budget für deine wichtigste Ausgabenkategorie, um den Überblick zu behalten.",
+      "Prüfe deine Budgets wöchentlich, damit Abweichungen früh auffallen.",
+    ],
+  },
+  es: {
+    thisMonth: (income, expenses, net, hasActivity) =>
+      hasActivity
+        ? `Has recibido ${income} y gastado ${expenses} hasta ahora. Tu saldo neto es ${net}.`
+        : "Aún no hay actividad este mes — añade algunas transacciones para que Clario pueda empezar.",
+    tips: [
+      "Registra cada gasto — incluso los pequeños se acumulan durante el mes.",
+      "Define un presupuesto para tu categoría de mayor gasto para mantener el control.",
+      "Revisa tus presupuestos cada semana para detectar desviaciones a tiempo.",
+    ],
+  },
+  fr: {
+    thisMonth: (income, expenses, net, hasActivity) =>
+      hasActivity
+        ? `Tu as gagné ${income} et dépensé ${expenses} jusqu’à présent. Ton solde net est de ${net}.`
+        : "Aucune activité ce mois-ci — ajoute quelques transactions pour que Clario puisse commencer.",
+    tips: [
+      "Enregistre chaque dépense — même les petites sommes s’additionnent au fil du mois.",
+      "Fixe un budget pour ta catégorie de dépenses principale afin de garder le contrôle.",
+      "Vérifie tes budgets chaque semaine pour repérer rapidement les écarts.",
+    ],
+  },
+};
+
+const QUICK_TIP_FALLBACK: Record<BriefingLanguage, string> = {
+  en: "Small daily wins compound — log one expense and check off one task today.",
+  de: "Kleine tägliche Erfolge summieren sich — erfasse heute eine Ausgabe und erledige eine Aufgabe.",
+  es: "Los pequeños avances diarios se acumulan: registra un gasto y completa una tarea hoy.",
+  fr: "Les petites victoires quotidiennes comptent — enregistre une dépense et termine une tâche aujourd’hui.",
+};
+
 function monthWindow(ym?: string) {
   const { first, nextFirst, monthDate } = monthBounds(ym);
   return { first, nextFirst, monthFirst: monthDate };
 }
 
-import { callGeminiJson } from "./ai/gemini.server";
 
 export const generateInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -52,6 +137,7 @@ export const generateInsights = createServerFn({ method: "POST" })
         // Multiplier applied to INR amounts for display only. Data stays in INR.
         rate: z.number().positive().finite().default(1),
         month: z.string().regex(MONTH_REGEX).optional(),
+        language: z.enum(["en", "de", "es", "fr"]).default("en"),
       })
       .parse(d ?? {}),
   )
@@ -61,30 +147,22 @@ export const generateInsights = createServerFn({ method: "POST" })
     const fmt = (v: number) => format(v * rate, currency);
     const { first, nextFirst, monthFirst } = monthWindow(data.month);
 
-    const [expRes, incRes, budRes] = await Promise.all([
-      context.supabase
-        .from("expenses")
-        .select("category, amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
-      context.supabase
-        .from("income")
-        .select("amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
+    const [catRes, totalsRes, budRes] = await Promise.all([
+      context.supabase.rpc("get_expense_category_totals", { p_from: first, p_to: nextFirst }),
+      context.supabase.rpc("get_totals", { p_from: first, p_to: nextFirst }),
       context.supabase.from("budgets").select("category, monthly_limit").eq("month", monthFirst),
     ]);
 
-    if (expRes.error) throw expRes.error;
-    if (incRes.error) throw incRes.error;
+    if (catRes.error) throw catRes.error;
+    if (totalsRes.error) throw totalsRes.error;
     if (budRes.error) throw budRes.error;
 
     const spentByCat: Record<string, number> = {};
-    for (const e of expRes.data ?? []) {
-      spentByCat[e.category] = (spentByCat[e.category] ?? 0) + Number(e.amount);
+    for (const e of catRes.data ?? []) {
+      spentByCat[e.category] = Number(e.total);
     }
-    const totalExpenses = Object.values(spentByCat).reduce((a, b) => a + b, 0);
-    const totalIncome = (incRes.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
+    const totalExpenses = Number(totalsRes.data?.[0]?.spent ?? 0);
+    const totalIncome = Number(totalsRes.data?.[0]?.income ?? 0);
     const net = totalIncome - totalExpenses;
 
     const budgets = (budRes.data ?? []).map((b) => ({
@@ -96,8 +174,8 @@ export const generateInsights = createServerFn({ method: "POST" })
     const fallback: Insights = {
       thisMonth:
         totalIncome === 0 && totalExpenses === 0
-          ? "No activity yet this month — add a few transactions and Clario will get to work."
-          : `You earned ${fmt(totalIncome)} and spent ${fmt(totalExpenses)} so far. Net ${fmt(net)}.`,
+          ? INSIGHTS_FALLBACKS[data.language].thisMonth(fmt(totalIncome), fmt(totalExpenses), fmt(net), false)
+          : INSIGHTS_FALLBACKS[data.language].thisMonth(fmt(totalIncome), fmt(totalExpenses), fmt(net), true),
       whereMoneyWent: Object.entries(spentByCat)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
@@ -115,11 +193,7 @@ export const generateInsights = createServerFn({ method: "POST" })
           note: `${fmt(b.spent)} of ${fmt(b.limit)}`,
         };
       }),
-      tips: [
-        "Log every expense — even small ones add up over the month.",
-        "Set a budget for your top spending category to stay in control.",
-        "Review your budgets weekly to catch drift early.",
-      ],
+      tips: [...INSIGHTS_FALLBACKS[data.language].tips],
     };
 
     const spentByCatNorm: Record<string, number> = {};
@@ -132,7 +206,19 @@ export const generateInsights = createServerFn({ method: "POST" })
       spent: b.spent,
     }));
 
+    // Figures shown to the model must be in the display currency, not raw INR.
+    const conv = (v: number) => Math.round(v * rate * 100) / 100;
+    const convByCat = Object.fromEntries(
+      Object.entries(spentByCatNorm).map(([k, v]) => [k, conv(v)]),
+    );
+    const convBudgets = budgetsNorm.map((b) => ({
+      category: b.category,
+      limit: conv(b.limit),
+      spent: conv(b.spent),
+    }));
+
     const prompt = `You are Clario, a calm and encouraging personal finance coach.
+Write every human-readable string in ${LANGUAGE_NAME[data.language]}; keep the JSON keys, the "status" values and the category names exactly as given.
 Return ONLY compact JSON with this exact shape:
 {"thisMonth": string, "whereMoneyWent": [{"category": string, "pct": number, "note": string}], "budgetHealth": [{"category": string, "status": "on_track"|"warning"|"over", "note": string}], "tips": [string, string, string]}
 Rules:
@@ -144,29 +230,21 @@ Rules:
 - No markdown, no preamble, just JSON.
 
 Data (amounts in ${currency}):
-- Total income: ${totalIncome}
-- Total expenses: ${totalExpenses}
-- Net: ${net}
-- Spending by category: ${JSON.stringify(spentByCatNorm)}
-- Budgets: ${JSON.stringify(budgetsNorm)}`;
+- Total income: ${conv(totalIncome)}
+- Total expenses: ${conv(totalExpenses)}
+- Net: ${conv(net)}
+- Spending by category: ${JSON.stringify(convByCat)}
+- Budgets: ${JSON.stringify(convBudgets)}`;
 
     const text = await callGeminiJson(prompt);
     if (!text) return fallback;
     try {
-      const parsed = JSON.parse(text) as Partial<Insights>;
+      const parsed = insightsModelSchema.parse(JSON.parse(text));
       return {
-        thisMonth: parsed.thisMonth || fallback.thisMonth,
-        whereMoneyWent:
-          Array.isArray(parsed.whereMoneyWent) && parsed.whereMoneyWent.length > 0
-            ? parsed.whereMoneyWent.slice(0, 3)
-            : fallback.whereMoneyWent,
-        budgetHealth: Array.isArray(parsed.budgetHealth)
-          ? parsed.budgetHealth
-          : fallback.budgetHealth,
-        tips:
-          Array.isArray(parsed.tips) && parsed.tips.length > 0
-            ? parsed.tips.slice(0, 3)
-            : fallback.tips,
+        thisMonth: parsed.thisMonth,
+        whereMoneyWent: parsed.whereMoneyWent,
+        budgetHealth: parsed.budgetHealth,
+        tips: parsed.tips.length === 3 ? parsed.tips : fallback.tips,
       };
     } catch {
       return fallback;
@@ -175,17 +253,18 @@ Data (amounts in ${currency}):
 
 export const quickTip = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async (): Promise<{ tip: string }> => {
-    const fallback = {
-      tip: "Small daily wins compound — log one expense and check off one task today.",
-    };
+  .inputValidator((d: unknown) =>
+    z.object({ language: z.enum(["en", "de", "es", "fr"]).default("en") }).parse(d ?? {}),
+  )
+  .handler(async ({ data }): Promise<{ tip: string }> => {
+    const fallback = { tip: QUICK_TIP_FALLBACK[data.language] };
     const text = await callGeminiJson(
-      `You are Clario, a calm finance + planning coach. Return ONLY JSON: {"tip": string} where tip is 1-2 encouraging sentences (<= 28 words) with one concrete action. No markdown.`,
+      `You are Clario, a calm finance + planning coach. Write the tip in ${LANGUAGE_NAME[data.language]}. Return ONLY JSON: {"tip": string} where tip is 1-2 encouraging sentences (<= 28 words) with one concrete action. No markdown.`,
     );
     if (!text) return fallback;
     try {
-      const parsed = JSON.parse(text) as { tip?: string };
-      return { tip: parsed.tip?.trim() || fallback.tip };
+      const parsed = quickTipSchema.parse(JSON.parse(text));
+      return { tip: parsed.tip };
     } catch {
       return fallback;
     }

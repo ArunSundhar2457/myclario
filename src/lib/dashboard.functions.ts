@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { MONTH_REGEX, isoDate, monthBounds, monthDayRange } from "./month";
+import { MONTH_REGEX, dateString, isoDate, monthBounds, monthDayRange } from "./month";
 
 const iso = isoDate;
 const monthSchema = z.string().regex(MONTH_REGEX);
+// The user's local date, sent by the browser (the server runs in UTC).
+const todaySchema = dateString;
 
 export const getSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -12,47 +14,44 @@ export const getSnapshot = createServerFn({ method: "POST" })
     z.object({ range: z.enum(["month", "all"]), month: monthSchema.optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const q = (table: "income" | "expenses") => {
-      let qb = context.supabase.from(table).select("amount");
-      if (data.range === "month") {
-        const { first, nextFirst } = monthBounds(data.month);
-        qb = qb.gte("occurred_on", first).lt("occurred_on", nextFirst);
-      }
-      return qb;
-    };
-    const [inc, exp] = await Promise.all([q("income"), q("expenses")]);
-    if (inc.error) throw inc.error;
-    if (exp.error) throw exp.error;
-    const income = (inc.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
-    const spent = (exp.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
+    const args =
+      data.range === "month"
+        ? (() => {
+            const { first, nextFirst } = monthBounds(data.month);
+            return { p_from: first, p_to: nextFirst };
+          })()
+        : {};
+    const { data: rows, error } = await context.supabase.rpc("get_totals", args);
+    if (error) throw error;
+    const income = Number(rows?.[0]?.income ?? 0);
+    const spent = Number(rows?.[0]?.spent ?? 0);
     return { income, spent, balance: income - spent };
   });
 
 export const getSpendingTrend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ month: monthSchema.optional() }).parse(d ?? {}))
+  .inputValidator((d: unknown) =>
+    z.object({ month: monthSchema.optional(), today: todaySchema.optional() }).parse(d ?? {}),
+  )
   .handler(async ({ data, context }) => {
-    const { start: startIso, end: endIso, days } = monthDayRange(data.month);
+    const { start: startIso, end: endIso, days } = monthDayRange(data.month, data.today);
     const start = new Date(
       Number(startIso.slice(0, 4)),
       Number(startIso.slice(5, 7)) - 1,
       Number(startIso.slice(8, 10)),
     );
 
-    const [inc, exp] = await Promise.all([
-      context.supabase
-        .from("income")
-        .select("amount, occurred_on")
-        .gte("occurred_on", startIso)
-        .lte("occurred_on", endIso),
-      context.supabase
-        .from("expenses")
-        .select("amount, occurred_on")
-        .gte("occurred_on", startIso)
-        .lte("occurred_on", endIso),
-    ]);
-    if (inc.error) throw inc.error;
-    if (exp.error) throw exp.error;
+    // End is inclusive in monthDayRange; the DB function wants an exclusive upper bound.
+    const endExclusive = new Date(
+      Number(endIso.slice(0, 4)),
+      Number(endIso.slice(5, 7)) - 1,
+      Number(endIso.slice(8, 10)) + 1,
+    );
+    const { data: dayRows, error } = await context.supabase.rpc("get_daily_totals", {
+      p_from: startIso,
+      p_to: iso(endExclusive),
+    });
+    if (error) throw error;
 
     const byDay: Record<string, { income: number; spent: number }> = {};
     for (let i = 0; i < days; i++) {
@@ -60,13 +59,12 @@ export const getSpendingTrend = createServerFn({ method: "POST" })
       d.setDate(start.getDate() + i);
       byDay[iso(d)] = { income: 0, spent: 0 };
     }
-    for (const r of inc.data ?? []) {
-      const k = r.occurred_on;
-      if (byDay[k]) byDay[k].income += Number(r.amount);
-    }
-    for (const r of exp.data ?? []) {
-      const k = r.occurred_on;
-      if (byDay[k]) byDay[k].spent += Number(r.amount);
+    for (const r of dayRows ?? []) {
+      const slot = byDay[r.day];
+      if (slot) {
+        slot.income += Number(r.income);
+        slot.spent += Number(r.spent);
+      }
     }
     return Object.entries(byDay).map(([date, v]) => ({ date, ...v }));
   });
@@ -76,15 +74,14 @@ export const getCategoryBreakdown = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ month: monthSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const { first, nextFirst } = monthBounds(data.month);
-    const { data: rows, error } = await context.supabase
-      .from("expenses")
-      .select("amount, category")
-      .gte("occurred_on", first)
-      .lt("occurred_on", nextFirst);
+    const { data: rows, error } = await context.supabase.rpc("get_expense_category_totals", {
+      p_from: first,
+      p_to: nextFirst,
+    });
     if (error) throw error;
     const totals: Record<string, number> = {};
     for (const r of rows ?? []) {
-      totals[r.category] = (totals[r.category] ?? 0) + Number(r.amount);
+      totals[r.category] = Number(r.total);
     }
     return Object.entries(totals)
       .filter(([, v]) => v > 0)
@@ -99,17 +96,13 @@ export const getBudgetAlerts = createServerFn({ method: "POST" })
     const { first, nextFirst } = monthBounds(data.month);
     const [budgets, exp] = await Promise.all([
       context.supabase.from("budgets").select("id, category, monthly_limit").eq("month", first),
-      context.supabase
-        .from("expenses")
-        .select("category, amount")
-        .gte("occurred_on", first)
-        .lt("occurred_on", nextFirst),
+      context.supabase.rpc("get_expense_category_totals", { p_from: first, p_to: nextFirst }),
     ]);
     if (budgets.error) throw budgets.error;
     if (exp.error) throw exp.error;
     const spentByCat: Record<string, number> = {};
     for (const r of exp.data ?? []) {
-      spentByCat[r.category] = (spentByCat[r.category] ?? 0) + Number(r.amount);
+      spentByCat[r.category] = Number(r.total);
     }
     return (budgets.data ?? [])
       .map((b) => {
@@ -130,8 +123,9 @@ export const getBudgetAlerts = createServerFn({ method: "POST" })
 
 export const getTodayTodos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const today = iso(new Date());
+  .inputValidator((d: unknown) => z.object({ today: todaySchema.optional() }).parse(d ?? {}))
+  .handler(async ({ data: input, context }) => {
+    const today = input.today ?? iso(new Date());
     const { data, error, count } = await context.supabase
       .from("todos")
       .select("id, title, notes, is_completed, priority, due_date, due_time", { count: "exact" })

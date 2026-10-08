@@ -28,7 +28,7 @@ export function rateFor(target: Currency, rates: Rates): { currency: Currency; r
   return { currency: target, rate: r };
 }
 
-function format(value: number, currency: Currency): string {
+export function formatMoney(value: number, currency: Currency): string {
   try {
     return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
       style: "currency",
@@ -51,5 +51,5 @@ export function convertAndFormat(
 ): string {
   const amount = Number.isFinite(amountInINR) ? amountInINR : 0;
   const { currency, rate } = rateFor(targetCurrency, rates);
-  return format(amount * rate, currency);
+  return formatMoney(amount * rate, currency);
 }

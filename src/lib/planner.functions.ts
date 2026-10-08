@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { dateString } from "./month";
 
 const priority = z.enum(["low", "medium", "high"]);
+const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/);
 
 function monthBounds(year: number, month: number) {
   const first = new Date(year, month - 1, 1);
@@ -33,7 +35,7 @@ export const listTodosForMonth = createServerFn({ method: "GET" })
 
 export const listTodosForDay = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ date: z.string() }).parse(d))
+  .inputValidator((d: unknown) => z.object({ date: dateString }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("todos")
@@ -52,8 +54,8 @@ export const createTodo = createServerFn({ method: "POST" })
       .object({
         title: z.string().min(1).max(200),
         notes: z.string().max(2000).optional().nullable(),
-        due_date: z.string(),
-        due_time: z.string().optional().nullable(),
+        due_date: dateString,
+        due_time: timeSchema.optional().nullable(),
         priority,
       })
       .parse(d),
@@ -98,8 +100,8 @@ export const updateTodo = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         title: z.string().min(1).max(200),
         notes: z.string().max(2000).optional().nullable(),
-        due_date: z.string(),
-        due_time: z.string().optional().nullable(),
+        due_date: dateString,
+        due_time: timeSchema.optional().nullable(),
         priority,
       })
       .parse(d),
