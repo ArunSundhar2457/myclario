@@ -44,8 +44,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
-  const { t } = useLanguage();
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency, rate } = useCurrency();
   const genFn = useServerFn(generateInsights);
