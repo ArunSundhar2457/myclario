@@ -102,7 +102,7 @@ function TransactionsPage() {
     manualRangeRef.current = false;
     const { start, end } = monthDayRange(selectedMonth);
     navigate({ search: { ...search, from: start, to: end, page: 1 } });
-  }, [selectedMonth, navigate]);
+  }, [selectedMonth, navigate, search]);
 
   const filters = {
     kind: search.kind,
