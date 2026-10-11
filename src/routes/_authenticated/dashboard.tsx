@@ -346,7 +346,8 @@ function BriefingCard({
   const briefingFn = useServerFn(getDailyBriefing);
   const { data, isLoading } = useQuery({
     queryKey: ["daily-briefing", monthLabelText, month, currency, rate, language, today],
-    queryFn: () => briefingFn({ data: { monthLabel: monthLabelText, month, currency, rate, language, today } }),
+    queryFn: () =>
+      briefingFn({ data: { monthLabel: monthLabelText, month, currency, rate, language, today } }),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -481,7 +482,7 @@ function TasksCard({ today: todayIso }: { today: string }) {
                       notes: t.notes ?? null,
                       is_completed: t.is_completed,
                       priority: t.priority,
-                  due_date: t.due_date ?? todayIso,
+                      due_date: t.due_date ?? todayIso,
                       due_time: t.due_time ?? null,
                     });
                     setSheetOpen(true);
