@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
 });
 
 function InsightsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { selectedMonth } = useAppStore();
   const { currency, rate } = useCurrency();
   const genFn = useServerFn(generateInsights);
@@ -54,8 +54,8 @@ function InsightsPage() {
   // Keyed on the selected month, so changing the global dropdown refetches
   // insights for that month instead of showing stale data.
   const generate = useQuery({
-    queryKey: ["insights", currency, rate, selectedMonth],
-    queryFn: () => genFn({ data: { currency, rate, month: selectedMonth } }),
+    queryKey: ["insights", currency, rate, selectedMonth, language],
+    queryFn: () => genFn({ data: { currency, rate, month: selectedMonth, language } }),
     enabled: started,
     staleTime: 0,
     gcTime: 0,
@@ -63,7 +63,7 @@ function InsightsPage() {
   });
 
   const tip = useMutation({
-    mutationFn: () => tipFn({}),
+    mutationFn: () => tipFn({ data: { language } }),
   });
 
   const insights = generate.data as Insights | undefined;

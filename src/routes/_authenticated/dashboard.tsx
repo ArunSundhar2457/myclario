@@ -30,6 +30,7 @@ import type { Currency } from "@/lib/currency";
 import { getDailyBriefing } from "@/lib/briefing.functions";
 import { toggleTodo } from "@/lib/todos.functions";
 import { getProfile } from "@/lib/profile.functions";
+import { isoDate } from "@/lib/month";
 import { AddTaskSheet, type TodoRow } from "@/routes/_authenticated/planner";
 import {
   getSnapshot,
@@ -90,7 +91,9 @@ function todayLabel(): string {
 
 function Dashboard() {
   const { selectedMonth } = useAppStore();
-  const { currency } = useCurrency();
+  const { currency, rate } = useCurrency();
+  const { language } = useLanguage();
+  const today = isoDate(new Date());
 
   // Bento command center: deliberate visual weights, single-column on mobile.
   const cell = "[&>section]:h-full";
@@ -102,10 +105,17 @@ function Dashboard() {
           <MoneyPulse currency={currency} selectedMonth={selectedMonth} />
         </div>
         <div className={`lg:col-span-2 ${cell}`}>
-          <BriefingCard monthLabelText={monthLabel(selectedMonth)} currency={currency} />
+          <BriefingCard
+            monthLabelText={monthLabel(selectedMonth)}
+            month={selectedMonth}
+            currency={currency}
+            rate={rate}
+            language={language}
+            today={today}
+          />
         </div>
         <div className={`lg:col-span-4 ${cell}`}>
-          <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} />
+          <SpendingTrendCard currency={currency} selectedMonth={selectedMonth} today={today} />
         </div>
         <div className={`lg:col-span-2 ${cell}`}>
           <CategoryDonutCard selectedMonth={selectedMonth} currency={currency} />
@@ -114,7 +124,7 @@ function Dashboard() {
           <BudgetAlertStrip currency={currency} selectedMonth={selectedMonth} />
         </div>
         <div className={`lg:col-span-3 ${cell}`}>
-          <TasksCard />
+          <TasksCard today={today} />
         </div>
       </div>
     </div>
@@ -318,11 +328,26 @@ function BudgetAlertStrip({
   );
 }
 
-function BriefingCard({ monthLabelText, currency }: { monthLabelText: string; currency: string }) {
+function BriefingCard({
+  monthLabelText,
+  month,
+  currency,
+  rate,
+  language,
+  today,
+}: {
+  monthLabelText: string;
+  month: string;
+  currency: string;
+  rate: number;
+  language: "en" | "de" | "es" | "fr";
+  today: string;
+}) {
   const briefingFn = useServerFn(getDailyBriefing);
   const { data, isLoading } = useQuery({
-    queryKey: ["daily-briefing", monthLabelText, currency],
-    queryFn: () => briefingFn({ data: { monthLabel: monthLabelText, currency } }),
+    queryKey: ["daily-briefing", monthLabelText, month, currency, rate, language, today],
+    queryFn: () =>
+      briefingFn({ data: { monthLabel: monthLabelText, month, currency, rate, language, today } }),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -359,28 +384,29 @@ function BriefingCard({ monthLabelText, currency }: { monthLabelText: string; cu
   );
 }
 
-function TasksCard() {
+function TasksCard({ today: todayIso }: { today: string }) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const listFn = useServerFn(getTodayTodos);
   const toggleFn = useServerFn(toggleTodo);
   const [editing, setEditing] = useState<TodoRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const todoQueryKey = ["today-todos", todayIso] as const;
   const { data, isLoading } = useQuery({
-    queryKey: ["today-todos"],
-    queryFn: () => listFn(),
+    queryKey: todoQueryKey,
+    queryFn: () => listFn({ data: { today: todayIso } }),
   });
 
   const mutate = useMutation({
     mutationFn: (vars: { id: string; is_completed: boolean }) => toggleFn({ data: vars }),
     onMutate: async (vars) => {
-      await queryClient.cancelQueries({ queryKey: ["today-todos"] });
+      await queryClient.cancelQueries({ queryKey: todoQueryKey });
       const prev = queryClient.getQueryData<{
         rows: Array<{ id: string; is_completed: boolean }>;
         total: number;
-      }>(["today-todos"]);
+      }>(todoQueryKey);
       if (prev) {
-        queryClient.setQueryData(["today-todos"], {
+        queryClient.setQueryData(todoQueryKey, {
           ...prev,
           rows: prev.rows.map((r) =>
             r.id === vars.id ? { ...r, is_completed: vars.is_completed } : r,
@@ -390,18 +416,17 @@ function TasksCard() {
       return { prev };
     },
     onError: (e: Error, _v, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["today-todos"], ctx.prev);
+      if (ctx?.prev) queryClient.setQueryData(todoQueryKey, ctx.prev);
       toast.error(e.message);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["today-todos"] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: todoQueryKey }),
   });
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-  const today = new Date();
+  const today = new Date(`${todayIso}T00:00:00`);
   const y = today.getFullYear();
   const m = today.getMonth() + 1;
-  const iso = `${y}-${String(m).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
     <motion.section
@@ -457,7 +482,7 @@ function TasksCard() {
                       notes: t.notes ?? null,
                       is_completed: t.is_completed,
                       priority: t.priority,
-                      due_date: t.due_date ?? iso,
+                      due_date: t.due_date ?? todayIso,
                       due_time: t.due_time ?? null,
                     });
                     setSheetOpen(true);
@@ -483,7 +508,7 @@ function TasksCard() {
           setSheetOpen(v);
           if (!v) setEditing(null);
         }}
-        date={iso}
+        date={todayIso}
         year={y}
         month={m}
         editing={editing}
@@ -495,16 +520,18 @@ function TasksCard() {
 function SpendingTrendCard({
   currency,
   selectedMonth,
+  today,
 }: {
   currency: Currency;
   selectedMonth: string;
+  today: string;
 }) {
   const fn = useServerFn(getSpendingTrend);
   const { fmt } = useCurrency();
   const { t } = useLanguage();
   const { data, isLoading } = useQuery({
-    queryKey: ["spending-trend", selectedMonth],
-    queryFn: () => fn({ data: { month: selectedMonth } }),
+    queryKey: ["spending-trend", selectedMonth, today],
+    queryFn: () => fn({ data: { month: selectedMonth, today } }),
   });
   const chartData = data ?? [];
 
