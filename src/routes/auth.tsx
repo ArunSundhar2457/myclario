@@ -203,7 +203,7 @@ function GoogleButton() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://myclario.lovable.app/dashboard" },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (error) {
       setLoading(false);
