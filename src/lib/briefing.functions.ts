@@ -5,6 +5,7 @@ import { EXPENSE_CATEGORIES } from "./categories";
 import { CURRENCIES, formatMoney, type Currency } from "./currency";
 import { MONTH_REGEX, dateString, monthBounds } from "./month";
 import { callGeminiJson } from "./ai/gemini.server";
+import { consumeAiUsage } from "./ai/usage.server";
 import { buildBriefingPrompt, LANGUAGE_NAME, sanitizeLabel } from "./briefing.logic";
 
 const inputSchema = z.object({
@@ -130,6 +131,8 @@ export const getDailyBriefing = createServerFn({ method: "POST" })
       data.language,
     );
 
+    const usage = await consumeAiUsage(supabase, "briefing");
+    if (!usage.allowed) return fallback;
     const text = await callGeminiJson(prompt);
     if (!text) return fallback;
     try {

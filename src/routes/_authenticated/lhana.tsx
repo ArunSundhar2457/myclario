@@ -172,7 +172,13 @@ function LhanaPage() {
           },
         ]);
       } else {
-        setMessages([...next, { role: "assistant", text: t("lhana.error"), tone: "error" }]);
+        const key =
+          res.error === "quota"
+            ? "lhana.limitQuota"
+            : res.error === "cooldown"
+              ? "lhana.limitCooldown"
+              : "lhana.error";
+        setMessages([...next, { role: "assistant", text: t(key), tone: "error" }]);
       }
     } catch (err) {
       // A real abort: the request was cancelled end-to-end, so say exactly that.
