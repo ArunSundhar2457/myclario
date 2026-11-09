@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MONTH_REGEX, monthBounds } from "./month";
 import { callGeminiJson } from "./ai/gemini.server";
+import { consumeAiUsage } from "./ai/usage.server";
 import { LANGUAGE_NAME, type BriefingLanguage } from "./briefing.logic";
 
 const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
@@ -248,6 +249,8 @@ Data (amounts in ${currency}):
 - Spending by category: ${JSON.stringify(convByCat)}
 - Budgets: ${JSON.stringify(convBudgets)}`;
 
+    const usage = await consumeAiUsage(context.supabase, "insights");
+    if (!usage.allowed) return fallback;
     const text = await callGeminiJson(prompt);
     if (!text) return fallback;
     try {
@@ -268,8 +271,11 @@ export const quickTip = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ language: z.enum(["en", "de", "es", "fr"]).default("en") }).parse(d ?? {}),
   )
-  .handler(async ({ data }): Promise<{ tip: string }> => {
+  .handler(async ({ data, context }): Promise<{ tip: string }> => {
     const fallback = { tip: QUICK_TIP_FALLBACK[data.language] };
+    // Shares the Insights daily quota; no cooldown so it can load alongside Insights.
+    const usage = await consumeAiUsage(context.supabase, "insights", 0);
+    if (!usage.allowed) return fallback;
     const text = await callGeminiJson(
       `You are Clario, a calm finance + planning coach. Write the tip in ${LANGUAGE_NAME[data.language]}. Return ONLY JSON: {"tip": string} where tip is 1-2 encouraging sentences (<= 28 words) with one concrete action. No markdown.`,
     );

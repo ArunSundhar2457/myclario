@@ -97,6 +97,8 @@ export const fr: Record<string, string> = {
   "lhana.cancel": "Arrêter",
   "lhana.thinking": "Lhana réfléchit…",
   "lhana.error": "Lhana ne peut pas répondre pour le moment — réessaie dans un instant.",
+  "lhana.limitQuota": "Tu as atteint la limite Lhana du jour. Elle se renouvelle demain !",
+  "lhana.limitCooldown": "Lhana reprend son souffle — patiente un instant, s'il te plaît.",
   "lhana.promptSpending": "Où est parti mon argent ce mois-ci ?",
   "lhana.promptAfford": "Puis-je me permettre un achat de ₹5 000 ?",
   "lhana.promptMonth": "Comment se porte mon budget ?",

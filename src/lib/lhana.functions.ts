@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MONTH_REGEX, monthBounds } from "./month";
 import { callGemini } from "./ai/gemini.server";
+import { consumeAiUsage } from "./ai/usage.server";
 import { translate, type Language } from "./i18n";
 import {
   buildCards,
@@ -85,7 +86,7 @@ const LANGUAGE_NAME: Record<string, string> = {
 
 export type LhanaReply =
   | { ok: true; reply: string; cards: LhanaCard[]; degraded: boolean }
-  | { ok: false; error: "unavailable" };
+  | { ok: false; error: "unavailable" | "quota" | "cooldown" };
 
 export const askLhana = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -97,6 +98,10 @@ export const askLhana = createServerFn({ method: "POST" })
     const fmt = (v: number) => format(v * rate, currency);
     const lang = data.language as Language;
     const tr = (key: string) => translate(lang, key);
+
+    // ---- Usage guardrail: checked before any data or model work ----
+    const usage = await consumeAiUsage(supabase, "lhana");
+    if (!usage.allowed) return { ok: false, error: usage.reason };
 
     const intents = detectIntents(data.message);
     const needs = contextNeeds(intents);
