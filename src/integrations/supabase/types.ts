@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          created_at: string
+          feature: string
+          id: string
+          last_requested_at: string
+          request_count: number
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature: string
+          id?: string
+          last_requested_at?: string
+          request_count?: number
+          updated_at?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string
+          id?: string
+          last_requested_at?: string
+          request_count?: number
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           category: string
@@ -226,6 +259,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_increment_ai_usage: {
+        Args: { p_cooldown_seconds: number; p_feature: string; p_limit: number }
+        Returns: Json
+      }
       get_daily_totals: {
         Args: { p_from: string; p_to: string }
         Returns: {
