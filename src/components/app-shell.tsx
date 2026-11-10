@@ -53,7 +53,7 @@ function GlobalControls() {
   return (
     <div className="flex items-center gap-2">
       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-        <SelectTrigger className="h-9 w-[150px] text-sm">
+        <SelectTrigger className="h-11 w-[124px] text-sm md:h-9 md:w-[150px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -181,11 +181,38 @@ function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
   );
 }
 
-function MobileHeader() {
+function MobileHeader({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  async function signOut() {
+    await supabase.auth.signOut();
+    toast.success(t("nav.signedOut"));
+    navigate({ to: "/auth", replace: true });
+  }
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur md:hidden">
-      <Brand />
-      <GlobalControls />
+    <header className="sticky top-0 z-20 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-background/85 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur md:hidden">
+      <div className="min-w-0">
+        <Brand />
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <GlobalControls />
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          aria-label={t("nav.settings")}
+          className="grid h-11 w-11 place-items-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <SettingsIcon className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={signOut}
+          aria-label={t("nav.signOut")}
+          className="grid h-11 w-11 place-items-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
+      </div>
     </header>
   );
 }
@@ -209,7 +236,7 @@ function BottomNav() {
         const inner = (
           <span
             className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-md px-2 py-1.5 text-[10px] font-medium",
+              "flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-[10px] font-medium",
               active ? "text-primary" : "text-muted-foreground",
               !item.enabled && "opacity-60",
             )}
@@ -252,7 +279,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-h-screen w-full bg-background">
           <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <MobileHeader />
+            <MobileHeader onOpenSettings={() => setSettingsOpen(true)} />
             <DesktopHeader />
             <main className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-6">
               <div className="mx-auto w-full max-w-[1200px]">{children}</div>
