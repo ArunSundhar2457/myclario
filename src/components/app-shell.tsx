@@ -84,7 +84,7 @@ function Brand() {
         >
           Clario
         </span>
-        <span className="mt-1 text-muted-foreground" style={{ fontSize: "10px" }}>
+        <span className="mt-1 hidden text-muted-foreground sm:block" style={{ fontSize: "10px" }}>
           {t("brand.tagline")}
         </span>
       </div>
