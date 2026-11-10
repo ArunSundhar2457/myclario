@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <!-- White background so icon fills the tab space -->
   <rect width="512" height="512" rx="115" fill="white"/>
-  <!-- C arc in emerald green -->
-  <path d="M 310 100 A 156 156 0 1 0 310 412" fill="none" stroke="#2a7a6a" stroke-width="52" stroke-linecap="round"/>
-  <!-- Trend line in emerald green -->
-  <polyline points="148,360 208,272 268,312 340,168" fill="none" stroke="#2a7a6a" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Dot in emerald green -->
-  <circle cx="340" cy="168" r="36" fill="#2a7a6a"/>
+  <!-- C arc in Clario violet -->
+  <path d="M 310 100 A 156 156 0 1 0 310 412" fill="none" stroke="#8B7CF6" stroke-width="52" stroke-linecap="round"/>
+  <!-- Trend line in Clario violet -->
+  <polyline points="148,360 208,272 268,312 340,168" fill="none" stroke="#8B7CF6" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Dot in Clario violet -->
+  <circle cx="340" cy="168" r="36" fill="#8B7CF6"/>
 </svg>
