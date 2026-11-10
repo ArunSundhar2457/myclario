@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="280" height="72" viewBox="0 0 280 72">
   <g transform="translate(10, 4)">
-    <!-- C arc in emerald green -->
-    <path d="M 40 6 A 26 26 0 1 0 40 58" fill="none" stroke="#2a7a6a" stroke-width="6.5" stroke-linecap="round"/>
-    <!-- Trend line in emerald green -->
-    <polyline points="18,48 28,34 38,41 50,20" fill="none" stroke="#2a7a6a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- Dot in emerald green -->
-    <circle cx="50" cy="20" r="4.5" fill="#2a7a6a"/>
+    <!-- C arc in Clario violet -->
+    <path d="M 40 6 A 26 26 0 1 0 40 58" fill="none" stroke="#8B7CF6" stroke-width="6.5" stroke-linecap="round"/>
+    <!-- Trend line in Clario violet -->
+    <polyline points="18,48 28,34 38,41 50,20" fill="none" stroke="#8B7CF6" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Dot in Clario violet -->
+    <circle cx="50" cy="20" r="4.5" fill="#8B7CF6"/>
   </g>
   <!-- Wordmark in dark ink -->
   <text x="76" y="44" font-family="'DM Sans', 'Inter', sans-serif" font-weight="600" font-size="34" fill="#1e2035" letter-spacing="-0.5">Clario</text>
