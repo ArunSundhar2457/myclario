@@ -21,7 +21,7 @@ import "lenis/dist/lenis.css";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import founderPortrait from "@/assets/arun-founder-portrait.webp.asset.json";
+import founderPortrait from "@/assets/arun-founder-dp.webp.asset.json";
 import { ClarioBrand } from "./clario-brand";
 import { HighlightsGallery } from "./highlights-gallery";
 import { LhanaSection } from "./lhana-section";
