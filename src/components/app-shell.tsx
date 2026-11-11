@@ -50,16 +50,30 @@ function monthOptions(): { value: string; label: string }[] {
 
 function GlobalControls() {
   const { selectedMonth, setSelectedMonth } = useAppStore();
+  const now = new Date();
+  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const isCurrent = selectedMonth === current;
   return (
     <div className="flex items-center gap-2">
+      {!isCurrent && (
+        <button
+          type="button"
+          onClick={() => setSelectedMonth(current)}
+          className="h-11 rounded-full border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary hover:bg-primary/20 md:h-9"
+          title="Jump back to this month"
+        >
+          This month
+        </button>
+      )}
       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-        <SelectTrigger className="h-11 w-[124px] text-sm md:h-9 md:w-[150px]">
+        <SelectTrigger className="h-11 w-[150px] text-sm md:h-9 md:w-[190px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {monthOptions().map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
+              {o.value === current ? " · Current" : ""}
             </SelectItem>
           ))}
         </SelectContent>

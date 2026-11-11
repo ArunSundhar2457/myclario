@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type { Currency } from "./currency";
 export { CURRENCY_SYMBOL, convertAndFormat } from "./currency";
@@ -21,6 +21,10 @@ export const useAppStore = create<AppState>()(
       selectedMonth: currentMonth(),
       setSelectedMonth: (m) => set({ selectedMonth: m }),
     }),
-    { name: "clario-app" },
+    {
+      name: "clario-app",
+      // Session-only: every new visit opens on the current month.
+      storage: createJSONStorage(() => sessionStorage),
+    },
   ),
 );
