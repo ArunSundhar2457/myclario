@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import lhanaAvatar from "@/assets/lhana-avatar.png";
 import lhanaWelcome from "@/assets/lhana-welcome.png";
@@ -51,26 +51,101 @@ export function LhanaAvatar({
   );
 }
 
+const LAUNCHER_GREETINGS = [
+  "Yo bro, need a sanity check?",
+  "Don't buy it yet. Talk to me first.",
+  "What's good? Let's check those numbers.",
+  "Wallet looking nervous. Wanna talk?",
+];
+
+const WELCOME_GREETINGS = [
+  "Hey! 👋 Ready to face the numbers?",
+  "Yo, you poked me. Bold.",
+  "I don't bite. Your spending might.",
+  "Ask me anything, bro. I've seen worse.",
+];
+
+function useCycle(list: string[]) {
+  const [i, setI] = useState(0);
+  return [list[i % list.length], () => setI((n) => n + 1)] as const;
+}
+
+function WaveBadge({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute grid place-items-center rounded-full bg-card shadow-elevated ring-1 ring-border",
+        className,
+      )}
+    >
+      <span className="inline-block motion-safe:animate-lhana-wave">👋</span>
+    </span>
+  );
+}
+
 export function LhanaLauncher({ label }: { label: string }) {
+  const [greeting, next] = useCycle(LAUNCHER_GREETINGS);
+  const [bubble, setBubble] = useState(false);
+  const [nod, setNod] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const show = (ms = 3200) => {
+    setBubble(true);
+    setNod((n) => n + 1);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setBubble(false), ms);
+  };
+
+  useEffect(() => {
+    const first = setTimeout(() => show(), 1500);
+    const idle = setInterval(() => {
+      next();
+      show();
+    }, 20000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(idle);
+      if (timer.current) clearTimeout(timer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Link
       to="/lhana"
       aria-label={label}
+      onMouseEnter={() => {
+        next();
+        show(4000);
+      }}
+      onFocus={() => show(4000)}
       className="group fixed bottom-24 right-4 z-30 flex items-center gap-2 md:bottom-8 md:right-8"
     >
-      <span className="pointer-events-none translate-x-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground opacity-0 shadow-elevated transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-md:hidden">
-        {label}
-      </span>
-      <span className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-lhana/40 bg-lhana-soft shadow-lhana transition-transform duration-200 group-hover:scale-105 group-active:scale-95 motion-safe:animate-card-float motion-reduce:animate-none">
-        <img
-          src={LHANA_POSES.avatar}
-          alt=""
-          loading="lazy"
-          width={768}
-          height={768}
-          className="h-full w-full object-cover"
-          style={{ objectPosition: "center 20%" }}
-        />
+      {bubble && (
+        <span
+          key={greeting}
+          className="pointer-events-none max-w-[220px] rounded-2xl rounded-br-sm border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-elevated motion-safe:animate-lhana-pop"
+        >
+          {greeting}
+        </span>
+      )}
+      <span className="relative motion-safe:animate-card-float motion-reduce:animate-none">
+        <span
+          key={nod}
+          className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-lhana/40 bg-lhana-soft shadow-lhana transition-transform duration-200 group-hover:scale-105 group-active:scale-95 motion-safe:animate-lhana-nod"
+        >
+          <img
+            src={LHANA_POSES.avatar}
+            alt=""
+            loading="lazy"
+            width={768}
+            height={768}
+            className="h-full w-full object-cover"
+            style={{ objectPosition: "center 20%" }}
+          />
+        </span>
+        <WaveBadge className="-left-1 -top-1 h-6 w-6 text-sm" />
       </span>
     </Link>
   );
@@ -85,17 +160,39 @@ export function LhanaWelcome({
   body: string;
   children?: ReactNode;
 }) {
+  const [greeting, next] = useCycle(WELCOME_GREETINGS);
+  const [taps, setTaps] = useState(0);
   return (
-    <div className="flex flex-col items-center gap-4 px-4 py-10 text-center">
-      <img
-        src={LHANA_POSES.welcome}
-        alt="Lhana waving hello"
-        loading="lazy"
-        width={768}
-        height={768}
-        className="h-36 w-36 rounded-3xl object-cover shadow-lhana"
-        style={{ objectPosition: "center 15%" }}
-      />
+    <div className="flex flex-col items-center gap-4 px-4 py-10 text-center animate-fade-up">
+      <div className="relative">
+        <span
+          key={greeting}
+          className="absolute -top-10 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-2xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-elevated motion-safe:animate-lhana-pop"
+        >
+          {greeting}
+        </span>
+        <button
+          type="button"
+          aria-label="Say hi to Lhana"
+          onClick={() => {
+            next();
+            setTaps((n) => n + 1);
+          }}
+          className="block rounded-3xl motion-safe:animate-card-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lhana"
+        >
+          <img
+            key={taps}
+            src={LHANA_POSES.welcome}
+            alt="Lhana waving hello"
+            loading="lazy"
+            width={768}
+            height={768}
+            className="h-36 w-36 cursor-pointer rounded-3xl object-cover shadow-lhana transition-transform hover:scale-105 active:scale-95 motion-safe:animate-lhana-nod"
+            style={{ objectPosition: "center 15%" }}
+          />
+        </button>
+        <WaveBadge className="-right-2 top-2 h-9 w-9 text-lg" />
+      </div>
       <div className="space-y-1.5">
         <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
         <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">{body}</p>
