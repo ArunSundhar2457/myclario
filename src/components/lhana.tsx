@@ -6,6 +6,7 @@ import lhanaWelcome from "@/assets/lhana-welcome.png";
 import lhanaThinking from "@/assets/lhana-thinking.png";
 import lhanaInsight from "@/assets/lhana-insight.png";
 import lhanaCelebrate from "@/assets/lhana-celebrate.png";
+import lhanaWave from "@/assets/lhana-wave.mp4.asset.json";
 
 /**
  * Canonical Lhana component system. One consistent character identity
@@ -180,18 +181,8 @@ export function LhanaWelcome({
           }}
           className="block rounded-3xl motion-safe:animate-card-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lhana"
         >
-          <img
-            key={taps}
-            src={LHANA_POSES.welcome}
-            alt="Lhana waving hello"
-            loading="lazy"
-            width={768}
-            height={768}
-            className="h-36 w-36 cursor-pointer rounded-3xl object-cover shadow-lhana transition-transform hover:scale-105 active:scale-95 motion-safe:animate-lhana-nod"
-            style={{ objectPosition: "center 15%" }}
-          />
+          <LhanaWaveVideo replayKey={taps} />
         </button>
-        <WaveBadge className="-right-2 top-2 h-9 w-9 text-lg" />
       </div>
       <div className="space-y-1.5">
         <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
@@ -462,5 +453,48 @@ export function LhanaEmptyState({
       <p className="max-w-sm text-sm text-muted-foreground">{body}</p>
       {children}
     </div>
+  );
+}
+
+/** Cinematic waving greeting; replays on tap, static portrait for reduced motion. */
+function LhanaWaveVideo({ replayKey }: { replayKey: number }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || replayKey === 0) return;
+    v.currentTime = 0;
+    void v.play().catch(() => {});
+  }, [replayKey]);
+  const cls =
+    "h-44 w-44 cursor-pointer rounded-3xl bg-card object-cover shadow-lhana transition-transform hover:scale-105 active:scale-95";
+  if (reduced) {
+    return (
+      <img
+        src={LHANA_POSES.welcome}
+        alt="Lhana waving hello"
+        width={768}
+        height={768}
+        className={cls}
+        style={{ objectPosition: "center 15%" }}
+      />
+    );
+  }
+  return (
+    <video
+      ref={ref}
+      src={lhanaWave.url}
+      poster={LHANA_POSES.welcome}
+      autoPlay
+      muted
+      playsInline
+      preload="auto"
+      aria-label="Lhana waving hello"
+      className={cls}
+      style={{ objectPosition: "center 50%" }}
+    />
   );
 }
