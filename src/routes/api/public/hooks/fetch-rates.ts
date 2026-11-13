@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 const CODES = ["USD", "EUR", "GBP"] as const;
 
 const frankfurterSchema = z.object({
@@ -13,12 +20,11 @@ export const Route = createFileRoute("/api/public/hooks/fetch-rates")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env["SUPABASE_ANON_KEY"] ?? process.env["SUPABASE_PUBLISHABLE_KEY"];
+        const expected = process.env["CRON_SECRET"];
         const provided =
-          request.headers.get("apikey") ??
+          request.headers.get("x-cron-secret") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || !provided || provided !== expected) {
+        if (!expected || !provided || !safeEqual(provided, expected)) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
