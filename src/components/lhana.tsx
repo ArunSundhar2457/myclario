@@ -88,6 +88,7 @@ function WaveBadge({ className }: { className?: string }) {
 export function LhanaLauncher({ label }: { label: string }) {
   const [greeting, next] = useCycle(LAUNCHER_GREETINGS);
   const [bubble, setBubble] = useState(false);
+  const [engaged, setEngaged] = useState(false);
   const [nod, setNod] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -117,11 +118,17 @@ export function LhanaLauncher({ label }: { label: string }) {
       to="/lhana"
       aria-label={label}
       onMouseEnter={() => {
+        setEngaged(true);
         next();
         show(4000);
       }}
-      onFocus={() => show(4000)}
-      className="group fixed bottom-24 right-4 z-30 flex items-center gap-2 md:bottom-8 md:right-8"
+      onMouseLeave={() => setEngaged(false)}
+      onFocus={() => {
+        setEngaged(true);
+        show(4000);
+      }}
+      onBlur={() => setEngaged(false)}
+      className="group fixed bottom-24 right-4 z-30 flex items-center gap-2 transition-[z-index] hover:z-50 focus-visible:z-50 md:bottom-16 md:right-8"
     >
       {bubble && (
         <span
@@ -131,22 +138,30 @@ export function LhanaLauncher({ label }: { label: string }) {
           {greeting}
         </span>
       )}
-      <span className="relative motion-safe:animate-card-float motion-reduce:animate-none">
+      <span className="relative motion-safe:animate-card-float motion-reduce:animate-none transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-focus-within:-translate-y-2 group-focus-within:scale-110">
         <span
           key={nod}
-          className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-lhana/40 bg-lhana-soft shadow-lhana transition-transform duration-200 group-hover:scale-105 group-active:scale-95 motion-safe:animate-lhana-nod"
+          className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-full border-2 border-lhana/40 bg-lhana-soft shadow-lhana transition-transform duration-300 group-active:scale-95 motion-safe:animate-lhana-nod"
         >
-          <img
-            src={LHANA_POSES.avatar}
-            alt=""
-            loading="lazy"
-            width={768}
-            height={768}
-            className="h-full w-full object-cover"
-            style={{ objectPosition: "center 20%" }}
-          />
+          {engaged ? (
+            <LhanaWaveVideo
+              replayKey={nod}
+              loop
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            <img
+              src={LHANA_POSES.avatar}
+              alt=""
+              loading="lazy"
+              width={768}
+              height={768}
+              className="h-full w-full object-cover"
+              style={{ objectPosition: "center 20%" }}
+            />
+          )}
         </span>
-        <WaveBadge className="-left-1 -top-1 h-6 w-6 text-sm" />
+        <WaveBadge className="-left-1 -top-1 h-7 w-7 text-base" />
       </span>
     </Link>
   );
@@ -456,8 +471,16 @@ export function LhanaEmptyState({
   );
 }
 
-/** Cinematic waving greeting; replays on tap, static portrait for reduced motion. */
-function LhanaWaveVideo({ replayKey }: { replayKey: number }) {
+/** Cinematic waving greeting; replays on tap or hover, static portrait for reduced motion. */
+function LhanaWaveVideo({
+  replayKey,
+  loop = false,
+  className,
+}: {
+  replayKey: number;
+  loop?: boolean;
+  className?: string;
+}) {
   const ref = useRef<HTMLVideoElement>(null);
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -469,8 +492,10 @@ function LhanaWaveVideo({ replayKey }: { replayKey: number }) {
     v.currentTime = 0;
     void v.play().catch(() => {});
   }, [replayKey]);
-  const cls =
-    "h-44 w-44 cursor-pointer rounded-3xl bg-card object-cover shadow-lhana transition-transform hover:scale-105 active:scale-95";
+  const cls = cn(
+    "h-44 w-44 cursor-pointer rounded-3xl bg-card object-cover shadow-lhana transition-transform hover:scale-105 active:scale-95",
+    className,
+  );
   if (reduced) {
     return (
       <img
@@ -489,6 +514,7 @@ function LhanaWaveVideo({ replayKey }: { replayKey: number }) {
       src={lhanaWave.url}
       poster={LHANA_POSES.welcome}
       autoPlay
+      loop={loop}
       muted
       playsInline
       preload="auto"

@@ -66,7 +66,7 @@ function GlobalControls() {
         </button>
       )}
       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-        <SelectTrigger className="h-11 w-[150px] text-sm md:h-9 md:w-[190px]">
+        <SelectTrigger className="h-11 w-max max-w-[calc(100vw-1.5rem)] text-sm md:h-9">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -209,7 +209,6 @@ function MobileHeader({ onOpenSettings }: { onOpenSettings: () => void }) {
         <Brand />
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <GlobalControls />
         <button
           type="button"
           onClick={onOpenSettings}
@@ -226,6 +225,9 @@ function MobileHeader({ onOpenSettings }: { onOpenSettings: () => void }) {
         >
           <LogOut className="h-5 w-5" />
         </button>
+      </div>
+      <div className="col-span-2 flex justify-end">
+        <GlobalControls />
       </div>
     </header>
   );
